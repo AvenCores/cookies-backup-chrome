@@ -114,13 +114,28 @@ body.standalone textarea {
   justify-content: space-between;
   align-items: center;
   gap: 6px;
+  min-height: 26px;
   margin-top: 5px;
 }
 
 #header .large-title {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
+  overflow: hidden;
   font-size: 15px;
+  white-space: nowrap;
+}
+
+#header .large-title span[data-i18n] {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+#header .large-title img {
+  flex-shrink: 0;
 }
 
 .locale-picker {
@@ -132,7 +147,8 @@ body.standalone textarea {
   display: flex;
   align-items: center;
   gap: 4px;
-  max-width: 110px;
+  max-width: 92px;
+  min-width: 0;
   height: 26px;
   padding: 0 6px;
   font-size: 12px;
@@ -161,6 +177,7 @@ body.standalone textarea {
 }
 
 .locale-current {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -545,4 +562,5 @@ input[type="file"]::file-selector-button:active {
   justify-content: center;
   align-items: center;
   column-gap: 4px;
+  min-width: 0;
 }

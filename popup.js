@@ -136,6 +136,9 @@ function applyI18n() {
     const key = el.getAttribute("data-i18n-placeholder");
     if (key) el.placeholder = tr(key);
   });
+  // full title on hover: the header shows one truncated line for long locales
+  const titleEl = document.querySelector("#header .large-title span[data-i18n]");
+  if (titleEl) titleEl.title = titleEl.textContent;
   const picker = document.getElementById("locale-picker");
   if (picker) {
     buildLocaleMenu();
