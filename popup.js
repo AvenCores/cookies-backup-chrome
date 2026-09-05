@@ -58,6 +58,15 @@ function detectLocale() {
   return "en";
 }
 
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function t(key, params) {
   const dict = (typeof TRANSLATIONS !== "undefined" && (TRANSLATIONS[currentLocale] || TRANSLATIONS["en"])) || {};
   const fallback = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS["en"]) || {};
@@ -71,6 +80,10 @@ function t(key, params) {
         } catch (e) {
           val = v.toLocaleString();
         }
+      } else {
+        // params are interpolated into innerHTML alerts, so escape them:
+        // cookie names/URLs come from the backup file and are attacker-controlled
+        val = escapeHtml(val);
       }
       text = text.replaceAll(`{${k}}`, String(val));
     }
@@ -123,7 +136,6 @@ async function initI18n() {
     const saved = normalizeLocale(res?.locale);
     currentLocale = saved || detectLocale();
   } catch (error) {
-    console.error(error);
     currentLocale = detectLocale();
   }
   applyI18n();
@@ -134,9 +146,7 @@ async function initI18n() {
       currentLocale = norm;
       try {
         await api.storage.local.set({ locale: currentLocale });
-      } catch (e) {
-        console.error(e);
-      }
+      } catch (e) {}
       applyI18n();
     });
   }
@@ -156,18 +166,25 @@ async function initTheme() {
     const res = await api.storage.local.get("theme");
     savedTheme = res?.theme === "dark" || res?.theme === "light" ? res.theme : null;
   } catch (error) {
-    console.error(error);
   }
   // with no stored choice, follow the system theme
   applyTheme(savedTheme || (systemPrefersDark.matches ? "dark" : "light"));
 }
 
 // keep following the system theme while the user hasn't picked one
-systemPrefersDark.addEventListener("change", (e) => {
-  if (!savedTheme) {
-    applyTheme(e.matches ? "dark" : "light");
-  }
-});
+if (typeof systemPrefersDark.addEventListener === "function") {
+  systemPrefersDark.addEventListener("change", (e) => {
+    if (!savedTheme) {
+      applyTheme(e.matches ? "dark" : "light");
+    }
+  });
+} else if (typeof systemPrefersDark.addListener === "function") {
+  systemPrefersDark.addListener((e) => {
+    if (!savedTheme) {
+      applyTheme(e.matches ? "dark" : "light");
+    }
+  });
+}
 
 document.getElementById("theme-toggle").addEventListener("click", () => {
   savedTheme =
@@ -175,7 +192,7 @@ document.getElementById("theme-toggle").addEventListener("click", () => {
       ? "light"
       : "dark";
   applyTheme(savedTheme);
-  api.storage.local.set({ theme: savedTheme }).catch(console.error);
+  Promise.resolve(api.storage.local.set({ theme: savedTheme })).catch(() => {});
 });
 
 initTheme();
@@ -193,11 +210,9 @@ if (location.search.includes("standalone")) {
   document.querySelector(".container-main-screen").classList.add("hidden");
   document.getElementById("open-tab-wrap").classList.remove("hidden");
   document.getElementById("btn-open-tab").addEventListener("click", () => {
-    api.tabs
-      .create({ url: api.runtime.getURL("popup.html?standalone=1") })
+    Promise.resolve(api.tabs.create({ url: api.runtime.getURL("popup.html?standalone=1") }))
       .then(() => window.close())
-      .catch((error) => {
-        console.error(error);
+      .catch(() => {
         alert(t("openTabFail"));
       });
   });
@@ -217,35 +232,50 @@ document
 
 document.getElementById("btn-backup").onclick = showEncPasswordInputBox;
 
-document.getElementById("btn-upload-fallback").onclick = showFallbackCkzInput;
+document.getElementById("btn-upload-fallback").onclick = (e) => {
+  if (e) e.preventDefault();
+  showFallbackCkzInput();
+};
 
-function handleEncPasswdSubmit(e) {
+async function handleEncPasswdSubmit(e) {
   e.preventDefault();
 
   const pass = getEncPasswd();
+  if (!pass || pass.length < 3) {
+    return;
+  }
 
-  api.cookies.getAll({}, (cookies) => {
-    if (cookies.length > 0) {
-      const data = sjcl.encrypt(pass, JSON.stringify(cookies), { ks: 256 });
-      // only using en-GB because it puts the date first
-      const d = new Date()
-      const date = d.toLocaleDateString("en-GB").replace(/\//g, "-");
-      const time = d.toLocaleTimeString("en-GB").replace(/:/g, "-");
-      const filename = `cookies-${date}-${time}.ckz`;
-      downloadJson(data, filename)
-      backupSuccessAlert(cookies.length)
-    } else {
-      alert(t("noCookies"));
-    }
-  });
+  // promise form works in both browsers; the callback form breaks on Firefox
+  // (browser.* ignores the callback and returns a promise instead)
+  let cookies;
+  try {
+    cookies = await api.cookies.getAll({});
+  } catch (err) {
+    addToWarningMessageList(createWarning(t("unknownError")));
+    return;
+  }
+  if (cookies.length > 0) {
+    const data = sjcl.encrypt(pass, JSON.stringify(cookies), { ks: 256 });
+    // only using en-GB because it puts the date first
+    const d = new Date()
+    const date = d.toLocaleDateString("en-GB").replace(/\//g, "-");
+    const time = d.toLocaleTimeString("en-GB").replace(/:/g, "-");
+    const filename = `cookies-${date}-${time}.ckz`;
+    downloadJson(data, filename)
+    backupSuccessAlert(cookies.length)
+  } else {
+    alert(t("noCookies"));
+  }
 }
 
 let cookieFile;
 
 function handleFileSelect(e) {
   cookieFile = e.target.files[0];
-  if (!cookieFile || !cookieFile.name.endsWith(".ckz")) {
+  if (!cookieFile || !cookieFile.name.toLowerCase().endsWith(".ckz")) {
     alert(t("notCkz"));
+    e.target.value = "";
+    cookieFile = null;
     hideDecPasswordInputBox()
     return;
   }
@@ -257,6 +287,9 @@ function handleDecPasswdSubmit(e) {
   e.preventDefault();
 
   const pass = getDecPasswd()
+  if (!pass) {
+    return;
+  }
 
   getCkzFileDataAsText(async (data) => {
     let cookies;
@@ -265,7 +298,6 @@ function handleDecPasswdSubmit(e) {
       const decrypted = sjcl.decrypt(pass, data)
       cookies = JSON.parse(decrypted);
     } catch (error) {
-      console.log(error);
       if (error instanceof sjcl.exception.corrupt) {
         alert(t("wrongPassword"));
       } else if (error instanceof sjcl.exception.invalid) {
@@ -273,6 +305,11 @@ function handleDecPasswdSubmit(e) {
       } else {
         alert(t("unknownError"));
       }
+      return;
+    }
+
+    if (!Array.isArray(cookies)) {
+      alert(t("invalidFile"));
       return;
     }
 
@@ -287,14 +324,20 @@ function handleDecPasswdSubmit(e) {
     const epoch = new Date().getTime() / 1000;
 
     for (const cookie of cookies) {
+      if (!cookie || typeof cookie.name !== "string" || typeof cookie.value !== "string") {
+        continue;
+      }
+      const domain = typeof cookie.domain === "string" ? cookie.domain : "";
+      const path = typeof cookie.path === "string" ? cookie.path : "/";
+      if (!domain) {
+        continue;
+      }
       let url =
         "http" +
         (cookie.secure ? "s" : "") +
         "://" +
-        (cookie.domain.startsWith(".")
-          ? cookie.domain.slice(1)
-          : cookie.domain) +
-        cookie.path;
+        (domain.startsWith(".") ? domain.slice(1) : domain) +
+        path;
 
       // Firefox writes "expirationDate: null" for session cookies, so guard before comparing
       if (cookie.expirationDate && epoch > cookie.expirationDate) {
@@ -302,52 +345,53 @@ function handleDecPasswdSubmit(e) {
         continue;
       }
 
-      if (cookie.hostOnly == true) {
-        // https://developer.chrome.com/extensions/cookies#method-set
-        // if the cookie is hostOnly, we don't
-        // supply the domain because that sets hostOnly to true
-        delete cookie.domain;
+      // cookies.set accepts only a fixed set of fields; everything else
+      // (hostOnly, session, storeId, firstPartyDomain, partitionKey, ...) is rejected
+      const details = {
+        url: url,
+        name: cookie.name,
+        value: cookie.value,
+        path: path,
+      };
+      if (cookie.hostOnly !== true && domain) {
+        // if the cookie is hostOnly, we don't supply the domain
+        details.domain = domain;
       }
       // if session is true (or a Firefox-made backup has expirationDate: null),
       // then expirationDate needs to be omitted
-      if (cookie.session == true || cookie.expirationDate == null) {
-        delete cookie.expirationDate;
+      if (cookie.session !== true && cookie.expirationDate != null) {
+        details.expirationDate = cookie.expirationDate;
       }
-
+      if (cookie.secure != null) details.secure = Boolean(cookie.secure);
+      if (cookie.httpOnly != null) details.httpOnly = Boolean(cookie.httpOnly);
       // the sameSite enums differ between the two browsers
-      if (isFirefox) {
-        // Chrome may report "exactSite" or "unspecified", Firefox only accepts these
-        if (!["no_restriction", "lax", "strict"].includes(cookie.sameSite)) {
-          delete cookie.sameSite;
+      if (typeof cookie.sameSite === "string") {
+        let sameSite = cookie.sameSite;
+        if (sameSite === "lax_plus") sameSite = "lax";
+        else if (sameSite === "strict_plus") sameSite = "strict";
+        if (isFirefox) {
+          // Firefox only accepts these three, "unspecified"/others must be omitted
+          if (["no_restriction", "lax", "strict"].includes(sameSite)) {
+            details.sameSite = sameSite;
+          }
+        } else if (["no_restriction", "lax", "strict", "unspecified"].includes(sameSite)) {
+          details.sameSite = sameSite;
         }
-      } else if (cookie.sameSite === "lax_plus") {
-        cookie.sameSite = "lax";
-      } else if (cookie.sameSite === "strict_plus") {
-        cookie.sameSite = "strict";
+      }
+      if (typeof cookie.storeId === "string" && cookie.storeId) {
+        details.storeId = cookie.storeId;
       }
 
-      // .set doesn't accepts these
-      delete cookie.hostOnly;
-      delete cookie.session;
-      delete cookie.storeId;
-
-      // .set wants url
-      cookie.url = url;
       let c = null;
       try {
         // resolves to the cookie in Chrome (MV3 promises) and Firefox (browser.* promises)
-        c = await api.cookies.set(cookie);
+        c = await api.cookies.set(details);
       } catch (error) {
-        console.error(error);
+        c = null;
       }
 
       if (c == null) {
-        console.error(
-          "Error while restoring the cookie for the URL " + cookie.url
-        );
-        console.error(JSON.stringify(cookie));
-        console.error(JSON.stringify(api.runtime.lastError));
-        unknownErrWarning(cookie.name, cookie.url)
+        unknownErrWarning(cookie.name, url)
       } else {
         total++;
         updateRestoreProgressBar(total)
@@ -427,11 +471,11 @@ function addToWarningMessageList(node) {
 }
 
 function getEncPasswd() {
-  return document.getElementById("inp-enc-passwd").value.trim();
+  return document.getElementById("inp-enc-passwd").value;
 }
 
 function getDecPasswd() {
-  return document.getElementById("inp-dec-passwd").value.trim();
+  return document.getElementById("inp-dec-passwd").value;
 }
 
 function initRestoreProgressBar(maxVal) {
@@ -487,8 +531,6 @@ async function sendMessageWithRetry(msg) {
 }
 
 async function downloadJson(data, filename) {
-  console.log("downloadJson start", filename);
-
   if (isFirefox) {
     // Firefox rejects data: URLs in downloads.download ("Access denied"), so
     // a blob: URL is needed, but it must be created by the background script:
@@ -503,7 +545,6 @@ async function downloadJson(data, filename) {
         filename: filename
       });
     } catch (error) {
-      console.error(error);
       addToWarningMessageList(createWarning(t("downloadFailed", { error: error?.message || error })));
       return;
     }
@@ -519,7 +560,7 @@ async function downloadJson(data, filename) {
     return;
   }
 
-  const blob = new Blob([data], { type: "application/ckz" });
+  const blob = new Blob([data], { type: "application/octet-stream" });
 
   let url;
   try {
@@ -527,9 +568,7 @@ async function downloadJson(data, filename) {
     // ("Failed - Extension"), so use a data: URL there. A data: URL is just a
     // string, it doesn't depend on the popup staying alive.
     url = await readAsDataURL(blob);
-    console.log("prepared download url", url.slice(0, 30) + "...");
   } catch (error) {
-    console.error(error);
     addToWarningMessageList(createWarning(t("prepareFailed", { error: error?.message || error })))
     return;
   }
@@ -545,31 +584,29 @@ async function downloadJson(data, filename) {
   try {
     downloadId = await api.downloads.download(options);
   } catch (error) {
-    console.error(error);
     const msg = error?.message || error;
     addToWarningMessageList(createWarning(t("downloadRejected", { msg })))
     return;
   }
 
   if (downloadId == null) {
-    const msg = api.runtime?.lastError?.message || "download returned no id";
-    console.error(msg);
+    const msg = "download returned no id";
     addToWarningMessageList(createWarning(t("downloadFailed", { error: msg })))
     return;
   }
-
-  console.log("download started, id:", downloadId);
 
   const listener = (delta) => {
     if (delta?.id != downloadId) {
       return;
     }
     if (delta?.state?.current == "complete") {
-      Promise.resolve(api.downloads.show(downloadId)).catch(() => {});
+      try {
+        const shown = api.downloads.show(downloadId);
+        if (shown && typeof shown.catch === "function") shown.catch(() => {});
+      } catch (e) {}
       api.downloads.onChanged.removeListener(listener);
     } else if (delta?.state?.current == "interrupted") {
       const msg = delta?.error?.current || "unknown";
-      console.error("download interrupted:", msg);
       addToWarningMessageList(createWarning(t("downloadInterrupted", { msg })))
       api.downloads.onChanged.removeListener(listener);
     }
@@ -584,8 +621,7 @@ function getCkzFileDataAsText(cb) {
     reader.onload = (e) => {
       cb(e.target.result);
     }
-    reader.onerror = (e) => {
-      console.error(e);
+    reader.onerror = () => {
       alert(t("readError"));
     }
   } else {

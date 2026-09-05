@@ -99,6 +99,11 @@ body.standalone .container-main-screen {
   width: 340px;
 }
 
+body.standalone textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+
 #open-tab-wrap {
   margin: 10px 6px;
 }
@@ -328,7 +333,7 @@ input[type="file"]::file-selector-button {
   touch-action: manipulation;
   vertical-align: middle;
   white-space: nowrap;
-  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 input[type="file"]::file-selector-button:hover {
@@ -392,7 +397,6 @@ input[type="file"]::file-selector-button:active {
 }
 
 .gap-5px,
-.gap-10px,
 .gap-15px {
   display: flex;
   flex-direction: column;
@@ -401,10 +405,6 @@ input[type="file"]::file-selector-button:active {
 
 .gap-15px {
   row-gap: 15px;
-}
-
-.gap-10px {
-  row-gap: 10px;
 }
 
 .gap-5px {

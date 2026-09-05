@@ -6,10 +6,7 @@
 const isFirefox = typeof browser !== "undefined";
 const api = isFirefox ? browser : chrome;
 
-console.log("[bg] background loaded, isFirefox =", isFirefox);
-
 api.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log("[bg] got message:", message?.type);
   if (!message || message.type !== "downloadBackup") {
     return;
   }
@@ -24,7 +21,7 @@ api.runtime.onMessage.addListener((message, sender, sendResponse) => {
 async function downloadBackup(data, filename) {
   // the blob belongs to this context, so its URL stays valid even after the
   // popup has been closed
-  const blob = new Blob([data], { type: "application/ckz" });
+  const blob = new Blob([data], { type: "application/octet-stream" });
   const url = URL.createObjectURL(blob);
 
   let id;
@@ -37,7 +34,6 @@ async function downloadBackup(data, filename) {
       // closing the popup can no longer revoke its URL
       saveAs: true
     });
-    console.log("[bg] download started, id:", id);
   } catch (error) {
     URL.revokeObjectURL(url);
     throw error;
@@ -48,11 +44,13 @@ async function downloadBackup(data, filename) {
     if (delta?.state?.current == "complete") {
       api.downloads.onChanged.removeListener(listener);
       URL.revokeObjectURL(url);
-      Promise.resolve(api.downloads.show(id)).catch(() => {});
+      try {
+        const shown = api.downloads.show(id);
+        if (shown && typeof shown.catch === "function") shown.catch(() => {});
+      } catch (e) {}
     } else if (delta?.state?.current == "interrupted") {
       api.downloads.onChanged.removeListener(listener);
       URL.revokeObjectURL(url);
-      console.error("download interrupted:", delta?.error?.current);
     }
   };
   api.downloads.onChanged.addListener(listener);
