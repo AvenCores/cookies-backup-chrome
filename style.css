@@ -307,6 +307,34 @@ textarea:focus {
   border-radius: 6px;
   outline: none;
   box-shadow: var(--input-shadow) 0px 1px 0px 0px inset;
+  cursor: pointer;
+  transition: background-color 0.15s ease-in-out, color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out;
+}
+
+/* light up the enter button once the password meets minlength (3 chars) */
+.two-col-group input:valid + .btn-enter {
+  background-color: #2ea44f;
+  border-color: rgba(27, 31, 35, 0.15);
+  color: #fff;
+}
+
+.two-col-group input:valid + .btn-enter:hover {
+  background-color: #2c974b;
+}
+
+.two-col-group input:valid + .btn-enter:active {
+  background-color: #298e46;
+}
+
+[data-theme="dark"] .two-col-group input:valid + .btn-enter {
+  background-color: #238636;
+  border-color: rgba(240, 246, 252, 0.1);
+}
+
+[data-theme="dark"] .two-col-group input:valid + .btn-enter:hover,
+[data-theme="dark"] .two-col-group input:valid + .btn-enter:active {
+  background-color: #2ea043;
 }
 
 input[type="file"] {
