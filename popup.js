@@ -12,6 +12,9 @@ const LOCALES_LIST =
     ? AVAILABLE_LOCALES
     : [{ code: "en", name: "English" }];
 let currentLocale = "en";
+// "auto" = follow the browser UI language (default), otherwise an explicit locale code
+const AUTO_LOCALE = "auto";
+let localeMode = AUTO_LOCALE;
 const RTL_LOCALES = ["ar"];
 // flags shown in the custom language menu (native <select> can't render them)
 const LOCALE_FLAGS = {
@@ -75,10 +78,14 @@ function normalizeLocale(raw) {
   return null;
 }
 
-function detectLocale() {
+async function detectLocale() {
   const candidates = [];
   try {
-    if (api?.i18n?.getUILanguage) candidates.push(api.i18n.getUILanguage());
+    if (api?.i18n?.getUILanguage) {
+      const v = api.i18n.getUILanguage();
+      // Chrome returns a plain string, Firefox may return a Promise
+      candidates.push(v && typeof v.then === "function" ? await v : v);
+    }
   } catch (e) {}
   try {
     if (Array.isArray(navigator.languages)) candidates.push(...navigator.languages);
@@ -158,13 +165,24 @@ function updateThemeToggleLabel(theme) {
 }
 
 async function initI18n() {
+  let saved = null;
   try {
-    const res = await api.storage.local.get("locale");
-    const saved = normalizeLocale(res?.locale);
-    currentLocale = saved || detectLocale();
-  } catch (error) {
-    currentLocale = detectLocale();
+    saved = (await api.storage.local.get("locale"))?.locale;
+  } catch (error) {}
+  if (saved === AUTO_LOCALE || saved == null) {
+    // default: follow the browser UI language
+    localeMode = AUTO_LOCALE;
+  } else {
+    const norm = normalizeLocale(saved);
+    localeMode = norm || AUTO_LOCALE;
+    if (!norm) {
+      // repair stale/invalid values left by older versions
+      try {
+        await api.storage.local.set({ locale: AUTO_LOCALE });
+      } catch (e) {}
+    }
   }
+  currentLocale = localeMode === AUTO_LOCALE ? await detectLocale() : localeMode;
   applyI18n();
   wireLocalePicker();
 }
@@ -172,34 +190,47 @@ async function initI18n() {
 function updateLocaleButton() {
   const btn = document.getElementById("locale-button");
   if (!btn) return;
-  const entry = LOCALES_LIST.find((e) => e.code === currentLocale) || { name: currentLocale };
-  document.getElementById("locale-flag").textContent = localeFlag(currentLocale);
-  document.getElementById("locale-current").textContent = entry.name;
-  const label = tr("localeLabel");
-  btn.setAttribute("aria-label", label);
-  btn.title = label;
+  const isAuto = localeMode === AUTO_LOCALE;
+  const flagEl = document.getElementById("locale-flag");
+  const curEl = document.getElementById("locale-current");
+  if (isAuto) {
+    if (flagEl) flagEl.textContent = "🌐";
+    if (curEl) curEl.textContent = tr("autoOption");
+  } else {
+    const entry = LOCALES_LIST.find((e) => e.code === currentLocale) || { name: currentLocale };
+    if (flagEl) flagEl.textContent = localeFlag(currentLocale);
+    if (curEl) curEl.textContent = entry.name;
+  }
+  btn.setAttribute("aria-label", tr("localeLabel"));
+  btn.title = isAuto ? tr("autoHint") : tr("localeLabel");
+}
+
+function appendLocaleOption(menu, code, flagText, nameText, selected) {
+  const li = document.createElement("li");
+  li.className = "locale-option" + (selected ? " selected" : "");
+  li.setAttribute("role", "option");
+  li.setAttribute("aria-selected", selected ? "true" : "false");
+  li.dataset.code = code;
+  const flag = document.createElement("span");
+  flag.className = "locale-flag";
+  flag.setAttribute("aria-hidden", "true");
+  flag.textContent = flagText;
+  const name = document.createElement("span");
+  name.className = "locale-name";
+  name.textContent = nameText;
+  li.append(flag, name);
+  li.addEventListener("click", () => selectLocale(code));
+  menu.appendChild(li);
 }
 
 function buildLocaleMenu() {
   const menu = document.getElementById("locale-menu");
   if (!menu) return;
   menu.replaceChildren();
+  appendLocaleOption(menu, AUTO_LOCALE, "🌐", tr("autoOption"), localeMode === AUTO_LOCALE);
   for (const entry of LOCALES_LIST) {
-    const li = document.createElement("li");
-    li.className = "locale-option" + (entry.code === currentLocale ? " selected" : "");
-    li.setAttribute("role", "option");
-    li.setAttribute("aria-selected", entry.code === currentLocale ? "true" : "false");
-    li.dataset.code = entry.code;
-    const flag = document.createElement("span");
-    flag.className = "locale-flag";
-    flag.setAttribute("aria-hidden", "true");
-    flag.textContent = localeFlag(entry.code);
-    const name = document.createElement("span");
-    name.className = "locale-name";
-    name.textContent = entry.name;
-    li.append(flag, name);
-    li.addEventListener("click", () => selectLocale(entry.code));
-    menu.appendChild(li);
+    const selected = localeMode !== AUTO_LOCALE && entry.code === currentLocale;
+    appendLocaleOption(menu, entry.code, localeFlag(entry.code), entry.name, selected);
   }
 }
 
@@ -244,11 +275,20 @@ function wireLocalePicker() {
 }
 
 async function selectLocale(code) {
-  const norm = normalizeLocale(code) || "en";
-  currentLocale = norm;
-  try {
-    await api.storage.local.set({ locale: currentLocale });
-  } catch (e) {}
+  if (code === AUTO_LOCALE) {
+    localeMode = AUTO_LOCALE;
+    try {
+      await api.storage.local.set({ locale: AUTO_LOCALE });
+    } catch (e) {}
+    currentLocale = await detectLocale();
+  } else {
+    const norm = normalizeLocale(code) || "en";
+    localeMode = norm;
+    currentLocale = norm;
+    try {
+      await api.storage.local.set({ locale: currentLocale });
+    } catch (e) {}
+  }
   applyI18n();
   closeLocaleMenu();
 }

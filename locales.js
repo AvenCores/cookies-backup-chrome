@@ -70,7 +70,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Export .json anyway",
   "jsonRestoreAnyway": "Restore .json anyway",
   "cancelBtn": "Cancel",
-  "notBackupFile": "Not a .ckz or .json file. Please select again!"
+  "notBackupFile": "Not a .ckz or .json file. Please select again!",
+  "autoOption": "Auto",
+  "autoHint": "Follow the browser language"
 },
 "ru": {
   "appTitle": "Бэкап и восстановление cookies",
@@ -113,7 +115,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Всё равно сохранить .json",
   "jsonRestoreAnyway": "Всё равно восстановить .json",
   "cancelBtn": "Отмена",
-  "notBackupFile": "Это не .ckz и не .json файл. Выберите снова!"
+  "notBackupFile": "Это не .ckz и не .json файл. Выберите снова!",
+  "autoOption": "Авто",
+  "autoHint": "Следовать языку браузера"
 },
 "uk": {
   "appTitle": "Резервна копія та відновлення cookies",
@@ -156,7 +160,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Все одно зберегти .json",
   "jsonRestoreAnyway": "Все одно відновити .json",
   "cancelBtn": "Скасувати",
-  "notBackupFile": "Це не .ckz і не .json файл. Виберіть знову!"
+  "notBackupFile": "Це не .ckz і не .json файл. Виберіть знову!",
+  "autoOption": "Авто",
+  "autoHint": "Дотримуватися мови браузера"
 },
 "de": {
   "appTitle": "Cookies sichern & wiederherstellen",
@@ -199,7 +205,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": ".json trotzdem exportieren",
   "jsonRestoreAnyway": ".json trotzdem wiederherstellen",
   "cancelBtn": "Abbrechen",
-  "notBackupFile": "Keine .ckz- oder .json-Datei. Bitte erneut wählen!"
+  "notBackupFile": "Keine .ckz- oder .json-Datei. Bitte erneut wählen!",
+  "autoOption": "Auto",
+  "autoHint": "Browsersprache folgen"
 },
 "fr": {
   "appTitle": "Sauvegarde et restauration des cookies",
@@ -242,7 +250,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Exporter le .json quand même",
   "jsonRestoreAnyway": "Restaurer le .json quand même",
   "cancelBtn": "Annuler",
-  "notBackupFile": "Ce n’est ni un fichier .ckz ni .json. Veuillez réessayer !"
+  "notBackupFile": "Ce n’est ni un fichier .ckz ni .json. Veuillez réessayer !",
+  "autoOption": "Auto",
+  "autoHint": "Suivre la langue du navigateur"
 },
 "es": {
   "appTitle": "Copia de seguridad y restauración de cookies",
@@ -285,7 +295,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Exportar .json igualmente",
   "jsonRestoreAnyway": "Restaurar .json igualmente",
   "cancelBtn": "Cancelar",
-  "notBackupFile": "No es un archivo .ckz ni .json. ¡Seleccione de nuevo!"
+  "notBackupFile": "No es un archivo .ckz ni .json. ¡Seleccione de nuevo!",
+  "autoOption": "Automático",
+  "autoHint": "Seguir el idioma del navegador"
 },
 "pt": {
   "appTitle": "Backup e restauração de cookies",
@@ -328,7 +340,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Exportar .json mesmo assim",
   "jsonRestoreAnyway": "Restaurar .json mesmo assim",
   "cancelBtn": "Cancelar",
-  "notBackupFile": "Não é um arquivo .ckz nem .json. Selecione novamente!"
+  "notBackupFile": "Não é um arquivo .ckz nem .json. Selecione novamente!",
+  "autoOption": "Automático",
+  "autoHint": "Seguir o idioma do navegador"
 },
 "it": {
   "appTitle": "Backup e ripristino dei cookie",
@@ -371,7 +385,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Esporta .json comunque",
   "jsonRestoreAnyway": "Ripristina .json comunque",
   "cancelBtn": "Annulla",
-  "notBackupFile": "Non è un file .ckz né .json. Seleziona di nuovo!"
+  "notBackupFile": "Non è un file .ckz né .json. Seleziona di nuovo!",
+  "autoOption": "Auto",
+  "autoHint": "Segui la lingua del browser"
 },
 "pl": {
   "appTitle": "Kopia zapasowa i przywracanie cookies",
@@ -414,7 +430,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Mimo to eksportuj .json",
   "jsonRestoreAnyway": "Mimo to przywróć .json",
   "cancelBtn": "Anuluj",
-  "notBackupFile": "To nie jest plik .ckz ani .json. Wybierz ponownie!"
+  "notBackupFile": "To nie jest plik .ckz ani .json. Wybierz ponownie!",
+  "autoOption": "Auto",
+  "autoHint": "Używaj języka przeglądarki"
 },
 "nl": {
   "appTitle": "Cookies back-uppen & herstellen",
@@ -457,7 +475,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": ".json toch exporteren",
   "jsonRestoreAnyway": ".json toch herstellen",
   "cancelBtn": "Annuleren",
-  "notBackupFile": "Geen .ckz- of .json-bestand. Selecteer opnieuw!"
+  "notBackupFile": "Geen .ckz- of .json-bestand. Selecteer opnieuw!",
+  "autoOption": "Auto",
+  "autoHint": "Browsertaal volgen"
 },
 "sv": {
   "appTitle": "Säkerhetskopiera & återställ cookies",
@@ -500,7 +520,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Exportera .json ändå",
   "jsonRestoreAnyway": "Återställ .json ändå",
   "cancelBtn": "Avbryt",
-  "notBackupFile": "Inte en .ckz- eller .json-fil. Välj igen!"
+  "notBackupFile": "Inte en .ckz- eller .json-fil. Välj igen!",
+  "autoOption": "Auto",
+  "autoHint": "Följ webbläsarens språk"
 },
 "da": {
   "appTitle": "Backup & gendannelse af cookies",
@@ -543,7 +565,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Eksporter .json alligevel",
   "jsonRestoreAnyway": "Gendan .json alligevel",
   "cancelBtn": "Annuller",
-  "notBackupFile": "Ikke en .ckz- eller .json-fil. Vælg igen!"
+  "notBackupFile": "Ikke en .ckz- eller .json-fil. Vælg igen!",
+  "autoOption": "Auto",
+  "autoHint": "Følg browsersproget"
 },
 "fi": {
   "appTitle": "Evästeiden varmuuskopiointi ja palautus",
@@ -586,7 +610,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Vie .json silti",
   "jsonRestoreAnyway": "Palauta .json silti",
   "cancelBtn": "Peruuta",
-  "notBackupFile": "Ei .ckz- eikä .json-tiedosto. Valitse uudelleen!"
+  "notBackupFile": "Ei .ckz- eikä .json-tiedosto. Valitse uudelleen!",
+  "autoOption": "Auto",
+  "autoHint": "Seuraa selaimen kieltä"
 },
 "no": {
   "appTitle": "Sikkerhetskopier & gjenopprett informasjonskapsler",
@@ -629,7 +655,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Eksporter .json likevel",
   "jsonRestoreAnyway": "Gjenopprett .json likevel",
   "cancelBtn": "Avbryt",
-  "notBackupFile": "Ikke en .ckz- eller .json-fil. Velg igjen!"
+  "notBackupFile": "Ikke en .ckz- eller .json-fil. Velg igjen!",
+  "autoOption": "Auto",
+  "autoHint": "Følg nettleserens språk"
 },
 "cs": {
   "appTitle": "Záloha a obnova cookies",
@@ -672,7 +700,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Přesto exportovat .json",
   "jsonRestoreAnyway": "Přesto obnovit .json",
   "cancelBtn": "Zrušit",
-  "notBackupFile": "Není to soubor .ckz ani .json. Vyberte znovu!"
+  "notBackupFile": "Není to soubor .ckz ani .json. Vyberte znovu!",
+  "autoOption": "Auto",
+  "autoHint": "Řídit se jazykem prohlížeče"
 },
 "sk": {
   "appTitle": "Záloha a obnova cookies",
@@ -715,7 +745,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Napriek tomu exportovať .json",
   "jsonRestoreAnyway": "Napriek tomu obnoviť .json",
   "cancelBtn": "Zrušiť",
-  "notBackupFile": "Nie je to súbor .ckz ani .json. Vyberte znova!"
+  "notBackupFile": "Nie je to súbor .ckz ani .json. Vyberte znova!",
+  "autoOption": "Auto",
+  "autoHint": "Riadiť sa jazykom prehliadača"
 },
 "hu": {
   "appTitle": "Cookie-k biztonsági mentése és visszaállítása",
@@ -758,7 +790,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": ".json exportálása mégis",
   "jsonRestoreAnyway": ".json visszaállítása mégis",
   "cancelBtn": "Mégse",
-  "notBackupFile": "Nem .ckz vagy .json fájl. Válasszon újra!"
+  "notBackupFile": "Nem .ckz vagy .json fájl. Válasszon újra!",
+  "autoOption": "Auto",
+  "autoHint": "A böngésző nyelvét követi"
 },
 "ro": {
   "appTitle": "Backup și restaurare cookies",
@@ -801,7 +835,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Exportă .json oricum",
   "jsonRestoreAnyway": "Restaurează .json oricum",
   "cancelBtn": "Anulează",
-  "notBackupFile": "Nu este un fișier .ckz sau .json. Selectați din nou!"
+  "notBackupFile": "Nu este un fișier .ckz sau .json. Selectați din nou!",
+  "autoOption": "Auto",
+  "autoHint": "Folosește limba browserului"
 },
 "tr": {
   "appTitle": "Çerezleri yedekle ve geri yükle",
@@ -844,7 +880,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Yine de .json dışa aktar",
   "jsonRestoreAnyway": "Yine de .json geri yükle",
   "cancelBtn": "İptal",
-  "notBackupFile": ".ckz veya .json dosyası değil. Lütfen tekrar seçin!"
+  "notBackupFile": ".ckz veya .json dosyası değil. Lütfen tekrar seçin!",
+  "autoOption": "Otomatik",
+  "autoHint": "Tarayıcının dilini kullan"
 },
 "zh-CN": {
   "appTitle": "Cookie 备份与恢复",
@@ -887,7 +925,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "仍要导出 .json",
   "jsonRestoreAnyway": "仍要恢复 .json",
   "cancelBtn": "取消",
-  "notBackupFile": "不是 .ckz 或 .json 文件，请重新选择！"
+  "notBackupFile": "不是 .ckz 或 .json 文件，请重新选择！",
+  "autoOption": "自动",
+  "autoHint": "跟随浏览器语言"
 },
 "zh-TW": {
   "appTitle": "Cookie 備份與還原",
@@ -930,7 +970,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "仍要匯出 .json",
   "jsonRestoreAnyway": "仍要還原 .json",
   "cancelBtn": "取消",
-  "notBackupFile": "不是 .ckz 或 .json 檔案，請重新選擇！"
+  "notBackupFile": "不是 .ckz 或 .json 檔案，請重新選擇！",
+  "autoOption": "自動",
+  "autoHint": "跟隨瀏覽器語言"
 },
 "ja": {
   "appTitle": "Cookie のバックアップと復元",
@@ -973,7 +1015,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": ".json をそれでもエクスポート",
   "jsonRestoreAnyway": ".json をそれでも復元",
   "cancelBtn": "キャンセル",
-  "notBackupFile": ".ckz でも .json でもありません。もう一度選択してください！"
+  "notBackupFile": ".ckz でも .json でもありません。もう一度選択してください！",
+  "autoOption": "自動",
+  "autoHint": "ブラウザの言語に従う"
 },
 "ko": {
   "appTitle": "쿠키 백업 및 복원",
@@ -1016,7 +1060,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "그래도 .json 내보내기",
   "jsonRestoreAnyway": "그래도 .json 복원",
   "cancelBtn": "취소",
-  "notBackupFile": ".ckz 또는 .json 파일이 아닙니다. 다시 선택하세요!"
+  "notBackupFile": ".ckz 또는 .json 파일이 아닙니다. 다시 선택하세요!",
+  "autoOption": "자동",
+  "autoHint": "브라우저 언어 따르기"
 },
 "ar": {
   "appTitle": "نسخ الكوكيز احتياطيًا واستعادتها",
@@ -1059,7 +1105,9 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "تصدير .json على أي حال",
   "jsonRestoreAnyway": "استعادة .json على أي حال",
   "cancelBtn": "إلغاء",
-  "notBackupFile": "ليس ملف .ckz أو .json. اختر مجددًا!"
+  "notBackupFile": "ليس ملف .ckz أو .json. اختر مجددًا!",
+  "autoOption": "تلقائي",
+  "autoHint": "اتباع لغة المتصفح"
 },
 "hi": {
   "appTitle": "कुकीज़ बैकअप और रिस्टोर",
@@ -1102,6 +1150,8 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "फिर भी .json एक्सपोर्ट करें",
   "jsonRestoreAnyway": "फिर भी .json रिस्टोर करें",
   "cancelBtn": "रद्द करें",
-  "notBackupFile": ".ckz या .json फ़ाइल नहीं है। कृपया फिर से चुनें!"
+  "notBackupFile": ".ckz या .json फ़ाइल नहीं है। कृपया फिर से चुनें!",
+  "autoOption": "ऑटो",
+  "autoHint": "ब्राउज़र की भाषा का उपयोग करें"
 }
 };
