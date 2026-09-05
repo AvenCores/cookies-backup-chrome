@@ -272,14 +272,36 @@ function readAsDataURL(blob) {
 }
 
 async function downloadJson(data, filename) {
+  console.log("downloadJson start", filename);
+
+  if (!api.downloads || !api.downloads.download) {
+    addToWarningMessageList(createWarning("downloads API is not available!"))
+    alert("downloads API is not available!");
+    return;
+  }
+
   const blob = new Blob([data], { type: "application/ckz" });
+
+  let url;
+  try {
+    if (isFirefox) {
+      // Firefox natively supports blob: downloads (per MDN) but may not accept data: URLs
+      url = URL.createObjectURL(blob);
+    } else {
+      // Chrome blocks blob: URLs created on extension pages
+      // (they fail with "Failed - Extension"), so use a data: URL there
+      url = await readAsDataURL(blob);
+    }
+    console.log("prepared download url", url.slice(0, 30) + "...");
+  } catch (error) {
+    console.error(error);
+    addToWarningMessageList(createWarning(`Preparing the download failed: <b>${error?.message || error}</b>`))
+    return;
+  }
 
   let downloadId;
   try {
-    // Chrome blocks downloads of blob: URLs created on extension pages
-    // (they fail with "Failed - Extension"), so use a data: URL instead.
-    // Promise style: Firefox reports errors by rejecting, Chrome has lastError.
-    const url = await readAsDataURL(blob);
+    // Promise style: Firefox reports errors by rejecting the promise/errors
     downloadId = await api.downloads.download({
       url: url,
       filename: filename,
@@ -288,16 +310,19 @@ async function downloadJson(data, filename) {
     });
   } catch (error) {
     console.error(error);
-    alert(`Download failed: ${error?.message || error}`);
+    const msg = error?.message || error;
+    addToWarningMessageList(createWarning(`Download rejected: <b>${msg}</b>`))
     return;
   }
 
   if (downloadId == null) {
-    const lastError = api.runtime?.lastError;
-    console.error(lastError);
-    alert(`Download failed: ${lastError?.message || "unknown error"}`);
+    const msg = api.runtime?.lastError?.message || "download returned no id";
+    console.error(msg);
+    addToWarningMessageList(createWarning(`Download failed: <b>${msg}</b>`))
     return;
   }
+
+  console.log("download started, id:", downloadId);
 
   const listener = (delta) => {
     if (delta?.id != downloadId) {
@@ -306,8 +331,13 @@ async function downloadJson(data, filename) {
     if (delta?.state?.current == "complete") {
       // Firefox only added downloads.show recently, don't let it break the flow
       Promise.resolve(api.downloads.show(downloadId)).catch(() => {});
+      if (isFirefox) URL.revokeObjectURL(url);
       api.downloads.onChanged.removeListener(listener);
     } else if (delta?.state?.current == "interrupted") {
+      const msg = delta?.error?.current || "unknown";
+      console.error("download interrupted:", msg);
+      addToWarningMessageList(createWarning("Download interrupted: <b>" + msg + "</b>"))
+      if (isFirefox) URL.revokeObjectURL(url);
       api.downloads.onChanged.removeListener(listener);
     }
   };
