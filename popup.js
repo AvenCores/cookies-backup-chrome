@@ -429,10 +429,11 @@ async function handleEncPasswdSubmit(e) {
     clearMessages();
 
     // promise form works in both browsers; the callback form breaks on Firefox
-    // (browser.* ignores the callback and returns a promise instead)
+    // (browser.* ignores the callback and returns a promise instead);
+    // callExtensionApi additionally supports old callback-only Chromiums
     let cookies;
     try {
-      cookies = await api.cookies.getAll({});
+      cookies = await cookiesGetAll({});
     } catch (err) {
       addToWarningMessageList(createWarning("unknownError"));
       return;
@@ -494,7 +495,7 @@ async function handleJsonBackup() {
 
   let cookies;
   try {
-    cookies = await api.cookies.getAll({});
+    cookies = await cookiesGetAll({});
   } catch (err) {
     addToWarningMessageList(createWarning("unknownError"));
     return;
@@ -596,6 +597,64 @@ function handleDecPasswdSubmit(e) {
   })
 }
 
+// One cookie, several increasingly lenient ways to store it. The first
+// attempt preserves the backup 1:1; later ones drop or coerce only the bits
+// Chromium rejects while Firefox tolerates: a cookie store id from another
+// browser, SameSite=None without Secure, and the __Host-/__Secure- prefix
+// rules. Redundant attempts are deduplicated.
+function buildRestoreAttempts(base, cookie, host) {
+  const attempts = [];
+  const seen = new Set();
+  const push = (details) => {
+    const key = JSON.stringify(details, Object.keys(details).sort());
+    if (!seen.has(key)) {
+      seen.add(key);
+      attempts.push(details);
+    }
+  };
+
+  // 1:1 with the backup
+  push({ ...base });
+
+  // cookie stores are per browser/profile ("firefox-default" vs "0"): an
+  // unknown storeId rejects the whole set, so retry in the default store
+  let current = { ...base };
+  if (current.storeId !== undefined) {
+    const { storeId, ...noStore } = current;
+    current = { ...noStore };
+    push(current);
+  }
+
+  // Chromium rejects SameSite=None without Secure (Firefox historically
+  // allows it): retry with the default policy instead of losing the cookie
+  if (current.sameSite === "no_restriction" && current.secure !== true) {
+    const { sameSite, ...noSameSite } = current;
+    current = { ...noSameSite };
+    push(current);
+  }
+
+  // __Host- / __Secure- prefixed names have extra rules in Chromium
+  const name = cookie && typeof cookie.name === "string" ? cookie.name : "";
+  if (name.startsWith("__Host-")) {
+    const coerced = {
+      url: "https://" + host + "/",
+      name: current.name,
+      value: current.value,
+      path: "/",
+      secure: true
+    };
+    if (current.httpOnly !== undefined) coerced.httpOnly = current.httpOnly;
+    if (current.expirationDate !== undefined) coerced.expirationDate = current.expirationDate;
+    if (current.sameSite !== undefined) coerced.sameSite = current.sameSite;
+    push(coerced);
+  } else if (name.startsWith("__Secure-") && current.secure !== true) {
+    const coercedPath = typeof current.path === "string" ? current.path : "/";
+    push({ ...current, secure: true, url: "https://" + host + coercedPath });
+  }
+
+  return attempts;
+}
+
 async function restoreCookies(cookies) {
   // initialize progress bar
   initRestoreProgressBar(cookies.length)
@@ -607,6 +666,10 @@ async function restoreCookies(cookies) {
   // whose that concerned about that much accuracy of cookie expriation dates
   const epoch = new Date().getTime() / 1000;
 
+  // cookie stores are per browser/profile: a backup made in another browser
+  // carries store ids that do not exist here (see buildRestoreAttempts)
+  const validStoreIds = await getCookieStoreIds();
+
   for (const cookie of cookies) {
     if (!cookie || typeof cookie.name !== "string" || typeof cookie.value !== "string") {
       continue;
@@ -616,11 +679,12 @@ async function restoreCookies(cookies) {
     if (!domain) {
       continue;
     }
+    const host = domain.startsWith(".") ? domain.slice(1) : domain;
     let url =
       "http" +
       (cookie.secure ? "s" : "") +
       "://" +
-      (domain.startsWith(".") ? domain.slice(1) : domain) +
+      host +
       path;
 
     // Firefox writes "expirationDate: null" for session cookies, so guard before comparing
@@ -630,7 +694,7 @@ async function restoreCookies(cookies) {
     }
 
     // cookies.set accepts only a fixed set of fields; everything else
-    // (hostOnly, session, storeId, firstPartyDomain, partitionKey, ...) is rejected
+    // (hostOnly, session, firstPartyDomain, partitionKey, ...) is rejected
     const details = {
       url: url,
       name: cookie.name,
@@ -663,22 +727,39 @@ async function restoreCookies(cookies) {
       }
     }
     if (typeof cookie.storeId === "string" && cookie.storeId) {
-      details.storeId = cookie.storeId;
+      // unknown here = from another browser/profile, still tried first and
+      // then retried without it (see buildRestoreAttempts)
+      if (!validStoreIds || validStoreIds.has(cookie.storeId)) {
+        details.storeId = cookie.storeId;
+      }
     }
 
-    let c = null;
-    try {
-      // resolves to the cookie in Chrome (MV3 promises) and Firefox (browser.* promises)
-      c = await api.cookies.set(details);
-    } catch (error) {
-      c = null;
+    let restored = false;
+    let lastError = null;
+    for (const attempt of buildRestoreAttempts(details, cookie, host)) {
+      try {
+        // resolves to the cookie in Chrome (MV3 promises) and Firefox (browser.* promises)
+        const set = await cookiesSet(attempt);
+        if (set != null) {
+          restored = true;
+          break;
+        }
+        lastError = new Error("cookies.set returned no cookie");
+      } catch (error) {
+        lastError = error;
+      }
     }
 
-    if (c == null) {
-      unknownErrWarning(cookie.name, url)
-    } else {
+    if (restored) {
       total++;
       updateRestoreProgressBar(total)
+    } else {
+      // the user-facing message stays localizable and short; the technical
+      // reason goes to the console for bug reports
+      try {
+        console.warn("Cookie restore failed:", cookie.name, url, lastError && (lastError.message || lastError));
+      } catch (e) {}
+      unknownErrWarning(cookie.name, url)
     }
   }
 
@@ -844,62 +925,131 @@ function readAsDataURL(blob) {
   });
 }
 
-// the MV3 background can be asleep; the first sendMessage can then lose the
-// race against the listener registration in it, retry a few times
-async function sendMessageWithRetry(msg) {
-  for (let attempt = 0; attempt < 5; attempt++) {
-    try {
-      return await api.runtime.sendMessage(msg);
-    } catch (error) {
-      if (attempt === 4) throw error;
-      await new Promise((r) => setTimeout(r, 150));
+// Chrome's extension APIs were callback-only for a long time and return
+// promises only in recent versions; Firefox's browser.* APIs are promise-only
+// and ignore the callback argument. This helper accepts both forms: if the
+// call returns a thenable it is awaited, otherwise the callback fires and
+// runtime.lastError (read synchronously inside it) decides the outcome.
+function callExtensionApi(owner, name, ...args) {
+  return new Promise((resolve, reject) => {
+    if (!owner || typeof owner[name] !== "function") {
+      reject(new Error("API not available: " + String(name)));
+      return;
     }
-  }
+    let settled = false;
+    const timer = setTimeout(() => {
+      if (!settled) {
+        settled = true;
+        reject(new Error("API call timed out: " + String(name)));
+      }
+    }, 10000);
+    const settleOk = (value) => {
+      if (!settled) {
+        settled = true;
+        clearTimeout(timer);
+        resolve(value === undefined ? null : value);
+      }
+    };
+    const settleErr = (error) => {
+      if (!settled) {
+        settled = true;
+        clearTimeout(timer);
+        reject(error instanceof Error ? error : new Error(String(error)));
+      }
+    };
+    const callback = (result) => {
+      let lastError = null;
+      try {
+        lastError = api && api.runtime && api.runtime.lastError ? api.runtime.lastError : null;
+      } catch (e) {
+        lastError = null;
+      }
+      if (lastError) {
+        settleErr(new Error(lastError.message || String(lastError)));
+      } else {
+        settleOk(result);
+      }
+    };
+    let maybe;
+    try {
+      maybe = owner[name].apply(owner, [...args, callback]);
+    } catch (error) {
+      settleErr(error);
+      return;
+    }
+    if (maybe && typeof maybe.then === "function") {
+      maybe.then(settleOk, settleErr);
+    }
+    // otherwise the callback above settles the promise (or the timer fires)
+  });
+}
+
+function cookiesGetAll(filter) {
+  return callExtensionApi(api.cookies, "getAll", filter);
+}
+
+function cookiesSet(details) {
+  return callExtensionApi(api.cookies, "set", details);
+}
+
+function downloadsDownload(options) {
+  return callExtensionApi(api.downloads, "download", options);
+}
+
+// Known cookie store ids of this browser/profile ("0" in Chromium,
+// "firefox-default" in Firefox). A backup made in another browser carries a
+// storeId that does not exist here and every cookies.set with it is rejected,
+// so callers drop it. Null = unknown, keep the stored value on first attempt.
+async function getCookieStoreIds() {
+  try {
+    if (!api.cookies || typeof api.cookies.getAllCookieStores !== "function") {
+      return null;
+    }
+    const stores = await callExtensionApi(api.cookies, "getAllCookieStores");
+    if (Array.isArray(stores)) {
+      return new Set(stores.map((s) => s && s.id).filter(Boolean));
+    }
+  } catch (error) {}
+  return null;
 }
 
 async function downloadJson(data, filename) {
-  if (isFirefox) {
-    // Firefox rejects data: URLs in downloads.download ("Access denied"), so
-    // a blob: URL is needed, but it must be created by the background script:
-    // blob URLs are revoked together with the document that created them, and
-    // the popup closes on its first focus loss (the save dialog closes it),
-    // revoking the URL before the downloader reads it -> "Failed".
-    let res;
-    try {
-      res = await sendMessageWithRetry({
-        type: "downloadBackup",
-        data: data,
-        filename: filename
-      });
-    } catch (error) {
-      addToWarningMessageList(createWarning("downloadFailed", { error: error?.message || error }));
-      return false;
-    }
-    if (!res || !res.ok) {
-      addToWarningMessageList(createWarning("downloadFailed", { error: res?.error || tr("unknownError") }));
-      return false;
-    }
-    return true;
-  }
-
   if (!api.downloads || !api.downloads.download) {
     addToWarningMessageList(createWarning("noDownloadsApi"))
     alert(tr("noDownloadsApi"));
     return false;
   }
 
-  const blob = new Blob([data], { type: "application/octet-stream" });
-
-  let url;
+  let url = null;
+  let isBlobUrl = false;
   try {
-    // Chrome blocks blob: downloads started from extension pages
-    // ("Failed - Extension"), so use a data: URL there. A data: URL is just a
-    // string, it doesn't depend on the popup staying alive.
-    url = await readAsDataURL(blob);
+    const blob = new Blob([data], { type: "application/octet-stream" });
+    if (isFirefox) {
+      // The full UI runs in a tab on Firefox (see the standalone mode above),
+      // so this document outlives the save dialog and a blob URL created here
+      // stays valid. Downloading here also avoids the MV3 background, which
+      // has no URL.createObjectURL, while Firefox rejects data: URLs.
+      url = URL.createObjectURL(blob);
+      isBlobUrl = true;
+    } else {
+      // Chrome blocks blob: downloads started from extension pages
+      // ("Failed - Extension"), so use a data: URL there. A data: URL is just a
+      // string, it doesn't depend on the popup staying alive.
+      url = await readAsDataURL(blob);
+    }
   } catch (error) {
     addToWarningMessageList(createWarning("prepareFailed", { error: error?.message || error }))
     return false;
   }
+
+  const revoke = () => {
+    if (isBlobUrl && url) {
+      try {
+        URL.revokeObjectURL(url);
+      } catch (e) {}
+      url = null;
+    }
+  };
 
   const options = {
     url: url,
@@ -910,14 +1060,16 @@ async function downloadJson(data, filename) {
 
   let downloadId;
   try {
-    downloadId = await api.downloads.download(options);
+    downloadId = await downloadsDownload(options);
   } catch (error) {
+    revoke();
     const msg = error?.message || error;
     addToWarningMessageList(createWarning("downloadRejected", { msg }))
     return false;
   }
 
   if (downloadId == null) {
+    revoke();
     const msg = "download returned no id";
     addToWarningMessageList(createWarning("downloadFailed", { error: msg }))
     return false;
@@ -933,10 +1085,12 @@ async function downloadJson(data, filename) {
         if (shown && typeof shown.catch === "function") shown.catch(() => {});
       } catch (e) {}
       api.downloads.onChanged.removeListener(listener);
+      revoke();
     } else if (delta?.state?.current == "interrupted") {
       const msg = delta?.error?.current || "unknown";
       addToWarningMessageList(createWarning("downloadInterrupted", { msg }))
       api.downloads.onChanged.removeListener(listener);
+      revoke();
     }
   };
   api.downloads.onChanged.addListener(listener);

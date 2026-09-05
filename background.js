@@ -1,8 +1,8 @@
-// Downloads are performed here instead of in popup.js: Firefox revokes every
-// blob: URL together with the document that created it, and the popup dies on
-// its first focus loss (the "Save File" dialog, opening the downloads panel,
-// clicking away), so a blob created in the popup is already revoked by the
-// time the downloader reads it. The background context outlives the popup.
+// MV3 background context: a service worker in Chromium, an event page in
+// Firefox. The same file must run in both, so it can only rely on the worker
+// surface: service workers have no URL.createObjectURL and no FileReader.
+// Blob downloads are used when available (event page); otherwise the payload
+// is encoded as a data: URL by hand, which chrome.downloads accepts.
 const isFirefox = typeof browser !== "undefined";
 const api = isFirefox ? browser : chrome;
 
@@ -18,11 +18,41 @@ api.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true; // keep the channel open, the response is async
 });
 
+// Builds a data: URL from a string without FileReader/URL.createObjectURL,
+// which do not exist in service workers. TextEncoder and btoa exist in both
+// workers and documents. Chunked conversion avoids blowing the call stack on
+// large backups.
+function stringToDataUrl(data) {
+  const bytes = new TextEncoder().encode(data);
+  let binary = "";
+  const CHUNK = 0x8000;
+  for (let i = 0; i < bytes.length; i += CHUNK) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+  }
+  return "data:application/octet-stream;base64," + btoa(binary);
+}
+
 async function downloadBackup(data, filename) {
-  // the blob belongs to this context, so its URL stays valid even after the
-  // popup has been closed
-  const blob = new Blob([data], { type: "application/octet-stream" });
-  const url = URL.createObjectURL(blob);
+  // Prefer a blob URL where the platform has one; fall back to an inline
+  // data: URL in service workers (Chromium accepts it in downloads.download).
+  let url = null;
+  let isBlobUrl = false;
+  if (typeof URL !== "undefined" && typeof URL.createObjectURL === "function") {
+    const blob = new Blob([data], { type: "application/octet-stream" });
+    url = URL.createObjectURL(blob);
+    isBlobUrl = true;
+  } else {
+    url = stringToDataUrl(data);
+  }
+
+  const revoke = () => {
+    if (isBlobUrl && url) {
+      try {
+        URL.revokeObjectURL(url);
+      } catch (e) {}
+      url = null;
+    }
+  };
 
   let id;
   try {
@@ -30,12 +60,10 @@ async function downloadBackup(data, filename) {
       url: url,
       filename: filename,
       conflictAction: "uniquify",
-      // safe here: the blob lives in this context, so the save dialog
-      // closing the popup can no longer revoke its URL
       saveAs: true
     });
   } catch (error) {
-    URL.revokeObjectURL(url);
+    revoke();
     throw error;
   }
 
@@ -43,14 +71,14 @@ async function downloadBackup(data, filename) {
     if (delta?.id != id) return;
     if (delta?.state?.current == "complete") {
       api.downloads.onChanged.removeListener(listener);
-      URL.revokeObjectURL(url);
+      revoke();
       try {
         const shown = api.downloads.show(id);
         if (shown && typeof shown.catch === "function") shown.catch(() => {});
       } catch (e) {}
     } else if (delta?.state?.current == "interrupted") {
       api.downloads.onChanged.removeListener(listener);
-      URL.revokeObjectURL(url);
+      revoke();
     }
   };
   api.downloads.onChanged.addListener(listener);
