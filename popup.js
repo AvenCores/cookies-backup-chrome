@@ -2,32 +2,46 @@
 const isFirefox = typeof browser !== "undefined";
 const api = isFirefox ? browser : chrome;
 
+// null until the user picks a theme manually, then remembered in storage
+let savedTheme = null;
+const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)");
+
 function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
   const toggle = document.getElementById("theme-toggle");
   if (toggle) {
-    toggle.setAttribute("aria-checked", theme === "dark" ? "true" : "false");
+    const label =
+      theme === "dark" ? "Switch to light theme" : "Switch to dark theme";
+    toggle.setAttribute("aria-label", label);
+    toggle.title = label;
   }
 }
 
 async function initTheme() {
-  let theme = null;
   try {
     const res = await api.storage.local.get("theme");
-    theme = res?.theme;
+    savedTheme = res?.theme === "dark" || res?.theme === "light" ? res.theme : null;
   } catch (error) {
     console.error(error);
   }
-  applyTheme(theme === "dark" ? "dark" : "light");
+  // with no stored choice, follow the system theme
+  applyTheme(savedTheme || (systemPrefersDark.matches ? "dark" : "light"));
 }
 
+// keep following the system theme while the user hasn't picked one
+systemPrefersDark.addEventListener("change", (e) => {
+  if (!savedTheme) {
+    applyTheme(e.matches ? "dark" : "light");
+  }
+});
+
 document.getElementById("theme-toggle").addEventListener("click", () => {
-  const next =
+  savedTheme =
     document.documentElement.getAttribute("data-theme") === "dark"
       ? "light"
       : "dark";
-  applyTheme(next);
-  api.storage.local.set({ theme: next }).catch(console.error);
+  applyTheme(savedTheme);
+  api.storage.local.set({ theme: savedTheme }).catch(console.error);
 });
 
 initTheme();
