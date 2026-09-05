@@ -366,6 +366,89 @@ body.standalone textarea {
   background-color: #2ea043;
 }
 
+.btn-secondary {
+  appearance: none;
+  font-size: 12px;
+  background-color: var(--file-btn-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-sizing: border-box;
+  color: var(--text);
+  cursor: pointer;
+  display: inline-block;
+  font-weight: 500;
+  line-height: 20px;
+  padding: 5px 16px;
+  text-align: center;
+  user-select: none;
+  -webkit-user-select: none;
+  white-space: nowrap;
+}
+
+.btn-secondary:hover {
+  background-color: var(--file-btn-bg-hover);
+}
+
+.btn-secondary:active {
+  background-color: var(--file-btn-bg-active);
+}
+
+.btn-danger {
+  appearance: none;
+  font-size: 13px;
+  background-color: #cf222e;
+  border: 1px solid rgba(27, 31, 35, 0.15);
+  border-radius: 6px;
+  box-shadow: rgba(27, 31, 35, 0.1) 0 1px 0;
+  box-sizing: border-box;
+  color: #fff;
+  cursor: pointer;
+  display: inline-block;
+  font-weight: bold;
+  line-height: 20px;
+  padding: 5px 12px;
+  text-align: center;
+  user-select: none;
+  -webkit-user-select: none;
+  white-space: nowrap;
+}
+
+.btn-danger:hover {
+  background-color: #a40e26;
+}
+
+.btn-danger:focus {
+  box-shadow: rgba(207, 34, 46, 0.4) 0 0 0 3px;
+  outline: none;
+}
+
+.insecure-box {
+  display: flex;
+  flex-direction: column;
+  row-gap: 8px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1.5px solid var(--warning-border);
+  background-color: var(--warning-bg);
+  color: var(--warning-text);
+  font-size: 12px;
+  text-align: left;
+}
+
+.insecure-title {
+  font-weight: bold;
+  font-size: 13px;
+}
+
+.insecure-text {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.insecure-box .two-col-group {
+  justify-content: flex-start;
+}
+
 input[type="password"],
 textarea {
   width: 100%;

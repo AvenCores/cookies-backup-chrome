@@ -56,6 +56,23 @@
         <button class="btn-primary" type="button" role="button" id="btn-backup" data-i18n="backupBtn">
           Backup all cookies
         </button>
+        <button class="btn-secondary" type="button" id="btn-backup-json" data-i18n="backupJsonBtn">
+          Backup without password (.json)
+        </button>
+        <div class="insecure-box hidden" id="json-export-confirm">
+          <div class="insecure-title" data-i18n="jsonWarningTitle">⚠️ Insecure backup</div>
+          <p class="insecure-text" data-i18n="jsonWarningText">
+            A .json file stores your cookies in plain text WITHOUT encryption. Anyone who gets this file can steal your accounts. Prefer a password-protected .ckz backup.
+          </p>
+          <div class="two-col-group">
+            <button class="btn-danger" type="button" id="btn-json-export-confirm" data-i18n="jsonExportAnyway">
+              Export .json anyway
+            </button>
+            <button class="btn-enter text-muted" type="button" id="btn-json-export-cancel" data-i18n="cancelBtn">
+              Cancel
+            </button>
+          </div>
+        </div>
         <div class="wrap-card hidden text-center" id="enc-passwd">
           <form id="enc-passwd-form" class="gap-5px">
             <div>
@@ -84,18 +101,32 @@
       <div class="wrap" id="restore-wrap">
         <span class="title" data-i18n="restoreTitle">Restore Cookies</span>
         <div id="restore-upload-wrap" class="wrap-tight">
-          <label for="restore" data-i18n="selectFile">Select your latest .ckz file</label>
+          <label for="restore" data-i18n="selectFile">Select your latest .ckz or .json file</label>
           <input
             class="text-muted"
             type="file"
             id="restore"
             name="file"
-            accept=".ckz"
+            accept=".ckz,.json,application/json"
           />
         </div>
         <p class="text-center" id="btn-upload-fallback">
-          <a href="#" data-i18n="uploadFallback">Unable to upload a .ckz file?</a>
+          <a href="#" data-i18n="uploadFallback">Unable to upload a backup file?</a>
         </p>
+        <div class="insecure-box hidden" id="json-restore-confirm">
+          <div class="insecure-title" data-i18n="jsonWarningTitle">⚠️ Insecure backup</div>
+          <p class="insecure-text" data-i18n="jsonRestoreWarning">
+            This .json file is NOT encrypted. Cookies from it will be restored without a password, but anyone who had this file could have read or modified it. Continue only with files you trust.
+          </p>
+          <div class="two-col-group">
+            <button class="btn-danger" type="button" id="btn-json-restore-confirm" data-i18n="jsonRestoreAnyway">
+              Restore .json anyway
+            </button>
+            <button class="btn-enter text-muted" type="button" id="btn-json-restore-cancel" data-i18n="cancelBtn">
+              Cancel
+            </button>
+          </div>
+        </div>
         <div class="wrap-card hidden text-center" id="dec-passwd">
           <form id="dec-passwd-form" class="gap-15px">
             <div class="gap-5px hidden" id="restore-using-text-wrap">

@@ -333,6 +333,12 @@ document
 
 document.getElementById("btn-backup").onclick = showEncPasswordInputBox;
 
+document.getElementById("btn-backup-json").onclick = showJsonExportWarning;
+document.getElementById("btn-json-export-confirm").onclick = handleJsonBackup;
+document.getElementById("btn-json-export-cancel").onclick = hideJsonExportWarning;
+document.getElementById("btn-json-restore-confirm").onclick = handleJsonRestore;
+document.getElementById("btn-json-restore-cancel").onclick = hideJsonRestoreConfirm;
+
 document.getElementById("btn-upload-fallback").onclick = (e) => {
   if (e) e.preventDefault();
   showFallbackCkzInput();
@@ -364,11 +370,7 @@ async function handleEncPasswdSubmit(e) {
     }
     if (cookies.length > 0) {
       const data = sjcl.encrypt(pass, JSON.stringify(cookies), { ks: 256 });
-      // only using en-GB because it puts the date first
-      const d = new Date()
-      const date = d.toLocaleDateString("en-GB").replace(/\//g, "-");
-      const time = d.toLocaleTimeString("en-GB").replace(/:/g, "-");
-      const filename = `cookies-${date}-${time}.ckz`;
+      const filename = backupFileName("ckz");
       // show success only if the download actually started (user may cancel
       // the save dialog -> warning only, no misleading success)
       const started = await downloadJson(data, filename);
@@ -383,16 +385,110 @@ async function handleEncPasswdSubmit(e) {
 
 let cookieFile;
 
+function backupFileName(ext) {
+  // only using en-GB because it puts the date first
+  const d = new Date()
+  const date = d.toLocaleDateString("en-GB").replace(/\//g, "-");
+  const time = d.toLocaleTimeString("en-GB").replace(/:/g, "-");
+  return `cookies-${date}-${time}.${ext}`;
+}
+
+function showJsonExportWarning() {
+  document.getElementById("btn-backup-json").style.display = "none";
+  document.getElementById("json-export-confirm").classList.remove("hidden");
+}
+
+function hideJsonExportWarning() {
+  document.getElementById("json-export-confirm").classList.add("hidden");
+  document.getElementById("btn-backup-json").style.display = "";
+}
+
+function showJsonRestoreConfirm() {
+  hideDecPasswordInputBox();
+  document.getElementById("json-restore-confirm").classList.remove("hidden");
+}
+
+function hideJsonRestoreBox() {
+  document.getElementById("json-restore-confirm").classList.add("hidden");
+}
+
+function hideJsonRestoreConfirm() {
+  hideJsonRestoreBox();
+  // reset the file input so the user can pick the same file again if needed
+  const input = document.getElementById("restore");
+  if (input) input.value = "";
+  cookieFile = null;
+}
+
+async function handleJsonBackup() {
+  clearMessages();
+
+  let cookies;
+  try {
+    cookies = await api.cookies.getAll({});
+  } catch (err) {
+    addToWarningMessageList(createWarning(tr("unknownError")));
+    return;
+  }
+  if (!cookies || cookies.length === 0) {
+    alert(tr("noCookies"));
+    return;
+  }
+  // plain JSON: human-readable, NO password, NO encryption.
+  // The insecure-box above already warned the user before this runs.
+  const data = JSON.stringify(cookies, null, 2);
+  const filename = backupFileName("json");
+  const started = await downloadJson(data, filename);
+  if (started) backupSuccessAlert(cookies.length);
+}
+
+function handleJsonRestore() {
+  clearMessages();
+  getBackupFileDataAsText(async (data) => {
+    if (!data) {
+      alert(tr("invalidFile"));
+      return;
+    }
+    let cookies;
+    try {
+      cookies = JSON.parse(data);
+    } catch (error) {
+      alert(tr("invalidFile"));
+      return;
+    }
+    if (!Array.isArray(cookies)) {
+      alert(tr("invalidFile"));
+      return;
+    }
+    // extra safety: a .ckz payload is a JSON object/string, never an array,
+    // so an array here really is a plain-JSON backup
+    await restoreCookies(cookies);
+  });
+}
+
 function handleFileSelect(e) {
   cookieFile = e.target.files[0];
-  if (!cookieFile || !cookieFile.name.toLowerCase().endsWith(".ckz")) {
-    alert(tr("notCkz"));
+  if (!cookieFile) {
+    hideDecPasswordInputBox()
+    hideJsonRestoreConfirm()
+    return;
+  }
+  const name = cookieFile.name.toLowerCase();
+  if (name.endsWith(".json")) {
+    hideFallbackCkzButton()
+    showJsonRestoreConfirm()
+    return;
+  }
+  if (!name.endsWith(".ckz")) {
+    alert(tr("notBackupFile"));
     e.target.value = "";
     cookieFile = null;
     hideDecPasswordInputBox()
+    hideJsonRestoreBox()
     return;
   }
   hideFallbackCkzButton()
+  hideJsonRestoreBox()
   showDecPasswordInputBox()
 }
 
@@ -405,7 +501,7 @@ function handleDecPasswdSubmit(e) {
   }
 
   clearMessages();
-  getCkzFileDataAsText(async (data) => {
+  getBackupFileDataAsText(async (data) => {
     let cookies;
 
     try {
@@ -427,97 +523,101 @@ function handleDecPasswdSubmit(e) {
       return;
     }
 
-    // initialize progress bar
-    initRestoreProgressBar(cookies.length)
+    await restoreCookies(cookies);
+  })
+}
 
-    let total = 0;
+async function restoreCookies(cookies) {
+  // initialize progress bar
+  initRestoreProgressBar(cookies.length)
 
-    // lets save some syscalls by defining it once up here
-    // if i call it in the loop, its not gonna be very slow but hey,
-    // whose that concerned about that much accuracy of cookie expriation dates
-    const epoch = new Date().getTime() / 1000;
+  let total = 0;
 
-    for (const cookie of cookies) {
-      if (!cookie || typeof cookie.name !== "string" || typeof cookie.value !== "string") {
-        continue;
-      }
-      const domain = typeof cookie.domain === "string" ? cookie.domain : "";
-      const path = typeof cookie.path === "string" ? cookie.path : "/";
-      if (!domain) {
-        continue;
-      }
-      let url =
-        "http" +
-        (cookie.secure ? "s" : "") +
-        "://" +
-        (domain.startsWith(".") ? domain.slice(1) : domain) +
-        path;
+  // lets save some syscalls by defining it once up here
+  // if i call it in the loop, its not gonna be very slow but hey,
+  // whose that concerned about that much accuracy of cookie expriation dates
+  const epoch = new Date().getTime() / 1000;
 
-      // Firefox writes "expirationDate: null" for session cookies, so guard before comparing
-      if (cookie.expirationDate && epoch > cookie.expirationDate) {
-        expirationWarning(cookie.name, url)
-        continue;
-      }
+  for (const cookie of cookies) {
+    if (!cookie || typeof cookie.name !== "string" || typeof cookie.value !== "string") {
+      continue;
+    }
+    const domain = typeof cookie.domain === "string" ? cookie.domain : "";
+    const path = typeof cookie.path === "string" ? cookie.path : "/";
+    if (!domain) {
+      continue;
+    }
+    let url =
+      "http" +
+      (cookie.secure ? "s" : "") +
+      "://" +
+      (domain.startsWith(".") ? domain.slice(1) : domain) +
+      path;
 
-      // cookies.set accepts only a fixed set of fields; everything else
-      // (hostOnly, session, storeId, firstPartyDomain, partitionKey, ...) is rejected
-      const details = {
-        url: url,
-        name: cookie.name,
-        value: cookie.value,
-        path: path,
-      };
-      if (cookie.hostOnly !== true && domain) {
-        // if the cookie is hostOnly, we don't supply the domain
-        details.domain = domain;
-      }
-      // if session is true (or a Firefox-made backup has expirationDate: null),
-      // then expirationDate needs to be omitted
-      if (cookie.session !== true && cookie.expirationDate != null) {
-        details.expirationDate = cookie.expirationDate;
-      }
-      if (cookie.secure != null) details.secure = Boolean(cookie.secure);
-      if (cookie.httpOnly != null) details.httpOnly = Boolean(cookie.httpOnly);
-      // the sameSite enums differ between the two browsers
-      if (typeof cookie.sameSite === "string") {
-        let sameSite = cookie.sameSite;
-        if (sameSite === "lax_plus") sameSite = "lax";
-        else if (sameSite === "strict_plus") sameSite = "strict";
-        if (isFirefox) {
-          // Firefox only accepts these three, "unspecified"/others must be omitted
-          if (["no_restriction", "lax", "strict"].includes(sameSite)) {
-            details.sameSite = sameSite;
-          }
-        } else if (["no_restriction", "lax", "strict", "unspecified"].includes(sameSite)) {
-          details.sameSite = sameSite;
-        }
-      }
-      if (typeof cookie.storeId === "string" && cookie.storeId) {
-        details.storeId = cookie.storeId;
-      }
-
-      let c = null;
-      try {
-        // resolves to the cookie in Chrome (MV3 promises) and Firefox (browser.* promises)
-        c = await api.cookies.set(details);
-      } catch (error) {
-        c = null;
-      }
-
-      if (c == null) {
-        unknownErrWarning(cookie.name, url)
-      } else {
-        total++;
-        updateRestoreProgressBar(total)
-      }
+    // Firefox writes "expirationDate: null" for session cookies, so guard before comparing
+    if (cookie.expirationDate && epoch > cookie.expirationDate) {
+      expirationWarning(cookie.name, url)
+      continue;
     }
 
-    // update messages
-    restoreSuccessAlert(total, cookies.length)
+    // cookies.set accepts only a fixed set of fields; everything else
+    // (hostOnly, session, storeId, firstPartyDomain, partitionKey, ...) is rejected
+    const details = {
+      url: url,
+      name: cookie.name,
+      value: cookie.value,
+      path: path,
+    };
+    if (cookie.hostOnly !== true && domain) {
+      // if the cookie is hostOnly, we don't supply the domain
+      details.domain = domain;
+    }
+    // if session is true (or a Firefox-made backup has expirationDate: null),
+    // then expirationDate needs to be omitted
+    if (cookie.session !== true && cookie.expirationDate != null) {
+      details.expirationDate = cookie.expirationDate;
+    }
+    if (cookie.secure != null) details.secure = Boolean(cookie.secure);
+    if (cookie.httpOnly != null) details.httpOnly = Boolean(cookie.httpOnly);
+    // the sameSite enums differ between the two browsers
+    if (typeof cookie.sameSite === "string") {
+      let sameSite = cookie.sameSite;
+      if (sameSite === "lax_plus") sameSite = "lax";
+      else if (sameSite === "strict_plus") sameSite = "strict";
+      if (isFirefox) {
+        // Firefox only accepts these three, "unspecified"/others must be omitted
+        if (["no_restriction", "lax", "strict"].includes(sameSite)) {
+          details.sameSite = sameSite;
+        }
+      } else if (["no_restriction", "lax", "strict", "unspecified"].includes(sameSite)) {
+        details.sameSite = sameSite;
+      }
+    }
+    if (typeof cookie.storeId === "string" && cookie.storeId) {
+      details.storeId = cookie.storeId;
+    }
 
-    // hide progress bar
-    hideRestoreProgressBar()
-  })
+    let c = null;
+    try {
+      // resolves to the cookie in Chrome (MV3 promises) and Firefox (browser.* promises)
+      c = await api.cookies.set(details);
+    } catch (error) {
+      c = null;
+    }
+
+    if (c == null) {
+      unknownErrWarning(cookie.name, url)
+    } else {
+      total++;
+      updateRestoreProgressBar(total)
+    }
+  }
+
+  // update messages
+  restoreSuccessAlert(total, cookies.length)
+
+  // hide progress bar
+  hideRestoreProgressBar()
 }
 
 // NOTE: most of these methods are shallow, but i wanted to separate application logic from the DOM
@@ -576,6 +676,8 @@ function hideBackupButton() {
 
 function showEncPasswordInputBox(e) {
   hideBackupButton()
+  document.getElementById("btn-backup-json").style.display = "none";
+  document.getElementById("json-export-confirm").classList.add("hidden");
   document.getElementById("enc-passwd").style.display = "flex";
   // activate the input box
   document.getElementById("inp-enc-passwd").focus();
@@ -642,6 +744,8 @@ function showFallbackCkzInput() {
   // show the fallback
   document.getElementById("restore-using-text-wrap").style.display = "flex"
   document.getElementById("dec-passwd").style.display = "flex";
+  // plain-JSON paste uses the same textarea, so offer the insecure restore path too
+  document.getElementById("json-restore-confirm").classList.remove("hidden");
 }
 
 function getCkzFileContentsFromTextarea() {
@@ -756,7 +860,7 @@ async function downloadJson(data, filename) {
   return true;
 }
 
-function getCkzFileDataAsText(cb) {
+function getBackupFileDataAsText(cb) {
   if (cookieFile) {
     const reader = new FileReader();
     reader.readAsText(cookieFile);
@@ -769,4 +873,9 @@ function getCkzFileDataAsText(cb) {
   } else {
     cb(getCkzFileContentsFromTextarea())
   }
+}
+
+// legacy name, kept for compatibility
+function getCkzFileDataAsText(cb) {
+  return getBackupFileDataAsText(cb);
 }
