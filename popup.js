@@ -2,30 +2,25 @@
 const isFirefox = typeof browser !== "undefined";
 const api = isFirefox ? browser : chrome;
 
-// Firefox unloads the action popup the moment it loses focus, which happens as
-// soon as the native file picker opens, so the picked file dies with the popup
-// (bug 1292701, still unfixed). Instead of the picker, clicking it in the
-// popup opens this same UI in a standalone extension window, where file
-// selection works normally.
-if (isFirefox && !location.search.includes("standalone")) {
-  const restoreInput = document.getElementById("restore");
-  restoreInput.addEventListener(
-    "click",
+// Firefox unloads the action popup the moment it loses focus, and opening the
+// native file picker always steals the focus (bug 1292701), so a "Browse"
+// button can never return a file to the popup. On Firefox everything therefore
+// stays inside the popup: the .ckz file is copied in a file manager (Ctrl+C)
+// and pasted in here with Ctrl+V, which never takes focus away from the popup.
+if (isFirefox) {
+  document.getElementById("restore-upload-wrap").style.display = "none";
+  document.getElementById("btn-upload-fallback").classList.add("hidden");
+  document.getElementById("restore-using-text-wrap").classList.remove("hidden");
+
+  document.addEventListener(
+    "paste",
     (e) => {
+      const files = e.clipboardData && e.clipboardData.files;
+      if (!files || !files.length) {
+        return;
+      }
       e.preventDefault();
-      e.stopImmediatePropagation();
-      api.windows
-        .create({
-          url: api.runtime.getURL("popup.html?standalone=1"),
-          type: "popup",
-          width: 330,
-          height: 620
-        })
-        .then(() => window.close())
-        .catch((error) => {
-          console.error(error);
-          alert("Could not open the restore window!");
-        });
+      acceptRestoreFile(files[0]);
     },
     true
   );
@@ -71,7 +66,11 @@ function handleEncPasswdSubmit(e) {
 let cookieFile;
 
 function handleFileSelect(e) {
-  cookieFile = e.target.files[0];
+  acceptRestoreFile(e.target.files[0]);
+}
+
+function acceptRestoreFile(file) {
+  cookieFile = file;
   if (!cookieFile || !cookieFile.name.endsWith(".ckz")) {
     alert("Not a .ckz file. Please select again!");
     hideDecPasswordInputBox()
