@@ -271,6 +271,19 @@ function readAsDataURL(blob) {
   });
 }
 
+// the MV3 background can be asleep; the first sendMessage can then lose the
+// race against the listener registration in it, retry a few times
+async function sendMessageWithRetry(msg) {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    try {
+      return await api.runtime.sendMessage(msg);
+    } catch (error) {
+      if (attempt === 4) throw error;
+      await new Promise((r) => setTimeout(r, 150));
+    }
+  }
+}
+
 async function downloadJson(data, filename) {
   console.log("downloadJson start", filename);
 
@@ -278,12 +291,11 @@ async function downloadJson(data, filename) {
     // Firefox rejects data: URLs in downloads.download ("Access denied"), so
     // a blob: URL is needed, but it must be created by the background script:
     // blob URLs are revoked together with the document that created them, and
-    // the popup closes on its first focus loss (the "Save File" dialog closes
-    // it even without saveAs when "always ask where to save" is enabled),
+    // the popup closes on its first focus loss (the save dialog closes it),
     // revoking the URL before the downloader reads it -> "Failed".
     let res;
     try {
-      res = await api.runtime.sendMessage({
+      res = await sendMessageWithRetry({
         type: "downloadBackup",
         data: data,
         filename: filename

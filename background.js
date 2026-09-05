@@ -6,7 +6,10 @@
 const isFirefox = typeof browser !== "undefined";
 const api = isFirefox ? browser : chrome;
 
+console.log("[bg] background loaded, isFirefox =", isFirefox);
+
 api.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log("[bg] got message:", message?.type);
   if (!message || message.type !== "downloadBackup") {
     return;
   }
@@ -29,8 +32,12 @@ async function downloadBackup(data, filename) {
     id = await api.downloads.download({
       url: url,
       filename: filename,
-      conflictAction: "uniquify"
+      conflictAction: "uniquify",
+      // safe here: the blob lives in this context, so the save dialog
+      // closing the popup can no longer revoke its URL
+      saveAs: true
     });
+    console.log("[bg] download started, id:", id);
   } catch (error) {
     URL.revokeObjectURL(url);
     throw error;
