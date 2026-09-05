@@ -77,24 +77,55 @@
 
 ## 🚀 Установка
 
-### Из магазинов
+### Из магазинов (рекомендуется — подписанные сборки, автообновления)
 
 - Chrome / Chromium: [Chrome Web Store](https://chrome.google.com/webstore/detail/cookie-backup-and-restore/cndobhdcpmpilkebeebeecgminfhkpcj)
 - Firefox: [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/cookie-backup-and-restore/)
 
-### Вручную (Chromium)
+### Из файла в Releases — Chromium / Chrome / Edge / Opera / Brave
 
-1. Распакуйте `cookie-backup-chrome-<version>-chromium.zip` из [Releases](https://github.com/AvenCores/cookies-backup-chrome/releases) (или склонируйте репозиторий).
-2. Откройте `chrome://extensions`, включите «Режим разработчика».
-3. «Загрузить распакованное расширение» → выберите папку проекта.
+В [Releases](https://github.com/AvenCores/cookies-backup-chrome/releases) скачайте файл `cookie-backup-chrome-<version>-chromium.zip`.
 
-### Вручную (Firefox)
+Chrome и Chromium не умеют ставить `.zip` напрямую как подписанный пакет, установка — только как «распакованное расширение»:
 
-Работает на том же MV3-манифесте. Нюанс: в popup Firefox нельзя держать открытым нативный file-picker (popup выгружается при потере фокуса, bug 1292701), поэтому popup показывает только кнопку **Open Extension**, которая открывает тот же UI во вкладке `popup.html?standalone=1`, где выбор файла и вставка текста работают штатно.
+1. Распакуйте `.zip` в постоянную папку (не удаляйте её после установки — расширение работает из этой папки).
+2. Откройте `chrome://extensions` (в Edge — `edge://extensions`, в Opera — `opera://extensions`), включите «Режим разработчика».
+3. «Загрузить распакованное расширение» → выберите распакованную папку.
+4. Для обновления: скачайте новый `.zip` из Releases, распакуйте поверх старой папки и нажмите «Обновить» на странице расширений.
 
-1. Откройте `about:debugging#/runtime/this-firefox`.
-2. «Загрузить временное дополнение...» → выберите `manifest.json` из сборки `cookie-backup-chrome-<version>-firefox.xpi` из [Releases](https://github.com/AvenCores/cookies-backup-chrome/releases) (или соберите локально: скопируйте репозиторий и замените `manifest.json` содержимым `manifest.firefox.json` — для локальной проверки из исходников нужен именно Firefox-вариант).
-3. Для постоянной установки `.xpi` нужно подписать его в AMO (канал unlisted), временное дополнение слетает после перезапуска.
+Альтернатива — склонировать репозиторий и загрузить его папку таким же способом.
+
+### Из файла в Releases — Firefox (⚠️ файл без подписи)
+
+В [Releases](https://github.com/AvenCores/cookies-backup-chrome/releases) лежит файл `cookie-backup-chrome-<version>-firefox.xpi`.
+
+> ⚠️ Важно: этот `.xpi` **не подписан Mozilla (AMO)**. Обычный Firefox Release/Stable принимает к постоянной установке **только подписанные** `.xpi`. При попытке открыть файл двойным кликом Firefox выдаст ошибку вида «дополнение не может быть установлено, так как не прошло проверку / файл повреждён». Это ограничение Firefox, а не баг расширения. Для постоянной работы без лишних шагов ставьте версию из [Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/cookie-backup-and-restore/) — она подписана.
+>
+> Где ставится неподписанный `.xpi` из Releases:
+> - ✅ Firefox Nightly / Developer Edition с отключённой проверкой подписи — постоянно;
+> - ✅ Любой Firefox (включая Release) — временно, до перезапуска, через `about:debugging`;
+> - ❌ Firefox Release/Stable — постоянно поставить нельзя, только подписать самому через AMO (см. ниже).
+
+**Вариант А. Временно, в любом Firefox (слетает после перезапуска, удобно для проверки):**
+
+1. Скачайте `.xpi` из Releases.
+2. Откройте `about:debugging#/runtime/this-firefox`.
+3. «Загрузить временное дополнение...» → выберите скачанный `.xpi` (если Firefox просит `manifest.json` — распакуйте `.xpi` как обычный zip и выберите из него `manifest.json`).
+4. Расширение будет работать до закрытия браузера.
+
+Нюанс popup в Firefox: в popup нельзя держать открытым нативный file-picker (popup выгружается при потере фокуса, bug 1292701), поэтому popup показывает только кнопку **Open Extension**, которая открывает тот же UI во вкладке `popup.html?standalone=1`, где выбор файла и вставка текста работают штатно.
+
+**Вариант Б. Постоянно в Nightly / Developer Edition:**
+
+1. Откройте `about:config`, поставьте `xpinstall.signatures.required = false`.
+2. Откройте скачанный `.xpi` через `Ctrl+O` (или перетащите файл в окно Firefox) → «Установить».
+3. Расширение останется после перезапуска.
+
+**Вариант В. Подписать самому для постоянного использования в Release (канал unlisted в AMO):**
+
+1. Распакуйте `.xpi` (или соберите локально: скопируйте репозиторий и замените `manifest.json` содержимым `manifest.firefox.json`).
+2. Загрузите сборку на [addons.mozilla.org → Submit → unlisted](https://addons.mozilla.org/developers/) — Mozilla подпишет файл.
+3. Скачайте подписанный `.xpi` из AMO и установите его в свой Firefox навсегда.
 
 ## 📖 Использование
 
