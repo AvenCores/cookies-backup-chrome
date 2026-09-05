@@ -282,13 +282,20 @@ async function downloadJson(data, filename) {
 
   const blob = new Blob([data], { type: "application/ckz" });
 
-  // Use a data: URL in both browsers:
-  // - Chrome blocks blob: downloads started from extension pages ("Failed - Extension").
-  // - blob: URLs are tied to the popup document, and the popup closes as soon
-  //   as the save dialog steals focus, so the blob dies mid-download on Firefox too.
   let url;
   try {
-    url = await readAsDataURL(blob);
+    if (isFirefox) {
+      // Firefox rejects data: URLs in downloads.download ("Access denied"),
+      // so use a blob: URL. It must not be combined with saveAs: the save
+      // dialog closes the popup, which destroys the blob before the download
+      // starts. Without saveAs the download begins immediately and Firefox
+      // still honors the user's "always ask where to save" preference.
+      url = URL.createObjectURL(blob);
+    } else {
+      // Chrome blocks blob: downloads started from extension pages
+      // ("Failed - Extension"), so use a data: URL there
+      url = await readAsDataURL(blob);
+    }
     console.log("prepared download url", url.slice(0, 30) + "...");
   } catch (error) {
     console.error(error);
@@ -296,15 +303,19 @@ async function downloadJson(data, filename) {
     return;
   }
 
+  const options = {
+    url: url,
+    filename: filename,
+    conflictAction: "uniquify"
+  };
+  if (!isFirefox) {
+    options.saveAs = true;
+  }
+
   let downloadId;
   try {
     // Promise style: Firefox reports errors by rejecting the promise/errors
-    downloadId = await api.downloads.download({
-      url: url,
-      filename: filename,
-      saveAs: true,
-      conflictAction: "uniquify"
-    });
+    downloadId = await api.downloads.download(options);
   } catch (error) {
     console.error(error);
     const msg = error?.message || error;
@@ -328,11 +339,16 @@ async function downloadJson(data, filename) {
     if (delta?.state?.current == "complete") {
       // Firefox only added downloads.show recently, don't let it break the flow
       Promise.resolve(api.downloads.show(downloadId)).catch(() => {});
+      if (isFirefox) {
+        URL.revokeObjectURL(url)
+        addToSuccessMessageList(createSuccessAlert("Backup saved to your Downloads folder!"))
+      }
       api.downloads.onChanged.removeListener(listener);
     } else if (delta?.state?.current == "interrupted") {
       const msg = delta?.error?.current || "unknown";
       console.error("download interrupted:", msg);
       addToWarningMessageList(createWarning("Download interrupted: <b>" + msg + "</b>"))
+      if (isFirefox) URL.revokeObjectURL(url);
       api.downloads.onChanged.removeListener(listener);
     }
   };
