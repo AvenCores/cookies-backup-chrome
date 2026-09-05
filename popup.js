@@ -1,3 +1,6 @@
+// works on both Chrome and Firefox: Firefox exposes `browser`, Chrome exposes `chrome`
+const api = typeof browser !== "undefined" ? browser : chrome;
+
 document
   .getElementById("restore")
   .addEventListener("change", handleFileSelect, false);
@@ -19,7 +22,7 @@ function handleEncPasswdSubmit(e) {
 
   const pass = getEncPasswd();
 
-  chrome.cookies.getAll({}, (cookies) => {
+  api.cookies.getAll({}, (cookies) => {
     if (cookies.length > 0) {
       const data = sjcl.encrypt(pass, JSON.stringify(cookies), { ks: 256 });
       // only using en-GB because it puts the date first
@@ -111,19 +114,24 @@ function handleDecPasswdSubmit(e) {
       // .set doesn't accepts these
       delete cookie.hostOnly;
       delete cookie.session;
+      delete cookie.storeId;
 
       // .set wants url
       cookie.url = url;
-      let c = await new Promise((resolve, reject) => {
-        chrome.cookies.set(cookie, resolve);
-      });
+      let c = null;
+      try {
+        // resolves to the cookie in Chrome (MV3 promises) and Firefox (browser.* promises)
+        c = await api.cookies.set(cookie);
+      } catch (error) {
+        console.error(error);
+      }
 
       if (c == null) {
         console.error(
           "Error while restoring the cookie for the URL " + cookie.url
         );
         console.error(JSON.stringify(cookie));
-        console.error(JSON.stringify(chrome.runtime.lastError));
+        console.error(JSON.stringify(api.runtime.lastError));
         unknownErrWarning(cookie.name, cookie.url)
       } else {
         total++;
@@ -244,10 +252,10 @@ function downloadJson(data, filename) {
   const blob = new Blob([data], { type: "application/ckz" });
   const url = URL.createObjectURL(blob);
 
-  chrome.downloads.download({ url: url, filename: filename }, (id) => {
-    chrome.downloads.onChanged.addListener((delta) => {
-      if (delta?.state?.current == "complete") {
-        chrome.downloads.show(id)
+  api.downloads.download({ url: url, filename: filename }, (id) => {
+    api.downloads.onChanged.addListener((delta) => {
+      if (delta?.id == id && delta?.state?.current == "complete") {
+        api.downloads.show(id)
       }
     })
   });
