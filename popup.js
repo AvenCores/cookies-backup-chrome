@@ -2,19 +2,145 @@
 const isFirefox = typeof browser !== "undefined";
 const api = isFirefox ? browser : chrome;
 
+// ---- i18n (25 languages, see locales.js) ----
+let currentLocale = "en";
+const RTL_LOCALES = ["ar"];
+const _localeLowerMap = {};
+try {
+  for (const entry of AVAILABLE_LOCALES || []) {
+    _localeLowerMap[String(entry.code).toLowerCase()] = entry.code;
+  }
+} catch (e) {}
+
+function normalizeLocale(raw) {
+  if (!raw) return null;
+  const original = String(raw).replace(/_/g, "-");
+  const low = original.toLowerCase();
+  if (typeof TRANSLATIONS !== "undefined") {
+    if (TRANSLATIONS[original]) return original;
+  }
+  if (_localeLowerMap[low]) return _localeLowerMap[low];
+  // Chinese variants: Traditional -> zh-TW, everything else -> zh-CN
+  if (low.startsWith("zh")) {
+    if (/tw|hk|hant|mo/.test(low)) return _localeLowerMap["zh-tw"] || "zh-TW";
+    return _localeLowerMap["zh-cn"] || "zh-CN";
+  }
+  const base = low.split("-")[0];
+  if (_localeLowerMap[base]) return _localeLowerMap[base];
+  // fallback: first locale sharing the same base language
+  for (const code of Object.keys(_localeLowerMap)) {
+    if (code.split("-")[0] === base) return _localeLowerMap[code];
+  }
+  return null;
+}
+
+function detectLocale() {
+  const candidates = [];
+  try {
+    if (api?.i18n?.getUILanguage) candidates.push(api.i18n.getUILanguage());
+  } catch (e) {}
+  try {
+    if (Array.isArray(navigator.languages)) candidates.push(...navigator.languages);
+    if (navigator.language) candidates.push(navigator.language);
+  } catch (e) {}
+  for (const c of candidates) {
+    const norm = normalizeLocale(c);
+    if (norm) return norm;
+  }
+  return "en";
+}
+
+function t(key, params) {
+  const dict = (typeof TRANSLATIONS !== "undefined" && (TRANSLATIONS[currentLocale] || TRANSLATIONS["en"])) || {};
+  const fallback = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS["en"]) || {};
+  let text = dict[key] ?? fallback[key] ?? key;
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      let val = v;
+      if (typeof v === "number") {
+        try {
+          val = v.toLocaleString(currentLocale);
+        } catch (e) {
+          val = v.toLocaleString();
+        }
+      }
+      text = text.replaceAll(`{${k}}`, String(val));
+    }
+  }
+  return text;
+}
+
+function applyI18n() {
+  document.documentElement.lang = currentLocale;
+  document.documentElement.dir = RTL_LOCALES.includes(currentLocale.split("-")[0]) ? "rtl" : "ltr";
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.getAttribute("data-i18n");
+    if (key) el.textContent = t(key);
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-placeholder");
+    if (key) el.placeholder = t(key);
+  });
+  const select = document.getElementById("locale-select");
+  if (select) {
+    if (!select.options.length) {
+      for (const entry of AVAILABLE_LOCALES) {
+        const opt = document.createElement("option");
+        opt.value = entry.code;
+        opt.textContent = entry.name;
+        select.appendChild(opt);
+      }
+    }
+    select.value = currentLocale;
+    const label = t("localeLabel");
+    select.setAttribute("aria-label", label);
+    select.title = label;
+  }
+  // refresh theme toggle label for the new language
+  const theme = document.documentElement.getAttribute("data-theme") || "light";
+  updateThemeToggleLabel(theme);
+}
+
+function updateThemeToggleLabel(theme) {
+  const toggle = document.getElementById("theme-toggle");
+  if (!toggle) return;
+  const label = theme === "dark" ? t("themeToLight") : t("themeToDark");
+  toggle.setAttribute("aria-label", label);
+  toggle.title = label;
+}
+
+async function initI18n() {
+  try {
+    const res = await api.storage.local.get("locale");
+    const saved = normalizeLocale(res?.locale);
+    currentLocale = saved || detectLocale();
+  } catch (error) {
+    console.error(error);
+    currentLocale = detectLocale();
+  }
+  applyI18n();
+  const select = document.getElementById("locale-select");
+  if (select) {
+    select.addEventListener("change", async () => {
+      const norm = normalizeLocale(select.value) || "en";
+      currentLocale = norm;
+      try {
+        await api.storage.local.set({ locale: currentLocale });
+      } catch (e) {
+        console.error(e);
+      }
+      applyI18n();
+    });
+  }
+}
+
 // null until the user picks a theme manually, then remembered in storage
 let savedTheme = null;
 const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)");
 
 function applyTheme(theme) {
   document.documentElement.setAttribute("data-theme", theme);
-  const toggle = document.getElementById("theme-toggle");
-  if (toggle) {
-    const label =
-      theme === "dark" ? "Switch to light theme" : "Switch to dark theme";
-    toggle.setAttribute("aria-label", label);
-    toggle.title = label;
-  }
+  updateThemeToggleLabel(theme);
 }
 
 async function initTheme() {
@@ -46,6 +172,8 @@ document.getElementById("theme-toggle").addEventListener("click", () => {
 
 initTheme();
 
+initI18n();
+
 // The full UI cannot live in the Firefox action popup: opening the native
 // file picker steals the popup's focus and Firefox unloads the popup before
 // the file can be read (bug 1292701, still unfixed). So on Firefox the popup
@@ -62,7 +190,7 @@ if (location.search.includes("standalone")) {
       .then(() => window.close())
       .catch((error) => {
         console.error(error);
-        alert("Could not open the extension tab!");
+        alert(t("openTabFail"));
       });
   });
 }
@@ -99,7 +227,7 @@ function handleEncPasswdSubmit(e) {
       downloadJson(data, filename)
       backupSuccessAlert(cookies.length)
     } else {
-      alert("No cookies to backup!");
+      alert(t("noCookies"));
     }
   });
 }
@@ -109,7 +237,7 @@ let cookieFile;
 function handleFileSelect(e) {
   cookieFile = e.target.files[0];
   if (!cookieFile || !cookieFile.name.endsWith(".ckz")) {
-    alert("Not a .ckz file. Please select again!");
+    alert(t("notCkz"));
     hideDecPasswordInputBox()
     return;
   }
@@ -131,11 +259,11 @@ function handleDecPasswdSubmit(e) {
     } catch (error) {
       console.log(error);
       if (error instanceof sjcl.exception.corrupt) {
-        alert("Password incorrect!");
+        alert(t("wrongPassword"));
       } else if (error instanceof sjcl.exception.invalid) {
-        alert("File is not a valid .ckz file!");
+        alert(t("invalidFile"));
       } else {
-        alert("Unknown error!");
+        alert(t("unknownError"));
       }
       return;
     }
@@ -243,22 +371,23 @@ function createSuccessAlert(text) {
 
 function unknownErrWarning(cookie_name, cookie_url) {
   if (cookie_name && cookie_url) {
-    addToWarningMessageList(createWarning(`Cookie ${cookie_name} for the domain ${cookie_url} could not be restored`))
+    addToWarningMessageList(createWarning(t("cookieRestoreFail", { name: cookie_name, url: cookie_url })))
   }
 }
 
 function expirationWarning(cookie_name, cookie_url) {
   if (cookie_name && cookie_url) {
-    addToWarningMessageList(createWarning(`Cookie ${cookie_name} for the domain ${cookie_url} has expired`))
+    addToWarningMessageList(createWarning(t("cookieExpired", { name: cookie_name, url: cookie_url })))
   }
 }
 
 function backupSuccessAlert(totalCookies) {
-  addToSuccessMessageList(createSuccessAlert(`Successfully backed up <b>${totalCookies.toLocaleString()}</b> cookies!`))
+  const count = typeof totalCookies === "number" ? totalCookies : Number(totalCookies) || 0;
+  addToSuccessMessageList(createSuccessAlert(t("backupSuccess", { count })))
 }
 
 function restoreSuccessAlert(restoredCookies, totalCookies) {
-  addToSuccessMessageList(createSuccessAlert(`Successfully restored <b>${restoredCookies.toLocaleString()}</b> cookies out of <b>${totalCookies.toLocaleString()}</b>`));
+  addToSuccessMessageList(createSuccessAlert(t("restoreSuccess", { restored: restoredCookies, total: totalCookies })));
 }
 
 function hideBackupButton() {
@@ -367,18 +496,18 @@ async function downloadJson(data, filename) {
       });
     } catch (error) {
       console.error(error);
-      addToWarningMessageList(createWarning(`Download failed: <b>${error?.message || error}</b>`));
+      addToWarningMessageList(createWarning(t("downloadFailed", { error: error?.message || error })));
       return;
     }
     if (!res || !res.ok) {
-      addToWarningMessageList(createWarning(`Download failed: <b>${res?.error || "unknown error"}</b>`));
+      addToWarningMessageList(createWarning(t("downloadFailed", { error: res?.error || t("unknownError") })));
     }
     return;
   }
 
   if (!api.downloads || !api.downloads.download) {
-    addToWarningMessageList(createWarning("downloads API is not available!"))
-    alert("downloads API is not available!");
+    addToWarningMessageList(createWarning(t("noDownloadsApi")))
+    alert(t("noDownloadsApi"));
     return;
   }
 
@@ -393,7 +522,7 @@ async function downloadJson(data, filename) {
     console.log("prepared download url", url.slice(0, 30) + "...");
   } catch (error) {
     console.error(error);
-    addToWarningMessageList(createWarning(`Preparing the download failed: <b>${error?.message || error}</b>`))
+    addToWarningMessageList(createWarning(t("prepareFailed", { error: error?.message || error })))
     return;
   }
 
@@ -410,14 +539,14 @@ async function downloadJson(data, filename) {
   } catch (error) {
     console.error(error);
     const msg = error?.message || error;
-    addToWarningMessageList(createWarning(`Download rejected: <b>${msg}</b>`))
+    addToWarningMessageList(createWarning(t("downloadRejected", { msg })))
     return;
   }
 
   if (downloadId == null) {
     const msg = api.runtime?.lastError?.message || "download returned no id";
     console.error(msg);
-    addToWarningMessageList(createWarning(`Download failed: <b>${msg}</b>`))
+    addToWarningMessageList(createWarning(t("downloadFailed", { error: msg })))
     return;
   }
 
@@ -433,7 +562,7 @@ async function downloadJson(data, filename) {
     } else if (delta?.state?.current == "interrupted") {
       const msg = delta?.error?.current || "unknown";
       console.error("download interrupted:", msg);
-      addToWarningMessageList(createWarning("Download interrupted: <b>" + msg + "</b>"))
+      addToWarningMessageList(createWarning(t("downloadInterrupted", { msg })))
       api.downloads.onChanged.removeListener(listener);
     }
   };
@@ -449,7 +578,7 @@ function getCkzFileDataAsText(cb) {
     }
     reader.onerror = (e) => {
       console.error(e);
-      alert("Unknown error while reading the .ckz file!");
+      alert(t("readError"));
     }
   } else {
     cb(getCkzFileContentsFromTextarea())

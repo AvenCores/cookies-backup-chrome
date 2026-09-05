@@ -1,14 +1,21 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="utf-8" />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
     <div class="container-main-screen">
       <div id="header">
+        <select
+          id="locale-select"
+          class="locale-select"
+          aria-label="Language"
+          title="Language"
+        ></select>
         <div class="two-col-group text-center large-title">
           <img src="icons/48.png" width="20px" />
-          Cookies backup & restore
+          <span data-i18n="appTitle">Cookies backup & restore</span>
         </div>
         <button
           id="theme-toggle"
@@ -34,13 +41,13 @@
         </button>
       </div>
       <div class="wrap" id="backup-wrap">
-        <button class="btn-primary" role="button" id="btn-backup">
+        <button class="btn-primary" role="button" id="btn-backup" data-i18n="backupBtn">
           Backup all cookies
         </button>
         <div class="wrap-card hidden text-center" id="enc-passwd">
           <form id="enc-passwd-form" class="gap-5px">
             <div>
-              <small><b>Enter encryption password</b></small>
+              <small><b data-i18n="encTitle">Enter encryption password</b></small>
             </div>
             <div class="two-col-group">
               <input
@@ -50,10 +57,11 @@
                 minlength="3"
                 required
                 placeholder="password"
+                data-i18n-placeholder="encPlaceholder"
               />
               <button class="btn-enter text-muted">&#9166;</button>
             </div>
-            <small class="text-muted"
+            <small class="text-muted" data-i18n="encHint"
               >Please don't forget this password, You'll need it when you
               restore your cookies.</small
             >
@@ -61,9 +69,9 @@
         </div>
       </div>
       <div class="wrap" id="restore-wrap">
-        <span class="title">Restore Cookies</span>
+        <span class="title" data-i18n="restoreTitle">Restore Cookies</span>
         <div id="restore-upload-wrap" class="wrap-tight">
-          <label for="restore">Select your latest .ckz file</label>
+          <label for="restore" data-i18n="selectFile">Select your latest .ckz file</label>
           <input
             class="text-muted"
             type="file"
@@ -73,12 +81,12 @@
           />
         </div>
         <p class="text-center" id="btn-upload-fallback">
-          <a href="#">Unable to upload a .ckz file?</a>
+          <a href="#" data-i18n="uploadFallback">Unable to upload a .ckz file?</a>
         </p>
         <div class="wrap-card hidden text-center" id="dec-passwd">
           <form id="dec-passwd-form" class="gap-15px">
             <div class="gap-5px hidden" id="restore-using-text-wrap">
-              <small><b>Paste the contents of your .ckz file</b></small>
+              <small><b data-i18n="pasteTitle">Paste the contents of your .ckz file</b></small>
               <textarea
                 id="ckz-textarea"
                 rows="5"
@@ -87,7 +95,7 @@
               ></textarea>
             </div>
             <div class="gap-5px">
-              <small><b>Enter decryption password</b></small>
+              <small><b data-i18n="decTitle">Enter decryption password</b></small>
               <div class="two-col-group">
                 <input
                   type="password"
@@ -96,6 +104,7 @@
                   minlength="3"
                   required
                   placeholder="password"
+                  data-i18n-placeholder="decPlaceholder"
                 />
                 <button class="text-muted btn-enter">&#9166;</button>
               </div>
@@ -114,7 +123,7 @@
       <!-- credits -->
       <div id="credits" class="text-center text-muted">
         <small>
-          author
+          <span data-i18n="author">author</span>
           <a target="_blank" href="https://github.com/AvenCores">AvenCores</a>
           /
           <a
@@ -123,7 +132,7 @@
             >github</a
           >
           <br />
-          based on
+          <span data-i18n="basedOn">based on</span>
           <a
             target="_blank"
             href="https://github.com/candh/cookies-backup-chrome"
@@ -136,11 +145,12 @@
     <!-- shown instead of the full UI on Firefox: the tab has to do the work,
          the popup only launches it (see popup.js) -->
     <div id="open-tab-wrap" class="hidden text-center wrap">
-      <button class="btn-primary" id="btn-open-tab">Open Extension</button>
+      <button class="btn-primary" id="btn-open-tab" data-i18n="openExtension">Open Extension</button>
     </div>
   </body>
 
   <!-- https://bitwiseshiftleft.github.io/sjcl/sjcl.js -->
   <script src="sjcl.js"></script>
+  <script src="locales.js"></script>
   <script src="popup.js"></script>
 </html>
