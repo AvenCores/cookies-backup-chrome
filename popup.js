@@ -3,11 +3,19 @@ const isFirefox = typeof browser !== "undefined";
 const api = isFirefox ? browser : chrome;
 
 // ---- i18n (25 languages, see locales.js) ----
+// locales.js may fail to load (e.g. outdated package without the file),
+// so never crash: fall back to English-only.
+const LOCALES_LIST =
+  typeof AVAILABLE_LOCALES !== "undefined" &&
+  Array.isArray(AVAILABLE_LOCALES) &&
+  AVAILABLE_LOCALES.length
+    ? AVAILABLE_LOCALES
+    : [{ code: "en", name: "English" }];
 let currentLocale = "en";
 const RTL_LOCALES = ["ar"];
 const _localeLowerMap = {};
 try {
-  for (const entry of AVAILABLE_LOCALES || []) {
+  for (const entry of LOCALES_LIST) {
     _localeLowerMap[String(entry.code).toLowerCase()] = entry.code;
   }
 } catch (e) {}
@@ -84,7 +92,7 @@ function applyI18n() {
   const select = document.getElementById("locale-select");
   if (select) {
     if (!select.options.length) {
-      for (const entry of AVAILABLE_LOCALES) {
+      for (const entry of LOCALES_LIST) {
         const opt = document.createElement("option");
         opt.value = entry.code;
         opt.textContent = entry.name;
