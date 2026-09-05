@@ -274,6 +274,31 @@ function readAsDataURL(blob) {
 async function downloadJson(data, filename) {
   console.log("downloadJson start", filename);
 
+  if (isFirefox) {
+    // Firefox rejects data: URLs in downloads.download ("Access denied"), so
+    // a blob: URL is needed, but it must be created by the background script:
+    // blob URLs are revoked together with the document that created them, and
+    // the popup closes on its first focus loss (the "Save File" dialog closes
+    // it even without saveAs when "always ask where to save" is enabled),
+    // revoking the URL before the downloader reads it -> "Failed".
+    let res;
+    try {
+      res = await api.runtime.sendMessage({
+        type: "downloadBackup",
+        data: data,
+        filename: filename
+      });
+    } catch (error) {
+      console.error(error);
+      addToWarningMessageList(createWarning(`Download failed: <b>${error?.message || error}</b>`));
+      return;
+    }
+    if (!res || !res.ok) {
+      addToWarningMessageList(createWarning(`Download failed: <b>${res?.error || "unknown error"}</b>`));
+    }
+    return;
+  }
+
   if (!api.downloads || !api.downloads.download) {
     addToWarningMessageList(createWarning("downloads API is not available!"))
     alert("downloads API is not available!");
@@ -284,18 +309,10 @@ async function downloadJson(data, filename) {
 
   let url;
   try {
-    if (isFirefox) {
-      // Firefox rejects data: URLs in downloads.download ("Access denied"),
-      // so use a blob: URL. It must not be combined with saveAs: the save
-      // dialog closes the popup, which destroys the blob before the download
-      // starts. Without saveAs the download begins immediately and Firefox
-      // still honors the user's "always ask where to save" preference.
-      url = URL.createObjectURL(blob);
-    } else {
-      // Chrome blocks blob: downloads started from extension pages
-      // ("Failed - Extension"), so use a data: URL there
-      url = await readAsDataURL(blob);
-    }
+    // Chrome blocks blob: downloads started from extension pages
+    // ("Failed - Extension"), so use a data: URL there. A data: URL is just a
+    // string, it doesn't depend on the popup staying alive.
+    url = await readAsDataURL(blob);
     console.log("prepared download url", url.slice(0, 30) + "...");
   } catch (error) {
     console.error(error);
@@ -306,15 +323,12 @@ async function downloadJson(data, filename) {
   const options = {
     url: url,
     filename: filename,
-    conflictAction: "uniquify"
+    conflictAction: "uniquify",
+    saveAs: true
   };
-  if (!isFirefox) {
-    options.saveAs = true;
-  }
 
   let downloadId;
   try {
-    // Promise style: Firefox reports errors by rejecting the promise/errors
     downloadId = await api.downloads.download(options);
   } catch (error) {
     console.error(error);
@@ -337,18 +351,12 @@ async function downloadJson(data, filename) {
       return;
     }
     if (delta?.state?.current == "complete") {
-      // Firefox only added downloads.show recently, don't let it break the flow
       Promise.resolve(api.downloads.show(downloadId)).catch(() => {});
-      if (isFirefox) {
-        URL.revokeObjectURL(url)
-        addToSuccessMessageList(createSuccessAlert("Backup saved to your Downloads folder!"))
-      }
       api.downloads.onChanged.removeListener(listener);
     } else if (delta?.state?.current == "interrupted") {
       const msg = delta?.error?.current || "unknown";
       console.error("download interrupted:", msg);
       addToWarningMessageList(createWarning("Download interrupted: <b>" + msg + "</b>"))
-      if (isFirefox) URL.revokeObjectURL(url);
       api.downloads.onChanged.removeListener(listener);
     }
   };
