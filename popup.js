@@ -264,15 +264,38 @@ function getCkzFileContentsFromTextarea() {
 
 function downloadJson(data, filename) {
   const blob = new Blob([data], { type: "application/ckz" });
-  const url = URL.createObjectURL(blob);
 
-  api.downloads.download({ url: url, filename: filename }, (id) => {
-    api.downloads.onChanged.addListener((delta) => {
-      if (delta?.id == id && delta?.state?.current == "complete") {
-        api.downloads.show(id)
+  // Chrome blocks downloads of blob: URLs created on extension pages
+  // (they fail with "Failed - Extension"), so convert to a data: URL first
+  const reader = new FileReader();
+  reader.onload = () => {
+    api.downloads.download({ url: reader.result, filename: filename }, (id) => {
+      if (id == null) {
+        console.error(api.runtime.lastError);
+        alert("Download failed!");
+        return;
       }
-    })
-  });
+
+      const listener = (delta) => {
+        if (delta?.id != id) {
+          return;
+        }
+        if (delta?.state?.current == "complete") {
+          api.downloads.show(id);
+          api.downloads.onChanged.removeListener(listener);
+        } else if (delta?.state?.current == "interrupted") {
+          alert("Download failed!");
+          api.downloads.onChanged.removeListener(listener);
+        }
+      };
+      api.downloads.onChanged.addListener(listener);
+    });
+  };
+  reader.onerror = () => {
+    console.error(reader.error);
+    alert("Unknown error while preparing the backup file!");
+  };
+  reader.readAsDataURL(blob);
 }
 
 function getCkzFileDataAsText(cb) {
