@@ -20,6 +20,7 @@ jobs:
       - name: Verify sources
         run: |
           node --check popup.js
+          node --check background.js
           node -e "JSON.parse(require('fs').readFileSync('manifest.json', 'utf8'))"
 
       - name: Read version from manifest
@@ -28,7 +29,7 @@ jobs:
       - name: Stage extension files
         run: |
           mkdir -p build/chromium build/firefox
-          cp manifest.json popup.html popup.js style.css sjcl.js build/chromium/
+          cp manifest.json popup.html popup.js background.js style.css sjcl.js build/chromium/
           cp -r icons build/chromium/
           cp -r build/chromium/. build/firefox/
 
