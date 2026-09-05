@@ -282,16 +282,13 @@ async function downloadJson(data, filename) {
 
   const blob = new Blob([data], { type: "application/ckz" });
 
+  // Use a data: URL in both browsers:
+  // - Chrome blocks blob: downloads started from extension pages ("Failed - Extension").
+  // - blob: URLs are tied to the popup document, and the popup closes as soon
+  //   as the save dialog steals focus, so the blob dies mid-download on Firefox too.
   let url;
   try {
-    if (isFirefox) {
-      // Firefox natively supports blob: downloads (per MDN) but may not accept data: URLs
-      url = URL.createObjectURL(blob);
-    } else {
-      // Chrome blocks blob: URLs created on extension pages
-      // (they fail with "Failed - Extension"), so use a data: URL there
-      url = await readAsDataURL(blob);
-    }
+    url = await readAsDataURL(blob);
     console.log("prepared download url", url.slice(0, 30) + "...");
   } catch (error) {
     console.error(error);
@@ -331,13 +328,11 @@ async function downloadJson(data, filename) {
     if (delta?.state?.current == "complete") {
       // Firefox only added downloads.show recently, don't let it break the flow
       Promise.resolve(api.downloads.show(downloadId)).catch(() => {});
-      if (isFirefox) URL.revokeObjectURL(url);
       api.downloads.onChanged.removeListener(listener);
     } else if (delta?.state?.current == "interrupted") {
       const msg = delta?.error?.current || "unknown";
       console.error("download interrupted:", msg);
       addToWarningMessageList(createWarning("Download interrupted: <b>" + msg + "</b>"))
-      if (isFirefox) URL.revokeObjectURL(url);
       api.downloads.onChanged.removeListener(listener);
     }
   };

@@ -15,10 +15,11 @@
 
 # cookies-backup-chrome
 
-> This is a fork of [candh/cookies-backup-chrome](https://github.com/candh/cookies-backup-chrome),
-> maintained by [AvenCores](https://github.com/AvenCores) at
+> Это форк [candh/cookies-backup-chrome](https://github.com/candh/cookies-backup-chrome),
+> поддерживается [AvenCores](https://github.com/AvenCores) по адресу
 > [AvenCores/cookies-backup-chrome](https://github.com/AvenCores/cookies-backup-chrome).
-> It adds Firefox (MV3) support and fixes file downloads in both browsers.
+
+> Добавляет поддержку Firefox (MV3) и исправляет проблемы с загрузкой файлов в обоих браузерах.
 
 <p align="center">
     <a href="https://chrome.google.com/webstore/detail/cookie-backup-and-restore/cndobhdcpmpilkebeebeecgminfhkpcj"><img src="badge.png"></a>
@@ -26,40 +27,40 @@
 
 ---
 
-Want to change machines or want to do a fresh OS install but don't want to re-sign-in to everything you ever signed in? Use this extension!
+Хотите сменить компьютер или установить новую ОС, но не хотите заново входить во все учетные записи? Используйте это расширение!
 
-Backups Chrome Cookies, Encrypts them and Restores them when needed. Simple, Secure and Easy to Use.
+Создает резервные копии файлов cookie Chrome, шифрует их и восстанавливает при необходимости. Просто, безопасно и легко в использовании.
 
 <p align="center">
-    <img src="demo.gif" width=400px>
+
+<img src="demo.gif" width=400px>
 </p>
 
-Encryption is done using [sjcl](https://bitwiseshiftleft.github.io/sjcl/)
+Шифрование выполняется с помощью [sjcl](https://bitwiseshiftleft.github.io/sjcl/)
 
-## Firefox support
+## Поддержка Firefox
 
-Works on Firefox with the same manifest (MV3). Load it temporarily:
+Работает в Firefox с тем же манифестом (MV3). Загрузите временное дополнение:
 
-1. Open `about:debugging#/runtime/this-firefox`
-2. Click "Load Temporary Add-on..." and select `manifest.json` in this folder
+1. Откройте `about:debugging#/runtime/this-firefox`
+2. Нажмите «Загрузить временное дополнение...» и выберите `manifest.json` в этой папке.
 
-Cookies backed up from Chrome can be imported into Firefox: click the fallback
-"paste" button, paste the contents of the `.ckz` file, and enter the password.
+Файлы cookie, скопированные из Chrome, можно импортировать в Firefox: нажмите кнопку «Вставить» (fallback), вставьте содержимое файла `.ckz` и введите пароль.
 
-## Building
+## Здание
 
-The GitHub Actions workflow (`.github/workflows/build.yml`) runs on push/PR and
-produces two artifacts:
+Рабочий процесс GitHub Actions (`.github/workflows/build.yml`) выполняется по push/PR и
+производит два артефакта:
 
-- `cookie-backup-chrome-<version>-chromium.zip` — load unpacked via `chrome://extensions`
-- `cookie-backup-chrome-<version>-firefox.xpi` — temporary add-on via `about:debugging`,
-  or upload to AMO for signing (unlisted) before permanent installation
+- `cookie-backup-chrome-<version>-chromium.zip` — загрузить распакованный через `chrome://extensions`
+- `cookie-backup-chrome-<version>-firefox.xpi` — временное дополнение через `about:debugging`, 
+или загрузите в AMO для подписи (не в списке) перед постоянной установкой
 
-Tag a release (`v*`) to attach both archives to a GitHub Release automatically.
+Пометьте релиз (`v*`), чтобы автоматически прикрепить оба архива к релизу GitHub.
 
 # 📜 Лицензия
 
-Проект распространяется под лицензией GPL-3.0. Полный текст лицензии содержится в файле [`LICENSE`](LICENSE).
+Проект распространяется под лицензией GPL-3.0. Полный текст получен в файле [`ЛИЦЕНЗИЯ`](ЛИЦЕНЗИЯ).
 
 ---
 # 💰 Поддержать автора
