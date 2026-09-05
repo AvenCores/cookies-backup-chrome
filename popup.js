@@ -2,6 +2,35 @@
 const isFirefox = typeof browser !== "undefined";
 const api = isFirefox ? browser : chrome;
 
+// Firefox unloads the action popup the moment it loses focus, which happens as
+// soon as the native file picker opens, so the picked file dies with the popup
+// (bug 1292701, still unfixed). Instead of the picker, clicking it in the
+// popup opens this same UI in a standalone extension window, where file
+// selection works normally.
+if (isFirefox && !location.search.includes("standalone")) {
+  const restoreInput = document.getElementById("restore");
+  restoreInput.addEventListener(
+    "click",
+    (e) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      api.windows
+        .create({
+          url: api.runtime.getURL("popup.html?standalone=1"),
+          type: "popup",
+          width: 330,
+          height: 620
+        })
+        .then(() => window.close())
+        .catch((error) => {
+          console.error(error);
+          alert("Could not open the restore window!");
+        });
+    },
+    true
+  );
+}
+
 document
   .getElementById("restore")
   .addEventListener("change", handleFileSelect, false);
