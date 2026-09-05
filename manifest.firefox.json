@@ -1,0 +1,29 @@
+{
+  "name": "Cookie Backup and Restore",
+  "version": "4.2",
+  "description": "Backups and Encrypts all the cookies and Decrypts and Restores them when you need it.",
+  "permissions": ["cookies", "downloads", "storage"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "icons": {
+    "16": "icons/16.png",
+    "48": "icons/48.png",
+    "128": "icons/128.png"
+  },
+  "action": {
+    "default_title": "Backup & restore your cookies!",
+    "default_popup": "popup.html"
+  },
+  "manifest_version": 3,
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{f15bc194-6d91-4a2a-b758-5eb21fa2f5f8}",
+      "strict_min_version": "109.0",
+      "data_collection_permissions": {
+        "required": ["none"]
+      }
+    }
+  }
+}

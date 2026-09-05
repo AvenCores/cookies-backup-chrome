@@ -44,22 +44,22 @@
 - **Шифрованный бэкап (`.ckz`)** — все cookies через `cookies.getAll({})` → JSON → [SJCL](https://bitwiseshiftleft.github.io/sjcl/) (`sjcl.encrypt(pass, ...)`, `ks: 256`), пароль минимум 3 символа. Имя файла: `cookies-ДД-ММ-ГГГГ-ЧЧ-ММ-СС.ckz`.
 - **Бэкап без пароля (`.json`)** — читаемый plain-JSON с отдельным экраном-предупреждением (`.json` хранит cookies открытым текстом, для переноса/отладки).
 - **Восстановление `.ckz` и `.json`** — автовыбор по расширению файла, прогресс-бар (`<progress>`), счётчики `восстановлено X из Y`, предупреждения по каждой проблемной cookie (истекшие / не восстановились) с закрываемыми алертами и дедупликацией.
-- **Кросс-браузерное восстановление** — пересборка `url` из `domain + path + secure`, маппинг `sameSite` (`lax_plus`/`strict_plus` → `lax`/`strict`, в Firefox только `no_restriction/lax/strict`), пропуск `hostOnly/session/expirationDate/storeId`-нюансов, защита от `expirationDate: null` у сессионных cookie Firefox.
+- **Кросс-браузерное восстановление** — пересборка `url` из `domain + path + secure`, маппинг `sameSite` (`lax_plus`/`strict_plus` → `lax`/`strict`, в Firefox только `no_restriction/lax/strict`), защита от `expirationDate: null` у сессионных cookie Firefox, плюс цепочка fallback-попыток на каждую cookie: чужой `storeId` → без него, `SameSite=None` без `Secure` → без `sameSite`, `__Host-`/`__Secure-` → принудительно `secure` + `https`.
 - **Fallback «Вставить текстом»** — ссылка «Unable to upload a backup file?» скрывает file-input и показывает `textarea` для вставки содержимого `.ckz`/`.json` вручную (нужно для Firefox и для переноса Chrome → Firefox).
 - **25 языков + режим Auto** — `locales.js` (`AVAILABLE_LOCALES` + `TRANSLATIONS`), автоопределение по `i18n.getUILanguage()` + `navigator.languages`, кастомное меню с флагами, сохранение выбора в `storage.local.locale`, поддержка RTL (`ar`).
 - **Тёмная/светлая тема** — `data-theme` + CSS-переменные, по умолчанию следует `prefers-color-scheme`, ручной выбор запоминается в `storage.local.theme`.
 - **Надёжное скачивание в обоих браузерах:**
   - Chrome блокирует `blob:`-загрузки со страниц расширения → используется `data:` URL (`FileReader.readAsDataURL`).
-  - Firefox отзывает `blob:` URL вместе с закрывшимся popup (диалог «Save File» убивает popup) → скачивание делегировано в `background.js` (service worker + `scripts` для совместимости), blob живёт в фоне; плюс retry `runtime.sendMessage` на случай спящего MV3-воркера.
+  - Firefox отзывает `blob:` URL вместе с закрывшимся popup → полный UI работает во вкладке (`?standalone=1`), где blob-URL создаётся и качается напрямую из документа; `background.js` тоже умеет качать (blob там, где есть DOM, иначе `data:`-URL, т.к. в service worker нет `URL.createObjectURL`).
 
 ## 🧩 Структура проекта
 
 | Файл | Назначение |
 |---|---|
-| `manifest.json` | MV3-манифест (v4.2): `cookies`, `downloads`, `storage`, `host_permissions: <all_urls>`, `action.default_popup = popup.html`, `background.service_worker/scripts = background.js`, `browser_specific_settings.gecko` (id, `strict_min_version: 109.0`). |
+| `manifest.json` / `manifest.firefox.json` | MV3-манифесты (v4.2): `cookies`, `downloads`, `storage`, `host_permissions: <all_urls>`, `action.default_popup = popup.html`, `browser_specific_settings.gecko` (id, `strict_min_version: 109.0`). Два файла отличаются **только** секцией `background`: Chrome требует `service_worker`, Firefox — `scripts` (один файл на оба браузера невозможен: Chromium отвергает `scripts` в MV3, Firefox не умеет в `service_worker`). CI проверяет, что файлы идентичны кроме `background`. |
 | `popup.html` | UI: шапка (выбор языка, тема), блок бэкапа, блок восстановления, прогресс, сообщения, `open-tab-wrap` для Firefox. Подключает `sjcl.js` → `locales.js` → `popup.js`. |
 | `popup.js` | Вся логика: i18n, тема, бэкап `.ckz`/`.json`, восстановление, прогресс, алерты, скачивание, fallback-вставка, Firefox standalone-режим (`?standalone=1`). |
-| `background.js` | Фоновое скачивание для Firefox: принимает `{type: "downloadBackup", data, filename}`, создаёт `Blob`, качает через `downloads.download({saveAs: true, conflictAction: "uniquify"})`, чистит `ObjectURL` по `onChanged`. |
+| `background.js` | Скачивание по сообщению `{type: "downloadBackup", data, filename}`: blob-URL там, где доступен DOM (Firefox event page), иначе `data:`-URL, собранный вручную (`TextEncoder` + `btoa` — в service worker нет `URL.createObjectURL`/`FileReader`). Чистит URL по `downloads.onChanged`. |
 | `locales.js` | 25 локалей: `en, ru, uk, de, fr, es, pt, it, pl, nl, sv, da, fi, no, cs, sk, hu, ro, tr, zh-CN, zh-TW, ja, ko, ar, hi`. |
 | `style.css` | Светлая/тёмная темы, карточки, кнопки, `insecure-box`, языковое меню, standalone-режим (центровка, `width: 340px`). |
 | `sjcl.js` | Stanford Javascript Crypto Library для шифрования. |
@@ -93,7 +93,7 @@
 Работает на том же MV3-манифесте. Нюанс: в popup Firefox нельзя держать открытым нативный file-picker (popup выгружается при потере фокуса, bug 1292701), поэтому popup показывает только кнопку **Open Extension**, которая открывает тот же UI во вкладке `popup.html?standalone=1`, где выбор файла и вставка текста работают штатно.
 
 1. Откройте `about:debugging#/runtime/this-firefox`.
-2. «Загрузить временное дополнение...» → выберите `manifest.json` (или готовый `.xpi`).
+2. «Загрузить временное дополнение...» → выберите `manifest.json` из сборки `cookie-backup-chrome-<version>-firefox.xpi` из [Releases](https://github.com/AvenCores/cookies-backup-chrome/releases) (или соберите локально: скопируйте репозиторий и замените `manifest.json` содержимым `manifest.firefox.json` — для локальной проверки из исходников нужен именно Firefox-вариант).
 3. Для постоянной установки `.xpi` нужно подписать его в AMO (канал unlisted), временное дополнение слетает после перезапуска.
 
 ## 📖 Использование
@@ -126,16 +126,16 @@
 ## 🦊 Совместимость
 
 - Chromium (Chrome/Edge/Opera и др.): полный popup-режим.
-- Firefox ≥ 109 (MV3): полный UI во вкладке (`?standalone=1`), скачивание через background worker.
+- Firefox ≥ 109 (MV3): полный UI во вкладке (`?standalone=1`), скачивание напрямую из вкладки; устанавливается Firefox-сборка (см. выше).
 - Перенос Chrome ↔ Firefox поддерживается; различия `sameSite`/`storeId`/сессионных cookie нормализуются автоматически.
 
 ## 🔧 Сборка
 
 Рабочий процесс GitHub Actions (`.github/workflows/build.yml`) запускается по push/PR в `main`/`master`, по тегам `v*` и вручную:
 
-1. `node --check` для `popup.js` / `background.js` / `locales.js` + валидация `manifest.json`.
+1. `node --check` для `popup.js` / `background.js` / `locales.js` + валидация `manifest.json` и `manifest.firefox.json` (включая проверку, что файлы отличаются только секцией `background`).
 2. Версия читается из `manifest.json` (`VERSION`).
-3. Файлы расширения (`manifest.json`, `popup.html`, `popup.js`, `background.js`, `style.css`, `sjcl.js`, `locales.js`, `icons/`) копируются в `build/chromium` и `build/firefox`.
+3. Файлы расширения (`manifest.json`, `popup.html`, `popup.js`, `background.js`, `style.css`, `sjcl.js`, `locales.js`, `icons/`) копируются в `build/chromium` и `build/firefox`, затем `manifest.firefox.json` кладётся в `build/firefox/manifest.json`.
 4. Firefox-сборка прогоняется через `addons-linter` (`continue-on-error`).
 5. Пакуются артефакты:
    - `cookie-backup-chrome-<version>-chromium.zip` — загрузка распакованным через `chrome://extensions`

@@ -23,6 +23,21 @@ jobs:
           node --check background.js
           node --check locales.js
           node -e "JSON.parse(require('fs').readFileSync('manifest.json', 'utf8'))"
+          node -e "JSON.parse(require('fs').readFileSync('manifest.firefox.json', 'utf8'))"
+          node -e "
+            const fs = require('fs');
+            const assert = require('assert');
+            const chrome = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+            const firefox = JSON.parse(fs.readFileSync('manifest.firefox.json', 'utf8'));
+            // Chrome (MV3) only accepts service_worker, Firefox only runs scripts:
+            // a single manifest cannot serve both, so the two files must differ
+            // in exactly this section and nowhere else.
+            assert.deepStrictEqual(chrome.background, { service_worker: 'background.js' });
+            assert.deepStrictEqual(firefox.background, { scripts: ['background.js'] });
+            delete chrome.background;
+            delete firefox.background;
+            assert.deepStrictEqual(chrome, firefox, 'manifest.json and manifest.firefox.json must differ only in background');
+          "
 
       - name: Read version from manifest
         run: echo "VERSION=$(node -p "require('./manifest.json').version")" >> "$GITHUB_ENV"
@@ -33,6 +48,7 @@ jobs:
           cp manifest.json popup.html popup.js background.js style.css sjcl.js locales.js build/chromium/
           cp -r icons build/chromium/
           cp -r build/chromium/. build/firefox/
+          cp manifest.firefox.json build/firefox/manifest.json
 
       - name: Lint Firefox build (addons-linter)
         continue-on-error: true
