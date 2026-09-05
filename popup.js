@@ -241,31 +241,43 @@ document.getElementById("btn-upload-fallback").onclick = (e) => {
 async function handleEncPasswdSubmit(e) {
   e.preventDefault();
 
+  const form = document.getElementById("enc-passwd-form");
+  if (form.dataset.busy === "1") return;
+
   const pass = getEncPasswd();
   if (!pass || pass.length < 3) {
     return;
   }
 
-  // promise form works in both browsers; the callback form breaks on Firefox
-  // (browser.* ignores the callback and returns a promise instead)
-  let cookies;
+  form.dataset.busy = "1";
   try {
-    cookies = await api.cookies.getAll({});
-  } catch (err) {
-    addToWarningMessageList(createWarning(tr("unknownError")));
-    return;
-  }
-  if (cookies.length > 0) {
-    const data = sjcl.encrypt(pass, JSON.stringify(cookies), { ks: 256 });
-    // only using en-GB because it puts the date first
-    const d = new Date()
-    const date = d.toLocaleDateString("en-GB").replace(/\//g, "-");
-    const time = d.toLocaleTimeString("en-GB").replace(/:/g, "-");
-    const filename = `cookies-${date}-${time}.ckz`;
-    downloadJson(data, filename)
-    backupSuccessAlert(cookies.length)
-  } else {
-    alert(tr("noCookies"));
+    clearMessages();
+
+    // promise form works in both browsers; the callback form breaks on Firefox
+    // (browser.* ignores the callback and returns a promise instead)
+    let cookies;
+    try {
+      cookies = await api.cookies.getAll({});
+    } catch (err) {
+      addToWarningMessageList(createWarning(tr("unknownError")));
+      return;
+    }
+    if (cookies.length > 0) {
+      const data = sjcl.encrypt(pass, JSON.stringify(cookies), { ks: 256 });
+      // only using en-GB because it puts the date first
+      const d = new Date()
+      const date = d.toLocaleDateString("en-GB").replace(/\//g, "-");
+      const time = d.toLocaleTimeString("en-GB").replace(/:/g, "-");
+      const filename = `cookies-${date}-${time}.ckz`;
+      // show success only if the download actually started (user may cancel
+      // the save dialog -> warning only, no misleading success)
+      const started = await downloadJson(data, filename);
+      if (started) backupSuccessAlert(cookies.length)
+    } else {
+      alert(tr("noCookies"));
+    }
+  } finally {
+    delete form.dataset.busy;
   }
 }
 
@@ -292,6 +304,7 @@ function handleDecPasswdSubmit(e) {
     return;
   }
 
+  clearMessages();
   getCkzFileDataAsText(async (data) => {
     let cookies;
 
@@ -408,18 +421,32 @@ function handleDecPasswdSubmit(e) {
 }
 
 // NOTE: most of these methods are shallow, but i wanted to separate application logic from the DOM
+function makeDismissable(div) {
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "alert-close";
+  btn.textContent = "\u00d7";
+  btn.setAttribute("aria-label", "\u00d7");
+  btn.title = "\u00d7";
+  btn.addEventListener("click", () => div.remove());
+  div.appendChild(btn);
+  return div;
+}
+
 function createWarning(text) {
   const div = document.createElement("div");
   div.classList.add("alert", "alert-warning");
+  div.dataset.html = text;
   div.innerHTML = text;
-  return div;
+  return makeDismissable(div);
 }
 
 function createSuccessAlert(text) {
   const div = document.createElement("div");
   div.classList.add("alert", "alert-success");
+  div.dataset.html = text;
   div.innerHTML = text;
-  return div;
+  return makeDismissable(div);
 }
 
 function unknownErrWarning(cookie_name, cookie_url) {
@@ -464,11 +491,23 @@ function hideDecPasswordInputBox(e) {
 }
 
 function addToSuccessMessageList(node) {
-  document.getElementById("messages").appendChild(node)
+  const list = document.getElementById("messages");
+  // dedupe: never stack two identical alerts from one action (double submit, retries)
+  const html = node.dataset.html;
+  if (html && list.querySelector(`[data-html="${CSS.escape(html)}"]`)) return;
+  list.appendChild(node)
 }
 
 function addToWarningMessageList(node) {
-  document.getElementById("warnings").appendChild(node)
+  const list = document.getElementById("warnings");
+  const html = node.dataset.html;
+  if (html && list.querySelector(`[data-html="${CSS.escape(html)}"]`)) return;
+  list.appendChild(node)
+}
+
+function clearMessages() {
+  document.getElementById("messages").replaceChildren();
+  document.getElementById("warnings").replaceChildren();
 }
 
 function getEncPasswd() {
@@ -547,18 +586,19 @@ async function downloadJson(data, filename) {
       });
     } catch (error) {
       addToWarningMessageList(createWarning(tr("downloadFailed", { error: error?.message || error })));
-      return;
+      return false;
     }
     if (!res || !res.ok) {
       addToWarningMessageList(createWarning(tr("downloadFailed", { error: res?.error || tr("unknownError") })));
+      return false;
     }
-    return;
+    return true;
   }
 
   if (!api.downloads || !api.downloads.download) {
     addToWarningMessageList(createWarning(tr("noDownloadsApi")))
     alert(tr("noDownloadsApi"));
-    return;
+    return false;
   }
 
   const blob = new Blob([data], { type: "application/octet-stream" });
@@ -571,7 +611,7 @@ async function downloadJson(data, filename) {
     url = await readAsDataURL(blob);
   } catch (error) {
     addToWarningMessageList(createWarning(tr("prepareFailed", { error: error?.message || error })))
-    return;
+    return false;
   }
 
   const options = {
@@ -587,13 +627,13 @@ async function downloadJson(data, filename) {
   } catch (error) {
     const msg = error?.message || error;
     addToWarningMessageList(createWarning(tr("downloadRejected", { msg })))
-    return;
+    return false;
   }
 
   if (downloadId == null) {
     const msg = "download returned no id";
     addToWarningMessageList(createWarning(tr("downloadFailed", { error: msg })))
-    return;
+    return false;
   }
 
   const listener = (delta) => {
@@ -613,6 +653,7 @@ async function downloadJson(data, filename) {
     }
   };
   api.downloads.onChanged.addListener(listener);
+  return true;
 }
 
 function getCkzFileDataAsText(cb) {
