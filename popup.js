@@ -67,10 +67,11 @@ function escapeHtml(s) {
     .replace(/'/g, "&#39;");
 }
 
-function t(key, params) {
+function tr(key, params) {
   const dict = (typeof TRANSLATIONS !== "undefined" && (TRANSLATIONS[currentLocale] || TRANSLATIONS["en"])) || {};
   const fallback = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS["en"]) || {};
   let text = dict[key] ?? fallback[key] ?? key;
+  if (typeof text !== "string") return String(text);
   if (params) {
     for (const [k, v] of Object.entries(params)) {
       let val = v;
@@ -85,7 +86,7 @@ function t(key, params) {
         // cookie names/URLs come from the backup file and are attacker-controlled
         val = escapeHtml(val);
       }
-      text = text.replaceAll(`{${k}}`, String(val));
+      text = text.split(`{${k}}`).join(String(val));
     }
   }
   return text;
@@ -96,11 +97,11 @@ function applyI18n() {
   document.documentElement.dir = RTL_LOCALES.includes(currentLocale.split("-")[0]) ? "rtl" : "ltr";
   document.querySelectorAll("[data-i18n]").forEach((el) => {
     const key = el.getAttribute("data-i18n");
-    if (key) el.textContent = t(key);
+    if (key) el.textContent = tr(key);
   });
   document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
     const key = el.getAttribute("data-i18n-placeholder");
-    if (key) el.placeholder = t(key);
+    if (key) el.placeholder = tr(key);
   });
   const select = document.getElementById("locale-select");
   if (select) {
@@ -113,7 +114,7 @@ function applyI18n() {
       }
     }
     select.value = currentLocale;
-    const label = t("localeLabel");
+    const label = tr("localeLabel");
     select.setAttribute("aria-label", label);
     select.title = label;
   }
@@ -125,7 +126,7 @@ function applyI18n() {
 function updateThemeToggleLabel(theme) {
   const toggle = document.getElementById("theme-toggle");
   if (!toggle) return;
-  const label = theme === "dark" ? t("themeToLight") : t("themeToDark");
+  const label = theme === "dark" ? tr("themeToLight") : tr("themeToDark");
   toggle.setAttribute("aria-label", label);
   toggle.title = label;
 }
@@ -213,7 +214,7 @@ if (location.search.includes("standalone")) {
     Promise.resolve(api.tabs.create({ url: api.runtime.getURL("popup.html?standalone=1") }))
       .then(() => window.close())
       .catch(() => {
-        alert(t("openTabFail"));
+        alert(tr("openTabFail"));
       });
   });
 }
@@ -251,7 +252,7 @@ async function handleEncPasswdSubmit(e) {
   try {
     cookies = await api.cookies.getAll({});
   } catch (err) {
-    addToWarningMessageList(createWarning(t("unknownError")));
+    addToWarningMessageList(createWarning(tr("unknownError")));
     return;
   }
   if (cookies.length > 0) {
@@ -264,7 +265,7 @@ async function handleEncPasswdSubmit(e) {
     downloadJson(data, filename)
     backupSuccessAlert(cookies.length)
   } else {
-    alert(t("noCookies"));
+    alert(tr("noCookies"));
   }
 }
 
@@ -273,7 +274,7 @@ let cookieFile;
 function handleFileSelect(e) {
   cookieFile = e.target.files[0];
   if (!cookieFile || !cookieFile.name.toLowerCase().endsWith(".ckz")) {
-    alert(t("notCkz"));
+    alert(tr("notCkz"));
     e.target.value = "";
     cookieFile = null;
     hideDecPasswordInputBox()
@@ -299,17 +300,17 @@ function handleDecPasswdSubmit(e) {
       cookies = JSON.parse(decrypted);
     } catch (error) {
       if (error instanceof sjcl.exception.corrupt) {
-        alert(t("wrongPassword"));
+        alert(tr("wrongPassword"));
       } else if (error instanceof sjcl.exception.invalid) {
-        alert(t("invalidFile"));
+        alert(tr("invalidFile"));
       } else {
-        alert(t("unknownError"));
+        alert(tr("unknownError"));
       }
       return;
     }
 
     if (!Array.isArray(cookies)) {
-      alert(t("invalidFile"));
+      alert(tr("invalidFile"));
       return;
     }
 
@@ -423,23 +424,23 @@ function createSuccessAlert(text) {
 
 function unknownErrWarning(cookie_name, cookie_url) {
   if (cookie_name && cookie_url) {
-    addToWarningMessageList(createWarning(t("cookieRestoreFail", { name: cookie_name, url: cookie_url })))
+    addToWarningMessageList(createWarning(tr("cookieRestoreFail", { name: cookie_name, url: cookie_url })))
   }
 }
 
 function expirationWarning(cookie_name, cookie_url) {
   if (cookie_name && cookie_url) {
-    addToWarningMessageList(createWarning(t("cookieExpired", { name: cookie_name, url: cookie_url })))
+    addToWarningMessageList(createWarning(tr("cookieExpired", { name: cookie_name, url: cookie_url })))
   }
 }
 
 function backupSuccessAlert(totalCookies) {
   const count = typeof totalCookies === "number" ? totalCookies : Number(totalCookies) || 0;
-  addToSuccessMessageList(createSuccessAlert(t("backupSuccess", { count })))
+  addToSuccessMessageList(createSuccessAlert(tr("backupSuccess", { count })))
 }
 
 function restoreSuccessAlert(restoredCookies, totalCookies) {
-  addToSuccessMessageList(createSuccessAlert(t("restoreSuccess", { restored: restoredCookies, total: totalCookies })));
+  addToSuccessMessageList(createSuccessAlert(tr("restoreSuccess", { restored: restoredCookies, total: totalCookies })));
 }
 
 function hideBackupButton() {
@@ -545,18 +546,18 @@ async function downloadJson(data, filename) {
         filename: filename
       });
     } catch (error) {
-      addToWarningMessageList(createWarning(t("downloadFailed", { error: error?.message || error })));
+      addToWarningMessageList(createWarning(tr("downloadFailed", { error: error?.message || error })));
       return;
     }
     if (!res || !res.ok) {
-      addToWarningMessageList(createWarning(t("downloadFailed", { error: res?.error || t("unknownError") })));
+      addToWarningMessageList(createWarning(tr("downloadFailed", { error: res?.error || tr("unknownError") })));
     }
     return;
   }
 
   if (!api.downloads || !api.downloads.download) {
-    addToWarningMessageList(createWarning(t("noDownloadsApi")))
-    alert(t("noDownloadsApi"));
+    addToWarningMessageList(createWarning(tr("noDownloadsApi")))
+    alert(tr("noDownloadsApi"));
     return;
   }
 
@@ -569,7 +570,7 @@ async function downloadJson(data, filename) {
     // string, it doesn't depend on the popup staying alive.
     url = await readAsDataURL(blob);
   } catch (error) {
-    addToWarningMessageList(createWarning(t("prepareFailed", { error: error?.message || error })))
+    addToWarningMessageList(createWarning(tr("prepareFailed", { error: error?.message || error })))
     return;
   }
 
@@ -585,13 +586,13 @@ async function downloadJson(data, filename) {
     downloadId = await api.downloads.download(options);
   } catch (error) {
     const msg = error?.message || error;
-    addToWarningMessageList(createWarning(t("downloadRejected", { msg })))
+    addToWarningMessageList(createWarning(tr("downloadRejected", { msg })))
     return;
   }
 
   if (downloadId == null) {
     const msg = "download returned no id";
-    addToWarningMessageList(createWarning(t("downloadFailed", { error: msg })))
+    addToWarningMessageList(createWarning(tr("downloadFailed", { error: msg })))
     return;
   }
 
@@ -607,7 +608,7 @@ async function downloadJson(data, filename) {
       api.downloads.onChanged.removeListener(listener);
     } else if (delta?.state?.current == "interrupted") {
       const msg = delta?.error?.current || "unknown";
-      addToWarningMessageList(createWarning(t("downloadInterrupted", { msg })))
+      addToWarningMessageList(createWarning(tr("downloadInterrupted", { msg })))
       api.downloads.onChanged.removeListener(listener);
     }
   };
@@ -622,7 +623,7 @@ function getCkzFileDataAsText(cb) {
       cb(e.target.result);
     }
     reader.onerror = () => {
-      alert(t("readError"));
+      alert(tr("readError"));
     }
   } else {
     cb(getCkzFileContentsFromTextarea())
