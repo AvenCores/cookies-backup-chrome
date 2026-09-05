@@ -2,30 +2,25 @@
 const isFirefox = typeof browser !== "undefined";
 const api = isFirefox ? browser : chrome;
 
-// Firefox unloads the action popup the moment it loses focus, which happens as
-// soon as the native file picker opens, so the picked file dies with the popup
-// (bug 1292701, still unfixed). Instead of the picker, clicking it in the
-// popup opens this same UI in a regular browser tab, where file selection
-// works normally and stays integrated in the browser window.
+// The full UI cannot live in the Firefox action popup: opening the native
+// file picker steals the popup's focus and Firefox unloads the popup before
+// the file can be read (bug 1292701, still unfixed). So on Firefox the popup
+// only shows a button that opens this same UI in a browser tab, where the
+// picker works and everything renders centered. Chrome keeps the plain popup.
 if (location.search.includes("standalone")) {
   document.body.classList.add("standalone");
 } else if (isFirefox) {
-  const restoreInput = document.getElementById("restore");
-  restoreInput.addEventListener(
-    "click",
-    (e) => {
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      api.tabs
-        .create({ url: api.runtime.getURL("popup.html?standalone=1") })
-        .then(() => window.close())
-        .catch((error) => {
-          console.error(error);
-          alert("Could not open the restore tab!");
-        });
-    },
-    true
-  );
+  document.querySelector(".container-main-screen").classList.add("hidden");
+  document.getElementById("open-tab-wrap").classList.remove("hidden");
+  document.getElementById("btn-open-tab").addEventListener("click", () => {
+    api.tabs
+      .create({ url: api.runtime.getURL("popup.html?standalone=1") })
+      .then(() => window.close())
+      .catch((error) => {
+        console.error(error);
+        alert("Could not open the extension tab!");
+      });
+  });
 }
 
 document

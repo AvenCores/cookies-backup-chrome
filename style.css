@@ -46,6 +46,10 @@ body.standalone .container-main-screen {
   padding-bottom: 20px;
 }
 
+#open-tab-wrap {
+  margin: 10px 6px;
+}
+
 #header {
   display: flex;
   justify-content: center;
