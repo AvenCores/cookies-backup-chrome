@@ -86,13 +86,17 @@ body {
 body.standalone {
   width: auto;
   max-height: none;
+  min-height: 100vh;
+  margin: 0;
+  box-sizing: border-box;
+  padding: 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 body.standalone .container-main-screen {
   width: 340px;
-  margin: 0 auto;
-  padding-top: 12px;
-  padding-bottom: 20px;
 }
 
 #open-tab-wrap {
