@@ -262,40 +262,56 @@ function getCkzFileContentsFromTextarea() {
   return document.getElementById("ckz-textarea").value.trim()
 }
 
-function downloadJson(data, filename) {
+function readAsDataURL(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function downloadJson(data, filename) {
   const blob = new Blob([data], { type: "application/ckz" });
 
-  // Chrome blocks downloads of blob: URLs created on extension pages
-  // (they fail with "Failed - Extension"), so convert to a data: URL first
-  const reader = new FileReader();
-  reader.onload = () => {
-    api.downloads.download({ url: reader.result, filename: filename }, (id) => {
-      if (id == null) {
-        console.error(api.runtime.lastError);
-        alert("Download failed!");
-        return;
-      }
-
-      const listener = (delta) => {
-        if (delta?.id != id) {
-          return;
-        }
-        if (delta?.state?.current == "complete") {
-          api.downloads.show(id);
-          api.downloads.onChanged.removeListener(listener);
-        } else if (delta?.state?.current == "interrupted") {
-          alert("Download failed!");
-          api.downloads.onChanged.removeListener(listener);
-        }
-      };
-      api.downloads.onChanged.addListener(listener);
+  let downloadId;
+  try {
+    // Chrome blocks downloads of blob: URLs created on extension pages
+    // (they fail with "Failed - Extension"), so use a data: URL instead.
+    // Promise style: Firefox reports errors by rejecting, Chrome has lastError.
+    const url = await readAsDataURL(blob);
+    downloadId = await api.downloads.download({
+      url: url,
+      filename: filename,
+      saveAs: true,
+      conflictAction: "uniquify"
     });
+  } catch (error) {
+    console.error(error);
+    alert(`Download failed: ${error?.message || error}`);
+    return;
+  }
+
+  if (downloadId == null) {
+    const lastError = api.runtime?.lastError;
+    console.error(lastError);
+    alert(`Download failed: ${lastError?.message || "unknown error"}`);
+    return;
+  }
+
+  const listener = (delta) => {
+    if (delta?.id != downloadId) {
+      return;
+    }
+    if (delta?.state?.current == "complete") {
+      // Firefox only added downloads.show recently, don't let it break the flow
+      Promise.resolve(api.downloads.show(downloadId)).catch(() => {});
+      api.downloads.onChanged.removeListener(listener);
+    } else if (delta?.state?.current == "interrupted") {
+      api.downloads.onChanged.removeListener(listener);
+    }
   };
-  reader.onerror = () => {
-    console.error(reader.error);
-    alert("Unknown error while preparing the backup file!");
-  };
-  reader.readAsDataURL(blob);
+  api.downloads.onChanged.addListener(listener);
 }
 
 function getCkzFileDataAsText(cb) {
