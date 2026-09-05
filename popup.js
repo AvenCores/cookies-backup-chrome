@@ -98,38 +98,67 @@ async function detectLocale() {
   return "en";
 }
 
-function escapeHtml(s) {
-  return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
-
-function tr(key, params) {
+function trTemplate(key) {
   const dict = (typeof TRANSLATIONS !== "undefined" && (TRANSLATIONS[currentLocale] || TRANSLATIONS["en"])) || {};
   const fallback = (typeof TRANSLATIONS !== "undefined" && TRANSLATIONS["en"]) || {};
-  let text = dict[key] ?? fallback[key] ?? key;
-  if (typeof text !== "string") return String(text);
+  const text = dict[key] ?? fallback[key] ?? key;
+  return typeof text === "string" ? text : String(text);
+}
+
+function formatParamValue(v) {
+  if (typeof v === "number") {
+    try {
+      return v.toLocaleString(currentLocale);
+    } catch (e) {
+      return v.toLocaleString();
+    }
+  }
+  return String(v);
+}
+
+// Plain-text version for alert(), title, textContent, etc.
+// Strips the <b> markers used by translations, never builds HTML.
+function tr(key, params) {
+  let text = trTemplate(key);
+  text = text.replace(/<\/?b>/g, "");
   if (params) {
     for (const [k, v] of Object.entries(params)) {
-      let val = v;
-      if (typeof v === "number") {
-        try {
-          val = v.toLocaleString(currentLocale);
-        } catch (e) {
-          val = v.toLocaleString();
-        }
-      } else {
-        // params are interpolated into innerHTML alerts, so escape them:
-        // cookie names/URLs come from the backup file and are attacker-controlled
-        val = escapeHtml(val);
-      }
-      text = text.split(`{${k}}`).join(String(val));
+      text = text.split(`{${k}}`).join(formatParamValue(v));
     }
   }
   return text;
+}
+
+// Safe rich-text renderer for the message lists. Honors the <b>...</b>
+// markers from translations and substitutes {placeholders} using only
+// textContent and createElement — no HTML string assignment, so
+// attacker-controlled values (cookie names, URLs, error messages)
+// can never become markup.
+function appendFormattedText(container, key, params) {
+  const template = trTemplate(key);
+  const parts = template.split(/(<\/?b>|\{[a-zA-Z]+\})/g);
+  let bold = false;
+  for (const part of parts) {
+    if (part === "<b>") {
+      bold = true;
+    } else if (part === "</b>") {
+      bold = false;
+    } else if (!part) {
+      continue;
+    } else {
+      const placeholder = /^\{([a-zA-Z]+)\}$/.exec(part);
+      const value = placeholder
+        ? formatParamValue(params?.[placeholder[1]] ?? part)
+        : part;
+      if (bold) {
+        const b = document.createElement("b");
+        b.textContent = value;
+        container.appendChild(b);
+      } else {
+        container.appendChild(document.createTextNode(value));
+      }
+    }
+  }
 }
 
 function applyI18n() {
@@ -405,7 +434,7 @@ async function handleEncPasswdSubmit(e) {
     try {
       cookies = await api.cookies.getAll({});
     } catch (err) {
-      addToWarningMessageList(createWarning(tr("unknownError")));
+      addToWarningMessageList(createWarning("unknownError"));
       return;
     }
     if (cookies.length > 0) {
@@ -467,7 +496,7 @@ async function handleJsonBackup() {
   try {
     cookies = await api.cookies.getAll({});
   } catch (err) {
-    addToWarningMessageList(createWarning(tr("unknownError")));
+    addToWarningMessageList(createWarning("unknownError"));
     return;
   }
   if (!cookies || cookies.length === 0) {
@@ -673,41 +702,47 @@ function makeDismissable(div) {
   return div;
 }
 
-function createWarning(text) {
+function createWarning(key, params) {
   const div = document.createElement("div");
   div.classList.add("alert", "alert-warning");
-  div.dataset.html = text;
-  div.innerHTML = text;
+  const span = document.createElement("span");
+  appendFormattedText(span, key, params);
+  div.appendChild(span);
+  div.dataset.alertKey = String(key);
+  div.dataset.alertText = span.textContent;
   return makeDismissable(div);
 }
 
-function createSuccessAlert(text) {
+function createSuccessAlert(key, params) {
   const div = document.createElement("div");
   div.classList.add("alert", "alert-success");
-  div.dataset.html = text;
-  div.innerHTML = text;
+  const span = document.createElement("span");
+  appendFormattedText(span, key, params);
+  div.appendChild(span);
+  div.dataset.alertKey = String(key);
+  div.dataset.alertText = span.textContent;
   return makeDismissable(div);
 }
 
 function unknownErrWarning(cookie_name, cookie_url) {
   if (cookie_name && cookie_url) {
-    addToWarningMessageList(createWarning(tr("cookieRestoreFail", { name: cookie_name, url: cookie_url })))
+    addToWarningMessageList(createWarning("cookieRestoreFail", { name: cookie_name, url: cookie_url }))
   }
 }
 
 function expirationWarning(cookie_name, cookie_url) {
   if (cookie_name && cookie_url) {
-    addToWarningMessageList(createWarning(tr("cookieExpired", { name: cookie_name, url: cookie_url })))
+    addToWarningMessageList(createWarning("cookieExpired", { name: cookie_name, url: cookie_url }))
   }
 }
 
 function backupSuccessAlert(totalCookies) {
   const count = typeof totalCookies === "number" ? totalCookies : Number(totalCookies) || 0;
-  addToSuccessMessageList(createSuccessAlert(tr("backupSuccess", { count })))
+  addToSuccessMessageList(createSuccessAlert("backupSuccess", { count }))
 }
 
 function restoreSuccessAlert(restoredCookies, totalCookies) {
-  addToSuccessMessageList(createSuccessAlert(tr("restoreSuccess", { restored: restoredCookies, total: totalCookies })));
+  addToSuccessMessageList(createSuccessAlert("restoreSuccess", { restored: restoredCookies, total: totalCookies }));
 }
 
 function hideBackupButton() {
@@ -735,15 +770,23 @@ function hideDecPasswordInputBox(e) {
 function addToSuccessMessageList(node) {
   const list = document.getElementById("messages");
   // dedupe: never stack two identical alerts from one action (double submit, retries)
-  const html = node.dataset.html;
-  if (html && list.querySelector(`[data-html="${CSS.escape(html)}"]`)) return;
+  const id = node.dataset.alertText;
+  if (id) {
+    for (const child of list.children) {
+      if (child.dataset && child.dataset.alertText === id) return;
+    }
+  }
   list.appendChild(node)
 }
 
 function addToWarningMessageList(node) {
   const list = document.getElementById("warnings");
-  const html = node.dataset.html;
-  if (html && list.querySelector(`[data-html="${CSS.escape(html)}"]`)) return;
+  const id = node.dataset.alertText;
+  if (id) {
+    for (const child of list.children) {
+      if (child.dataset && child.dataset.alertText === id) return;
+    }
+  }
   list.appendChild(node)
 }
 
@@ -829,18 +872,18 @@ async function downloadJson(data, filename) {
         filename: filename
       });
     } catch (error) {
-      addToWarningMessageList(createWarning(tr("downloadFailed", { error: error?.message || error })));
+      addToWarningMessageList(createWarning("downloadFailed", { error: error?.message || error }));
       return false;
     }
     if (!res || !res.ok) {
-      addToWarningMessageList(createWarning(tr("downloadFailed", { error: res?.error || tr("unknownError") })));
+      addToWarningMessageList(createWarning("downloadFailed", { error: res?.error || tr("unknownError") }));
       return false;
     }
     return true;
   }
 
   if (!api.downloads || !api.downloads.download) {
-    addToWarningMessageList(createWarning(tr("noDownloadsApi")))
+    addToWarningMessageList(createWarning("noDownloadsApi"))
     alert(tr("noDownloadsApi"));
     return false;
   }
@@ -854,7 +897,7 @@ async function downloadJson(data, filename) {
     // string, it doesn't depend on the popup staying alive.
     url = await readAsDataURL(blob);
   } catch (error) {
-    addToWarningMessageList(createWarning(tr("prepareFailed", { error: error?.message || error })))
+    addToWarningMessageList(createWarning("prepareFailed", { error: error?.message || error }))
     return false;
   }
 
@@ -870,13 +913,13 @@ async function downloadJson(data, filename) {
     downloadId = await api.downloads.download(options);
   } catch (error) {
     const msg = error?.message || error;
-    addToWarningMessageList(createWarning(tr("downloadRejected", { msg })))
+    addToWarningMessageList(createWarning("downloadRejected", { msg }))
     return false;
   }
 
   if (downloadId == null) {
     const msg = "download returned no id";
-    addToWarningMessageList(createWarning(tr("downloadFailed", { error: msg })))
+    addToWarningMessageList(createWarning("downloadFailed", { error: msg }))
     return false;
   }
 
@@ -892,7 +935,7 @@ async function downloadJson(data, filename) {
       api.downloads.onChanged.removeListener(listener);
     } else if (delta?.state?.current == "interrupted") {
       const msg = delta?.error?.current || "unknown";
-      addToWarningMessageList(createWarning(tr("downloadInterrupted", { msg })))
+      addToWarningMessageList(createWarning("downloadInterrupted", { msg }))
       api.downloads.onChanged.removeListener(listener);
     }
   };
