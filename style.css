@@ -33,6 +33,19 @@ body {
   background-size: 8px 8px;
 }
 
+/* the popup UI opened as a regular browser tab (Firefox restore) */
+body.standalone {
+  width: auto;
+  max-height: none;
+}
+
+body.standalone .container-main-screen {
+  width: 340px;
+  margin: 0 auto;
+  padding-top: 12px;
+  padding-bottom: 20px;
+}
+
 #header {
   display: flex;
   justify-content: center;
