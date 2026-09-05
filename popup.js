@@ -2,6 +2,36 @@
 const isFirefox = typeof browser !== "undefined";
 const api = isFirefox ? browser : chrome;
 
+function applyTheme(theme) {
+  document.documentElement.setAttribute("data-theme", theme);
+  const toggle = document.getElementById("theme-toggle");
+  if (toggle) {
+    toggle.setAttribute("aria-checked", theme === "dark" ? "true" : "false");
+  }
+}
+
+async function initTheme() {
+  let theme = null;
+  try {
+    const res = await api.storage.local.get("theme");
+    theme = res?.theme;
+  } catch (error) {
+    console.error(error);
+  }
+  applyTheme(theme === "dark" ? "dark" : "light");
+}
+
+document.getElementById("theme-toggle").addEventListener("click", () => {
+  const next =
+    document.documentElement.getAttribute("data-theme") === "dark"
+      ? "light"
+      : "dark";
+  applyTheme(next);
+  api.storage.local.set({ theme: next }).catch(console.error);
+});
+
+initTheme();
+
 // The full UI cannot live in the Firefox action popup: opening the native
 // file picker steals the popup's focus and Firefox unloads the popup before
 // the file can be read (bug 1292701, still unfixed). So on Firefox the popup
