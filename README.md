@@ -23,7 +23,7 @@
 
 <p align="center">
     <a href="https://chrome.google.com/webstore/detail/cookie-backup-and-restore/cndobhdcpmpilkebeebeecgminfhkpcj"><img src="badge.png" height="60" alt="Chrome Web Store" style="vertical-align: middle;"></a>&nbsp;&nbsp;
-    <a href="https://upload.wikimedia.org/wikipedia/commons/e/ec/Firefox_Browser_Add-ons_logo.svg"><img src="firefox.svg" height="60" alt="Firefox Add-ons" style="vertical-align: middle;"></a>
+    <a href="https://addons.mozilla.org/en-US/firefox/addon/cookie-backup-and-restore/"><img src="firefox.svg" height="60" alt="Firefox Add-ons" style="vertical-align: middle;"></a>
 </p>
 
 
