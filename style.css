@@ -123,11 +123,18 @@ body.standalone textarea {
   font-size: 15px;
 }
 
-.locale-select {
+.locale-picker {
+  position: relative;
   flex-shrink: 0;
-  max-width: 84px;
+}
+
+.locale-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 110px;
   height: 26px;
-  padding: 0 4px;
+  padding: 0 6px;
   font-size: 12px;
   color: var(--text);
   background-color: transparent;
@@ -137,19 +144,82 @@ body.standalone textarea {
   outline: none;
 }
 
-.locale-select:hover {
+.locale-button:hover {
   background-color: var(--card-bg);
   border-color: var(--border);
 }
 
-.locale-select:focus-visible {
+.locale-button:focus-visible {
   outline: 2px solid var(--link);
   outline-offset: 1px;
 }
 
-.locale-select option {
-  color: #24292e;
-  background-color: #ffffff;
+.locale-flag {
+  flex-shrink: 0;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.locale-current {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.locale-caret {
+  flex-shrink: 0;
+  font-size: 9px;
+  opacity: 0.6;
+}
+
+.locale-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 50;
+  min-width: 160px;
+  max-width: 210px;
+  max-height: 230px;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background-color: var(--wrap-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.locale-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.locale-option:hover {
+  background-color: var(--card-bg);
+}
+
+.locale-option.selected {
+  font-weight: 700;
+}
+
+.locale-option.selected::after {
+  content: "\2713";
+  margin-left: auto;
+  padding-left: 8px;
+  opacity: 0.7;
+}
+
+.locale-option .locale-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .theme-toggle {

@@ -13,6 +13,39 @@ const LOCALES_LIST =
     : [{ code: "en", name: "English" }];
 let currentLocale = "en";
 const RTL_LOCALES = ["ar"];
+// flags shown in the custom language menu (native <select> can't render them)
+const LOCALE_FLAGS = {
+  en: "\u{1F1EC}\u{1F1E7}",
+  ru: "\u{1F1F7}\u{1F1FA}",
+  uk: "\u{1F1FA}\u{1F1E6}",
+  de: "\u{1F1E9}\u{1F1EA}",
+  fr: "\u{1F1EB}\u{1F1F7}",
+  es: "\u{1F1EA}\u{1F1F8}",
+  pt: "\u{1F1F5}\u{1F1F9}",
+  it: "\u{1F1EE}\u{1F1F9}",
+  pl: "\u{1F1F5}\u{1F1F1}",
+  nl: "\u{1F1F3}\u{1F1F1}",
+  sv: "\u{1F1F8}\u{1F1EA}",
+  da: "\u{1F1E9}\u{1F1F0}",
+  fi: "\u{1F1EB}\u{1F1EE}",
+  no: "\u{1F1F3}\u{1F1F4}",
+  cs: "\u{1F1E8}\u{1F1FF}",
+  sk: "\u{1F1F8}\u{1F1F0}",
+  hu: "\u{1F1ED}\u{1F1FA}",
+  ro: "\u{1F1F7}\u{1F1F4}",
+  tr: "\u{1F1F9}\u{1F1F7}",
+  "zh-CN": "\u{1F1E8}\u{1F1F3}",
+  "zh-TW": "\u{1F1F9}\u{1F1FC}",
+  ja: "\u{1F1EF}\u{1F1F5}",
+  ko: "\u{1F1F0}\u{1F1F7}",
+  ar: "\u{1F1F8}\u{1F1E6}",
+  hi: "\u{1F1EE}\u{1F1F3}"
+};
+
+function localeFlag(code) {
+  if (!code) return "\u{1F310}";
+  return LOCALE_FLAGS[code] || LOCALE_FLAGS[String(code).split("-")[0]] || "\u{1F310}";
+}
 const _localeLowerMap = {};
 try {
   for (const entry of LOCALES_LIST) {
@@ -103,20 +136,10 @@ function applyI18n() {
     const key = el.getAttribute("data-i18n-placeholder");
     if (key) el.placeholder = tr(key);
   });
-  const select = document.getElementById("locale-select");
-  if (select) {
-    if (!select.options.length) {
-      for (const entry of LOCALES_LIST) {
-        const opt = document.createElement("option");
-        opt.value = entry.code;
-        opt.textContent = entry.name;
-        select.appendChild(opt);
-      }
-    }
-    select.value = currentLocale;
-    const label = tr("localeLabel");
-    select.setAttribute("aria-label", label);
-    select.title = label;
+  const picker = document.getElementById("locale-picker");
+  if (picker) {
+    buildLocaleMenu();
+    updateLocaleButton();
   }
   // refresh theme toggle label for the new language
   const theme = document.documentElement.getAttribute("data-theme") || "light";
@@ -140,17 +163,91 @@ async function initI18n() {
     currentLocale = detectLocale();
   }
   applyI18n();
-  const select = document.getElementById("locale-select");
-  if (select) {
-    select.addEventListener("change", async () => {
-      const norm = normalizeLocale(select.value) || "en";
-      currentLocale = norm;
-      try {
-        await api.storage.local.set({ locale: currentLocale });
-      } catch (e) {}
-      applyI18n();
-    });
+  wireLocalePicker();
+}
+
+function updateLocaleButton() {
+  const btn = document.getElementById("locale-button");
+  if (!btn) return;
+  const entry = LOCALES_LIST.find((e) => e.code === currentLocale) || { name: currentLocale };
+  document.getElementById("locale-flag").textContent = localeFlag(currentLocale);
+  document.getElementById("locale-current").textContent = entry.name;
+  const label = tr("localeLabel");
+  btn.setAttribute("aria-label", label);
+  btn.title = label;
+}
+
+function buildLocaleMenu() {
+  const menu = document.getElementById("locale-menu");
+  if (!menu) return;
+  menu.replaceChildren();
+  for (const entry of LOCALES_LIST) {
+    const li = document.createElement("li");
+    li.className = "locale-option" + (entry.code === currentLocale ? " selected" : "");
+    li.setAttribute("role", "option");
+    li.setAttribute("aria-selected", entry.code === currentLocale ? "true" : "false");
+    li.dataset.code = entry.code;
+    const flag = document.createElement("span");
+    flag.className = "locale-flag";
+    flag.setAttribute("aria-hidden", "true");
+    flag.textContent = localeFlag(entry.code);
+    const name = document.createElement("span");
+    name.className = "locale-name";
+    name.textContent = entry.name;
+    li.append(flag, name);
+    li.addEventListener("click", () => selectLocale(entry.code));
+    menu.appendChild(li);
   }
+}
+
+function openLocaleMenu() {
+  const menu = document.getElementById("locale-menu");
+  const btn = document.getElementById("locale-button");
+  if (!menu || !btn) return;
+  buildLocaleMenu();
+  menu.classList.remove("hidden");
+  btn.setAttribute("aria-expanded", "true");
+}
+
+function closeLocaleMenu() {
+  const menu = document.getElementById("locale-menu");
+  const btn = document.getElementById("locale-button");
+  if (!menu || !btn) return;
+  menu.classList.add("hidden");
+  btn.setAttribute("aria-expanded", "false");
+}
+
+function wireLocalePicker() {
+  const btn = document.getElementById("locale-button");
+  const menu = document.getElementById("locale-menu");
+  if (!btn || !menu || btn.dataset.wired === "1") return;
+  btn.dataset.wired = "1";
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (menu.classList.contains("hidden")) openLocaleMenu();
+    else closeLocaleMenu();
+  });
+  document.addEventListener("click", (e) => {
+    if (!menu.classList.contains("hidden") && !document.getElementById("locale-picker").contains(e.target)) {
+      closeLocaleMenu();
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !menu.classList.contains("hidden")) {
+      closeLocaleMenu();
+      btn.focus();
+    }
+  });
+}
+
+async function selectLocale(code) {
+  const norm = normalizeLocale(code) || "en";
+  currentLocale = norm;
+  try {
+    await api.storage.local.set({ locale: currentLocale });
+  } catch (e) {}
+  applyI18n();
+  closeLocaleMenu();
 }
 
 // null until the user picks a theme manually, then remembered in storage

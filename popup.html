@@ -9,12 +9,22 @@
   <body>
     <div class="container-main-screen">
       <div id="header">
-        <select
-          id="locale-select"
-          class="locale-select"
-          aria-label="Language"
-          title="Language"
-        ></select>
+        <div class="locale-picker" id="locale-picker">
+          <button
+            id="locale-button"
+            class="locale-button"
+            type="button"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+            aria-label="Language"
+            title="Language"
+          >
+            <span class="locale-flag" id="locale-flag" aria-hidden="true"></span>
+            <span class="locale-current" id="locale-current"></span>
+            <span class="locale-caret" aria-hidden="true">▾</span>
+          </button>
+          <ul id="locale-menu" class="locale-menu hidden" role="listbox" tabindex="-1"></ul>
+        </div>
         <div class="two-col-group text-center large-title">
           <img src="icons/48.png" width="20" alt="" />
           <span data-i18n="appTitle">Cookies backup & restore</span>
