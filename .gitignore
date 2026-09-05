@@ -1,1 +1,4 @@
 .DS_Store
+build/
+*.xpi
+cookie-backup-chrome-*.zip

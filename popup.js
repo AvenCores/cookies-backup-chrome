@@ -1,5 +1,6 @@
 // works on both Chrome and Firefox: Firefox exposes `browser`, Chrome exposes `chrome`
-const api = typeof browser !== "undefined" ? browser : chrome;
+const isFirefox = typeof browser !== "undefined";
+const api = isFirefox ? browser : chrome;
 
 document
   .getElementById("restore")
@@ -94,7 +95,8 @@ function handleDecPasswdSubmit(e) {
           : cookie.domain) +
         cookie.path;
 
-      if (epoch > cookie.expirationDate) {
+      // Firefox writes "expirationDate: null" for session cookies, so guard before comparing
+      if (cookie.expirationDate && epoch > cookie.expirationDate) {
         expirationWarning(cookie.name, url)
         continue;
       }
@@ -105,10 +107,22 @@ function handleDecPasswdSubmit(e) {
         // supply the domain because that sets hostOnly to true
         delete cookie.domain;
       }
-      if (cookie.session == true) {
-        // if session is true, then expirationDate
-        // needs to be omitted
+      // if session is true (or a Firefox-made backup has expirationDate: null),
+      // then expirationDate needs to be omitted
+      if (cookie.session == true || cookie.expirationDate == null) {
         delete cookie.expirationDate;
+      }
+
+      // the sameSite enums differ between the two browsers
+      if (isFirefox) {
+        // Chrome may report "exactSite" or "unspecified", Firefox only accepts these
+        if (!["no_restriction", "lax", "strict"].includes(cookie.sameSite)) {
+          delete cookie.sameSite;
+        }
+      } else if (cookie.sameSite === "lax_plus") {
+        cookie.sameSite = "lax";
+      } else if (cookie.sameSite === "strict_plus") {
+        cookie.sameSite = "strict";
       }
 
       // .set doesn't accepts these

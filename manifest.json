@@ -16,7 +16,8 @@
   "manifest_version": 3,
   "browser_specific_settings": {
     "gecko": {
-      "id": "{f15bc194-6d91-4a2a-b758-5eb21fa2f5f8}"
+      "id": "{f15bc194-6d91-4a2a-b758-5eb21fa2f5f8}",
+      "strict_min_version": "109.0"
     }
   }
 }

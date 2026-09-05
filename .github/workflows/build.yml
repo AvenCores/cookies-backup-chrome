@@ -1,0 +1,67 @@
+name: build
+
+on:
+  push:
+    branches: [main, master]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Verify sources
+        run: |
+          node --check popup.js
+          node -e "JSON.parse(require('fs').readFileSync('manifest.json', 'utf8'))"
+
+      - name: Read version from manifest
+        run: echo "VERSION=$(node -p "require('./manifest.json').version")" >> "$GITHUB_ENV"
+
+      - name: Stage extension files
+        run: |
+          mkdir -p build/chromium build/firefox
+          cp manifest.json popup.html popup.js style.css sjcl.js build/chromium/
+          cp -r icons build/chromium/
+          cp -r build/chromium/. build/firefox/
+
+      - name: Lint Firefox build (addons-linter)
+        continue-on-error: true
+        run: npx --yes addons-linter build/firefox --channel=unlisted
+
+      - name: Package for Chromium (.zip)
+        run: |
+          cd build/chromium
+          zip -r -X "../../cookie-backup-chrome-${VERSION}-chromium.zip" .
+          cd ../..
+
+      - name: Package for Firefox (.xpi)
+        run: |
+          cd build/firefox
+          zip -r -X "../../cookie-backup-chrome-${VERSION}-firefox.xpi" .
+          cd ../..
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cookie-backup-chrome-${{ env.VERSION }}-chromium
+          path: cookie-backup-chrome-*-chromium.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cookie-backup-chrome-${{ env.VERSION }}-firefox
+          path: cookie-backup-chrome-*-firefox.xpi
+
+      - name: Attach builds to GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            cookie-backup-chrome-*-chromium.zip
+            cookie-backup-chrome-*-firefox.xpi

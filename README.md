@@ -25,3 +25,14 @@ Works on Firefox with the same manifest (MV3). Load it temporarily:
 
 Cookies backed up from Chrome can be imported into Firefox: click the fallback
 "paste" button, paste the contents of the `.ckz` file, and enter the password.
+
+## Building
+
+The GitHub Actions workflow (`.github/workflows/build.yml`) runs on push/PR and
+produces two artifacts:
+
+- `cookie-backup-chrome-<version>-chromium.zip` — load unpacked via `chrome://extensions`
+- `cookie-backup-chrome-<version>-firefox.xpi` — temporary add-on via `about:debugging`,
+  or upload to AMO for signing (unlisted) before permanent installation
+
+Tag a release (`v*`) to attach both archives to a GitHub Release automatically.
