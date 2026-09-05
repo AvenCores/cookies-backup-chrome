@@ -111,19 +111,21 @@ body.standalone textarea {
 #header {
   position: relative;
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  gap: 6px;
-  min-height: 26px;
+  gap: 4px 6px;
   margin-top: 5px;
 }
 
 #header .large-title {
-  flex: 1 1 auto;
+  order: 3;
+  flex: 1 1 100%;
   min-width: 0;
   overflow: hidden;
   font-size: 15px;
   white-space: nowrap;
+  text-align: center;
 }
 
 #header .large-title span[data-i18n] {
@@ -147,7 +149,7 @@ body.standalone textarea {
   display: flex;
   align-items: center;
   gap: 4px;
-  max-width: 92px;
+  max-width: 170px;
   min-width: 0;
   height: 26px;
   padding: 0 6px;
