@@ -8,8 +8,14 @@
 // surface: service workers have no URL.createObjectURL and no FileReader.
 // Blob downloads are used when available (event page); otherwise the payload
 // is encoded as a data: URL by hand, which chrome.downloads accepts.
-const isFirefox = typeof browser !== "undefined";
-const api = isFirefox ? browser : chrome;
+// NOTE: `browser` exists in Firefox and (since ~2026) in Chrome too,
+// so it can't be used for Firefox detection. getBrowserInfo exists only in Firefox.
+const api = typeof browser !== "undefined" ? browser : chrome;
+const isFirefox =
+  (typeof navigator !== "undefined" && /Firefox|FxiOS/i.test(navigator.userAgent || "")) ||
+  (typeof browser !== "undefined" &&
+    browser.runtime &&
+    typeof browser.runtime.getBrowserInfo === "function");
 
 // Upper bound for one message payload (runtime.sendMessage has its own
 // quota; fail fast with a clear error instead of a cryptic transport one).

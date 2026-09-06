@@ -1,6 +1,12 @@
-// works on both Chrome and Firefox: Firefox exposes `browser`, Chrome exposes `chrome`
-const isFirefox = typeof browser !== "undefined";
-const api = isFirefox ? browser : chrome;
+// works on both Chrome and Firefox.
+// NOTE: `browser` exists in Firefox and (since ~2026) in Chrome too,
+// so it can't be used for Firefox detection. getBrowserInfo exists only in Firefox.
+const api = typeof browser !== "undefined" ? browser : chrome;
+const isFirefox =
+  (typeof navigator !== "undefined" && /Firefox|FxiOS/i.test(navigator.userAgent || "")) ||
+  (typeof browser !== "undefined" &&
+    browser.runtime &&
+    typeof browser.runtime.getBrowserInfo === "function");
 
 // ---- i18n (25 languages, see locales.js) ----
 // locales.js may fail to load (e.g. outdated package without the file),
