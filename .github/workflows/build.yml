@@ -22,6 +22,7 @@ jobs:
           node --check popup.js
           node --check background.js
           node --check locales.js
+          node --check formats.js
           node -e "JSON.parse(require('fs').readFileSync('manifest.json', 'utf8'))"
           node -e "JSON.parse(require('fs').readFileSync('manifest.firefox.json', 'utf8'))"
           node -e "
@@ -55,10 +56,17 @@ jobs:
       - name: Stage extension files
         run: |
           mkdir -p build/chromium build/firefox
-          cp manifest.json popup.html popup.js background.js style.css sjcl.js locales.js build/chromium/
+          cp manifest.json popup.html popup.js background.js style.css sjcl.js locales.js formats.js build/chromium/
           cp -r icons build/chromium/
           cp -r build/chromium/. build/firefox/
           cp manifest.firefox.json build/firefox/manifest.json
+          # every <script src> in popup.html must be present in both packages,
+          # otherwise the extension breaks at runtime (e.g. formats.js missing
+          # -> "Loading failed for the <script>" and all non-JSON exports fail)
+          for f in sjcl.js locales.js formats.js popup.js; do
+            test -f "build/chromium/$f" || { echo "missing chromium file: $f"; exit 1; }
+            test -f "build/firefox/$f" || { echo "missing firefox file: $f"; exit 1; }
+          done
 
       - name: Lint Firefox build (addons-linter)
         continue-on-error: true

@@ -337,6 +337,21 @@ function makeBgContext({ blobUrls }) {
     assert.ok(popup.includes("api.runtime.sendMessage({ type"), "popup.js must use single-arg sendMessage on Firefox");
     assert.ok(bgSrc.includes("return promise;"), "background.js must answer via returned promise");
   });
+  ok("packaging includes every popup script", () => {
+    // regression gate: every local <script src> in popup.html must be staged
+    // by build.yml, otherwise the packaged .zip/.xpi breaks at runtime with
+    // "Loading failed for the <script>" (formats.js was once forgotten, which
+    // broke every non-JSON export while JSON kept working via its fallback)
+    const html = fs.readFileSync(path.join(ROOT, "popup.html"), "utf8");
+    const yml = fs.readFileSync(path.join(ROOT, ".github", "workflows", "build.yml"), "utf8");
+    const srcs = [...html.matchAll(/<script\s+src="([^"]+)"/g)]
+      .map((m) => m[1])
+      .filter((s) => !/^https?:/.test(s));
+    assert.ok(srcs.length > 0, "popup.html must load local scripts");
+    for (const s of srcs) {
+      assert.ok(yml.includes(s), "build.yml must package " + s);
+    }
+  });
   const locales = fs.readFileSync(path.join(ROOT, "locales.js"), "utf8");
   ok("locales have no dead keys", () => {
     for (const key of ["notCkz", "noDownloadsApi", "downloadInterrupted", "prepareFailed"]) {
