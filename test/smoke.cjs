@@ -194,6 +194,74 @@ function makeBgContext({ blobUrls }) {
     });
   }
 
+  // ---------- 2b. popup boots cleanly under a stubbed DOM ----------
+  // Regression gate for init-time crashes (e.g. wiring code reading a
+  // `let`/`const` declared later in the file — a TDZ ReferenceError aborts
+  // the rest of the module init). The whole module must evaluate and settle
+  // with every wire step reached.
+  {
+    const bootEls = {};
+    const mkEl = () => {
+      const listeners = {};
+      return {
+        _listeners: listeners,
+        style: {}, dataset: {}, textContent: "", title: "", value: "",
+        type: "password", files: null, placeholder: "", innerHTML: "",
+        classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } },
+        setAttribute() {}, getAttribute() { return null; },
+        addEventListener(t, f) { (listeners[t] = listeners[t] || []).push(f); },
+        appendChild() {}, append() {}, replaceChildren() {},
+        querySelector() { return null; },
+        focus() {}, click() {},
+      };
+    };
+    const listenersOf = (id, type) => ((bootEls[id] && bootEls[id]._listeners[type]) || []).length;
+    const pctx = {
+      console,
+      document: {
+        documentElement: { lang: "", dir: "", setAttribute() {}, getAttribute() { return "light"; } },
+        getElementById(id) { return (bootEls[id] = bootEls[id] || mkEl()); },
+        querySelectorAll() { return []; },
+        querySelector() { return null; },
+        addEventListener() {},
+        createElement() { return mkEl(); },
+      },
+      window: {},
+      navigator: { userAgent: "node-smoke", languages: ["en"], language: "en" },
+      location: { search: "" },
+      chrome: {
+        storage: { local: { get: async () => ({}), set: async () => {} } },
+        runtime: { getManifest: () => ({ version: "0.0.0" }), lastError: null },
+        i18n: { getUILanguage: () => "en" },
+        cookies: {}, tabs: {},
+      },
+      setTimeout, clearTimeout,
+    };
+    pctx.window.matchMedia = () => ({ matches: false, addEventListener() {} });
+    pctx.window.getSelection = () => null;
+    vm.createContext(pctx);
+    // must not throw: any read-before-init during wiring fails here
+    vm.runInContext(fs.readFileSync(path.join(ROOT, "locales.js"), "utf8"), pctx);
+    vm.runInContext(fs.readFileSync(path.join(ROOT, "popup.js"), "utf8"), pctx);
+    await new Promise((r) => setTimeout(r, 150));
+    ok("popup boots without exceptions and wires everything", () => {
+      assert.strictEqual(bootEls["picked-file-status"].textContent, "No file chosen");
+      assert.ok(bootEls["toggle-enc-passwd"].innerHTML.includes("<svg"), "eye icon rendered");
+      for (const [id, type] of [
+        ["restore", "change"],
+        ["dec-passwd-form", "submit"],
+        ["enc-passwd-form", "submit"],
+        ["btn-about", "click"],
+        ["btn-donate", "click"],
+        ["toggle-enc-passwd", "click"],
+        ["restore-picker-label", "keydown"],
+        ["btn-copy-card", "click"],
+      ]) {
+        assert.ok(listenersOf(id, type) > 0, id + " listens for " + type);
+      }
+    });
+  }
+
   // ---------- 3. static guards ----------
   const popup = fs.readFileSync(path.join(ROOT, "popup.js"), "utf8");
   ok("popup has no download duplication", () => {

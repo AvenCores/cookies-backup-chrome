@@ -645,6 +645,20 @@ textarea:focus {
 
 .pwd-toggle {
   flex-shrink: 0;
+  /* fixed box: swapping the icon must never resize the button and shove
+     the password field next to it */
+  width: 32px;
+  min-width: 32px;
+  padding: 5px 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pwd-toggle svg {
+  display: block;
+  width: 16px;
+  height: 16px;
 }
 
 /* backup submit highlights only when BOTH password fields match (class set

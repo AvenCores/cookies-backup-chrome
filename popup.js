@@ -522,6 +522,13 @@ document
 // during wiring, which runs before the old declaration site below.
 let cookieFile;
 
+// Eye icons as inline SVG (feather-style, same 24x24 geometry for both
+// states). Emoji 👁/🙈 have different advance widths on every platform,
+// so swapping them resized the button and shoved the password field.
+// Declared up-front: updatePasswordToggles() runs during wiring below.
+const EYE_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>';
+const EYE_OFF_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+
 document
   .getElementById("dec-passwd-form")
   .addEventListener("submit", handleDecPasswdSubmit, false);
@@ -1644,8 +1651,9 @@ function updatePasswordToggles() {
     const label = shown ? tr("hidePassword") : tr("showPassword");
     btn.setAttribute("aria-label", label);
     btn.title = label;
-    // keep the eye meaningful without extra i18n churn
-    btn.textContent = shown ? "🙈" : "👁";
+    // same-size SVG either way: the button box never changes, the field
+    // next to it stays put (our own static strings only)
+    btn.innerHTML = shown ? EYE_OFF_SVG : EYE_SVG;
   }
 }
 
