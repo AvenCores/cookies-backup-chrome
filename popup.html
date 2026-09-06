@@ -187,11 +187,14 @@
           <div class="insecure-title" data-i18n="jsonWarningTitle">⚠️ Insecure backup</div>
           <p class="insecure-text" id="plain-restore-text"></p>
           <div class="gap-5px hidden" id="restore-domain-wrap">
-            <small><b data-i18n="domainLabel">Domain for Header / Python imports</b></small>
+            <label class="check-row">
+              <input type="checkbox" id="chk-restore-domain" />
+              <small><b data-i18n="domainOnlyLabel">Import only a specific domain</b></small>
+            </label>
             <input
               type="text"
               id="inp-restore-domain"
-              class="domain-input"
+              class="domain-input invisible"
               autocomplete="off"
               spellcheck="false"
               placeholder="example.com"
@@ -217,7 +220,10 @@
                 placeholder="{iv: 'kjFC7RBV-N4', 'v': 1, 'iter': ..., ...}"
               ></textarea>
             </div>
-            <div class="gap-5px">
+            <button class="btn-primary hidden" type="button" id="btn-paste-restore" data-i18n="pasteRestoreBtn">
+              Restore pasted backup
+            </button>
+            <div class="gap-5px" id="dec-passwd-row">
               <small><b data-i18n="decTitle">Enter decryption password</b></small>
               <div class="two-col-group">
                 <input
@@ -236,11 +242,14 @@
                 </div>
               </div>
               <div class="gap-5px hidden" id="dec-domain-wrap">
-                <small><b data-i18n="domainLabel">Domain for Header / Python imports</b></small>
+                <label class="check-row">
+                  <input type="checkbox" id="chk-dec-domain" />
+                  <small><b data-i18n="domainOnlyLabel">Import only a specific domain</b></small>
+                </label>
                 <input
                   type="text"
                   id="inp-dec-domain"
-                  class="domain-input"
+                  class="domain-input invisible"
                   autocomplete="off"
                   spellcheck="false"
                   placeholder="example.com"

@@ -99,7 +99,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "ru": {
@@ -172,7 +174,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "Этот файл определён как {format} и НЕ зашифрован. Cookies будут восстановлены без пароля, но любой, у кого был этот файл, мог его прочитать или изменить. Продолжайте только с файлами, которым доверяете.",
   "plainRestorePasteText": "Вставленное содержимое будет восстановлено без пароля. Оно может быть в любом поддерживаемом формате, его мог прочитать или изменить кто угодно. Продолжайте только с содержимым, которому доверяете.",
   "plainRestoreAnyway": "Всё равно восстановить",
+  "pasteRestoreBtn": "Восстановить вставленное",
   "domainLabel": "Домен для импорта Header / Python (например example.com)",
+  "domainOnlyLabel": "Импортировать лишь конкретный домен",
   "domainPlaceholder": "example.com"
 },
 "uk": {
@@ -245,7 +249,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "de": {
@@ -318,7 +324,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "fr": {
@@ -391,7 +399,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "es": {
@@ -464,7 +474,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "pt": {
@@ -537,7 +549,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "it": {
@@ -610,7 +624,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "pl": {
@@ -683,7 +699,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "nl": {
@@ -756,7 +774,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "sv": {
@@ -829,7 +849,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "da": {
@@ -902,7 +924,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "fi": {
@@ -975,7 +999,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "no": {
@@ -1048,7 +1074,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "cs": {
@@ -1121,7 +1149,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "sk": {
@@ -1194,7 +1224,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "hu": {
@@ -1267,7 +1299,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "ro": {
@@ -1340,7 +1374,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "tr": {
@@ -1413,7 +1449,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "zh-CN": {
@@ -1486,7 +1524,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "zh-TW": {
@@ -1559,7 +1599,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "ja": {
@@ -1632,7 +1674,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "ko": {
@@ -1705,7 +1749,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "ar": {
@@ -1778,7 +1824,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 },
 "hi": {
@@ -1851,7 +1899,9 @@ const TRANSLATIONS = {
   "plainRestoreFileText": "This file was detected as {format} and is NOT encrypted. Cookies will be restored without a password, but anyone who had this file could have read or changed it. Continue only with files you trust.",
   "plainRestorePasteText": "Pasted content will be restored without a password. It may be in any supported format and could have been read or changed by anyone. Continue only with content you trust.",
   "plainRestoreAnyway": "Restore anyway",
+  "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
+  "domainOnlyLabel": "Import only a specific domain",
   "domainPlaceholder": "example.com"
 }
 };

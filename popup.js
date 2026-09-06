@@ -563,7 +563,11 @@ wirePasswordToggles();
 wireRestoreDropZone();
 wireFilePicker();
 wireEncSubmitState();
+wireFallbackTextarea();
+wireDomainCheckboxes();
 initExportFormat();
+
+document.getElementById("btn-paste-restore").onclick = handlePlainRestore;
 
 // ---- About / Donate modals ----
 // Credits (author / based on) live inside the About dialog; social links
@@ -859,12 +863,43 @@ function cookiesFromDecrypted(decrypted, fallbackDomain) {
 // Header String / Python Dict carry names+values only, so restoring them
 // needs a domain. It comes from these optional inputs; without it such
 // cookies are skipped and reported by the restore counters.
+// With the "specific domain" checkbox on, the entered domain additionally
+// filters the restore: cookies from other domains are dropped.
 function normalizeDomain(v) {
   if (typeof v !== "string") return "";
   return v.trim().replace(/^\.+/, "").toLowerCase();
 }
 
+function cookieMatchesDomain(cookie, want) {
+  const d = cookie && typeof cookie.domain === "string"
+    ? cookie.domain.toLowerCase().replace(/^\.+/, "")
+    : "";
+  // domain-less cookies (Header/Python without a fallback, empty CSV cells)
+  // cannot match anything, but restore reports them as skipped anyway
+  if (!d) return true;
+  return d === want || d.endsWith("." + want);
+}
+
+function filterCookiesToDomain(cookies, domain) {
+  if (!domain) return cookies;
+  const want = String(domain).toLowerCase().replace(/^\.+/, "");
+  if (!want) return cookies;
+  return cookies.filter((c) => cookieMatchesDomain(c, want));
+}
+
+function isDomainOverrideChecked(chkId) {
+  try {
+    const chk = document.getElementById(chkId);
+    return !!(chk && chk.checked);
+  } catch (e) {
+    return false;
+  }
+}
+
 function getRestoreDomain() {
+  // the text field hides under the "specific domain" checkbox: stale text
+  // must never leak into a restore when the box is unchecked
+  if (!isDomainOverrideChecked("chk-restore-domain")) return "";
   try {
     const el = document.getElementById("inp-restore-domain");
     return el ? el.value : "";
@@ -874,11 +909,42 @@ function getRestoreDomain() {
 }
 
 function getDecDomain() {
+  if (!isDomainOverrideChecked("chk-dec-domain")) return "";
   try {
     const el = document.getElementById("inp-dec-domain");
     return el ? el.value : "";
   } catch (e) {
     return "";
+  }
+}
+
+function wireDomainCheckboxes() {
+  const pairs = [
+    ["chk-restore-domain", "inp-restore-domain"],
+    ["chk-dec-domain", "inp-dec-domain"],
+  ];
+  for (const [chkId, inpId] of pairs) {
+    let chk = null;
+    let inp = null;
+    try {
+      chk = document.getElementById(chkId);
+      inp = document.getElementById(inpId);
+    } catch (e) {
+      continue;
+    }
+    if (!chk || !inp || chk.dataset.wired === "1") continue;
+    if (typeof chk.addEventListener !== "function") continue;
+    chk.dataset.wired = "1";
+    chk.addEventListener("change", () => {
+      try {
+        // visibility (not display): the input space is reserved, so the
+        // popup never reflows when the checkbox is toggled
+        if (inp.classList && typeof inp.classList.toggle === "function") {
+          inp.classList.toggle("invisible", !chk.checked);
+        }
+        if (chk.checked && typeof inp.focus === "function") inp.focus();
+      } catch (e) {}
+    });
   }
 }
 
@@ -1118,10 +1184,11 @@ function fillPlainRestoreText(format) {
 
 function updateRestoreDomainVisibility(format) {
   const wrap = document.getElementById("restore-domain-wrap");
-  if (!wrap || !wrap.classList || typeof wrap.classList.toggle !== "function") return;
-  // Header / Python carry names+values only: offer a domain so they can be restored
-  const need = !format || format === "header" || format === "pydict";
-  wrap.classList.toggle("hidden", !need);
+  if (!wrap || !wrap.classList || typeof wrap.classList.remove !== "function") return;
+  // the "specific domain" checkbox is a general import option now: it assigns
+  // a domain to Header/Python cookies AND filters every format down to it
+  void format;
+  wrap.classList.remove("hidden");
 }
 
 // Cancel is a way back: reset the file input so the same file can be picked again
@@ -1162,6 +1229,7 @@ function resetRestoreFileState() {
   hideDecPasswordInputBox();
   hidePlainRestoreConfirm();
   hideDecDomainRow();
+  resetFallbackControls();
   const fb = document.getElementById("btn-upload-fallback");
   if (fb) fb.style.display = "";
   const up = document.getElementById("restore-upload-wrap");
@@ -1182,6 +1250,7 @@ function exitFallbackMode() {
   hideDecPasswordInputBox();
   hidePlainRestoreConfirm();
   hideDecDomainRow();
+  resetFallbackControls();
   const ta = document.getElementById("restore-using-text-wrap");
   if (ta) ta.style.display = "none";
   const up = document.getElementById("restore-upload-wrap");
@@ -1205,15 +1274,13 @@ function hideDecDomainRow() {
   }
 }
 
-// An encrypted Header/Python backup carries names+values only: offer the
-// domain field up-front when the filename already tells the inner format
-// (cookies-...-header.ckz / -pydict.ckz). A renamed file still restores,
-// its domain-less cookies are just skipped and reported.
-function revealDecDomainIfLossy(lowerName) {
+// The "specific domain" checkbox is a general import option: it assigns a
+// domain to Header/Python cookies AND filters every format down to it,
+// so the row is always offered wherever a password is asked.
+function showDecDomainRow() {
   const wrap = document.getElementById("dec-domain-wrap");
-  if (!wrap || !wrap.classList || typeof wrap.classList.toggle !== "function") return;
-  const lossy = lowerName.indexOf("-header.ckz") !== -1 || lowerName.indexOf("-pydict.ckz") !== -1;
-  wrap.classList.toggle("hidden", !lossy);
+  if (!wrap || !wrap.classList || typeof wrap.classList.remove !== "function") return;
+  wrap.classList.remove("hidden");
 }
 
 async function handlePlainBackup() {
@@ -1263,7 +1330,7 @@ function handlePlainRestore() {
       return;
     }
     const format = formatHint || safeSniff(text, cookieFile && cookieFile.name);
-    const fallbackDomain = normalizeDomain(getRestoreDomain());
+    const fallbackDomain = normalizeDomain(getRestoreDomain() || getDecDomain());
     let cookies;
     try {
       cookies = safeParse(format, text, fallbackDomain ? { fallbackDomain } : undefined);
@@ -1275,6 +1342,9 @@ function handlePlainRestore() {
       addToWarningMessageList(createWarning("invalidFile"));
       return;
     }
+    // "only a specific domain": drop cookies from other domains (Header /
+    // Python cookies already received the entered domain while parsing)
+    if (fallbackDomain) cookies = filterCookiesToDomain(cookies, fallbackDomain);
     if (cookies.length === 0) {
       addToWarningMessageList(createWarning("emptyBackup"));
       return;
@@ -1330,7 +1400,7 @@ function handlePickedBackupFile(file) {
   if (isEncryptedBackupName(name)) {
     hideFallbackCkzButton();
     hidePlainRestoreConfirm();
-    revealDecDomainIfLossy(name);
+    showDecDomainRow();
     showDecPasswordInputBox();
     updateDroppedFileName();
     return;
@@ -1525,6 +1595,17 @@ function handleDecPasswdSubmit(e) {
   }
 
   clearMessages();
+  // paste mode locks the password row until a .ckz payload is detected;
+  // never burn PBKDF2 on plain text (defense in depth, the button is disabled)
+  if (isFallbackActive()) {
+    try {
+      if (!isPlausibleCkzPayload(getCkzFileContentsFromTextarea())) {
+        addToWarningMessageList(createWarning("invalidFile"));
+        clearDecPassword();
+        return;
+      }
+    } catch (err) {}
+  }
   // pre-validation before the expensive PBKDF2: rejects garbage without
   // burning 100k iterations and avoids misleading "wrong password"
   const precheck = precheckBackupPayload();
@@ -1563,10 +1644,12 @@ function handleDecPasswdSubmit(e) {
     }
 
     // the .ckz envelope holds any export format (json stays a legacy
-    // direct array); Header/Python payloads need the optional domain below
+    // direct array); the optional domain below assigns Header/Python
+    // cookies AND filters every format down to it when the checkbox is on
+    const decDomain = normalizeDomain(getDecDomain());
     let cookies;
     try {
-      cookies = cookiesFromDecrypted(decrypted, normalizeDomain(getDecDomain()));
+      cookies = cookiesFromDecrypted(decrypted, decDomain);
     } catch (error) {
       addToWarningMessageList(createWarning("invalidFile"));
       clearDecPassword();
@@ -1578,6 +1661,7 @@ function handleDecPasswdSubmit(e) {
       clearDecPassword();
       return;
     }
+    if (decDomain) cookies = filterCookiesToDomain(cookies, decDomain);
     if (cookies.length === 0) {
       addToWarningMessageList(createWarning("emptyBackup"));
       clearDecPassword();
@@ -1988,6 +2072,10 @@ function showEncPasswordInputBox(e) {
 }
 
 function showDecPasswordInputBox(e) {
+  // picked .ckz file: password is always required, make sure a previous
+  // paste session did not leave the row disabled
+  setDecPasswordEnabled(true);
+  hidePasteRestoreButton();
   document.getElementById("dec-passwd").style.display = "flex";
   document.getElementById("inp-dec-passwd").focus()
 }
@@ -2151,15 +2239,113 @@ function hideFallbackCkzButton() {
 function showFallbackCkzInput() {
   hideFallbackCkzButton()
   document.getElementById("restore-upload-wrap").style.display = "none"
-  // show the fallback
+  // show the fallback: textarea + password row (locked until a .ckz
+  // payload is detected) + direct restore button for plain text.
+  // No insecure-warning box here: the UI itself shows which path applies.
+  pendingPlain = null;
+  hidePlainRestoreConfirm();
   document.getElementById("restore-using-text-wrap").style.display = "flex"
   document.getElementById("dec-passwd").style.display = "flex";
-  // pasted plain text (any format) uses the same textarea, so offer the
-  // password-less restore path too; the format is sniffed at click time
-  pendingPlain = null;
-  fillPlainRestoreText(null);
-  updateRestoreDomainVisibility(null);
-  document.getElementById("plain-restore-confirm").classList.remove("hidden");
+  updateFallbackState();
+}
+
+// The password row is only usable for encrypted (.ckz) payloads. In paste
+// mode it starts locked and unlocks once the pasted text sniffs as .ckz;
+// for picked .ckz files it is always enabled (see showDecPasswordInputBox).
+function setDecPasswordEnabled(on) {
+  try {
+    const input = document.getElementById("inp-dec-passwd");
+    if (input) input.disabled = !on;
+    const form = document.getElementById("dec-passwd-form");
+    const submit = form && typeof form.querySelector === "function"
+      ? form.querySelector('[type="submit"]')
+      : null;
+    if (submit) submit.disabled = !on;
+    const row = document.getElementById("dec-passwd-row");
+    if (row && row.classList && typeof row.classList.toggle === "function") {
+      row.classList.toggle("disabled-row", !on);
+    }
+  } catch (e) {}
+}
+
+function hidePasteRestoreButton() {
+  const btn = document.getElementById("btn-paste-restore");
+  if (btn && btn.classList && typeof btn.classList.add === "function") {
+    btn.classList.add("hidden");
+  }
+}
+
+function showPasteRestoreButton() {
+  const btn = document.getElementById("btn-paste-restore");
+  if (btn && btn.classList && typeof btn.classList.remove === "function") {
+    btn.classList.remove("hidden");
+  }
+}
+
+// Back to neutral: password unlocked, paste button hidden, domain row hidden
+function resetFallbackControls() {
+  setDecPasswordEnabled(true);
+  hidePasteRestoreButton();
+  hideDecDomainRow();
+}
+
+let fallbackTimer = 0;
+
+function scheduleFallbackUpdate() {
+  try {
+    if (fallbackTimer) clearTimeout(fallbackTimer);
+  } catch (e) {}
+  try {
+    fallbackTimer = setTimeout(() => {
+      fallbackTimer = 0;
+      updateFallbackState();
+    }, 200);
+  } catch (e) {}
+}
+
+function wireFallbackTextarea() {
+  let ta = null;
+  try {
+    ta = document.getElementById("ckz-textarea");
+  } catch (e) {
+    return;
+  }
+  if (!ta || ta.dataset.fbWired === "1") return;
+  if (typeof ta.addEventListener !== "function") return;
+  ta.dataset.fbWired = "1";
+  ta.addEventListener("input", scheduleFallbackUpdate);
+}
+
+// Live paste detection: .ckz payload -> unlock password, hide plain button;
+// plain text -> direct restore button (validated on click); empty -> lock all.
+// Sniffing is skipped for huge pastes (validated on click instead).
+function updateFallbackState() {
+  if (!isFallbackActive()) return;
+  let text = "";
+  try {
+    const ta = document.getElementById("ckz-textarea");
+    text = ta && typeof ta.value === "string" ? ta.value.trim() : "";
+  } catch (e) {
+    text = "";
+  }
+  if (!text) {
+    setDecPasswordEnabled(false);
+    hidePasteRestoreButton();
+    hideDecDomainRow();
+    return;
+  }
+  if (isPlausibleCkzPayload(text)) {
+    setDecPasswordEnabled(true);
+    hidePasteRestoreButton();
+    // inner format is unknown before decrypt: offer the domain checkbox
+    // up-front (assigns Header/Python cookies, filters every format)
+    showDecDomainRow();
+    return;
+  }
+  setDecPasswordEnabled(false);
+  showPasteRestoreButton();
+  // the "specific domain" checkbox filters every plain format too
+  showDecDomainRow();
 }
 
 function getCkzFileContentsFromTextarea() {

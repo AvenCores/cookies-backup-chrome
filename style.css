@@ -1276,6 +1276,44 @@ input[type="file"]::file-selector-button:active {
   white-space: nowrap;
 }
 
+/* domain override: collapsed under a checkbox, text field on demand.
+   The field uses visibility (not display) so toggling the checkbox never
+   reflows the popup: the space is reserved, only visibility flips. */
+.invisible {
+  visibility: hidden;
+}
+
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.check-row input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: #2ea44f;
+}
+
+.check-row small {
+  line-height: 1.3;
+}
+
+/* locked password row in paste mode: enabled only when the pasted text
+   detects as an encrypted (.ckz) payload */
+.disabled-row {
+  opacity: 0.45;
+}
+
+.disabled-row input,
+.disabled-row button {
+  cursor: not-allowed;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
