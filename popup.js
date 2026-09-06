@@ -463,19 +463,19 @@ async function handleEncPasswdSubmit(e) {
       addToWarningMessageList(createWarning("unknownError"));
       return;
     }
-    if (cookies.length > 0) {
-      // COMPAT: iter is stored inside the .ckz payload, so a higher count is
-      // still readable by the original extension (old sjcl.decrypt just works
-      // slower). Old backups with iter:10000 keep decrypting here untouched.
-      const data = sjcl.encrypt(pass, JSON.stringify(cookies), { ks: 256, iter: 100000 });
-      const filename = backupFileName("ckz");
-      // show success only if the download actually started (user may cancel
-      // the save dialog -> warning only, no misleading success)
-      const started = await downloadJson(data, filename);
-      if (started) backupSuccessAlert(cookies.length)
-    } else {
+    if (!cookies || cookies.length === 0) {
       alert(tr("noCookies"));
+      return;
     }
+    // COMPAT: iter is stored inside the .ckz payload, so a higher count is
+    // still readable by the original extension (old sjcl.decrypt just works
+    // slower). Old backups with iter:10000 keep decrypting here untouched.
+    const data = sjcl.encrypt(pass, JSON.stringify(cookies), { ks: 256, iter: 100000 });
+    const filename = backupFileName("ckz");
+    // show success only if the download actually started (user may cancel
+    // the save dialog -> warning only, no misleading success)
+    const started = await downloadJson(data, filename);
+    if (started) backupSuccessAlert(cookies.length)
   } finally {
     // wipe passwords from memory/DOM so they don't linger in the popup
     pass = null;
@@ -487,10 +487,11 @@ async function handleEncPasswdSubmit(e) {
 let cookieFile;
 
 function backupFileName(ext) {
-  // only using en-GB because it puts the date first
-  const d = new Date()
-  const date = d.toLocaleDateString("en-GB").replace(/\//g, "-");
-  const time = d.toLocaleTimeString("en-GB").replace(/:/g, "-");
+  // ISO-like stamp: unambiguous across locales and sorts chronologically
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  const date = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const time = `${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
   return `cookies-${date}-${time}.${ext}`;
 }
 
@@ -509,12 +510,12 @@ function showJsonRestoreConfirm() {
   document.getElementById("json-restore-confirm").classList.remove("hidden");
 }
 
-function hideJsonRestoreBox() {
+function hideJsonRestoreBanner() {
   document.getElementById("json-restore-confirm").classList.add("hidden");
 }
 
 function hideJsonRestoreConfirm() {
-  hideJsonRestoreBox();
+  hideJsonRestoreBanner();
   // reset the file input so the user can pick the same file again if needed
   const input = document.getElementById("restore");
   if (input) input.value = "";
@@ -548,18 +549,18 @@ function handleJsonRestore() {
   clearMessages();
   getBackupFileDataAsText(async (data) => {
     if (!data) {
-      alert(tr("invalidFile"));
+      addToWarningMessageList(createWarning("invalidFile"));
       return;
     }
     let cookies;
     try {
       cookies = JSON.parse(data);
     } catch (error) {
-      alert(tr("invalidFile"));
+      addToWarningMessageList(createWarning("invalidFile"));
       return;
     }
     if (!Array.isArray(cookies)) {
-      alert(tr("invalidFile"));
+      addToWarningMessageList(createWarning("invalidFile"));
       return;
     }
     // extra safety: a .ckz payload is a JSON object/string, never an array,
@@ -597,12 +598,12 @@ function handlePickedBackupFile(file) {
     if (input) input.value = "";
     cookieFile = null;
     hideDecPasswordInputBox()
-    hideJsonRestoreBox()
+    hideJsonRestoreBanner()
     updateDroppedFileName();
     return;
   }
   hideFallbackCkzButton()
-  hideJsonRestoreBox()
+  hideJsonRestoreBanner()
   showDecPasswordInputBox()
   updateDroppedFileName();
 }
@@ -677,10 +678,28 @@ function wireRestoreDropZone() {
     } catch (err) {}
     handlePickedBackupFile(picked);
   });
-  // a missed drop must never navigate the popup / standalone tab away
-  // (dropping a .json onto the tab would otherwise replace the UI)
-  document.addEventListener("dragover", (e) => e.preventDefault());
-  document.addEventListener("drop", (e) => e.preventDefault());
+  // a missed FILE drop must never navigate the popup / standalone tab away
+  // (dropping a .json onto the tab would otherwise replace the UI).
+  // Non-file drags (e.g. selected text into the paste textarea) are left
+  // alone so the browser handles them natively.
+  document.addEventListener("dragover", (e) => {
+    if (hasDroppedFiles(e)) e.preventDefault();
+  });
+  document.addEventListener("drop", (e) => {
+    if (hasDroppedFiles(e)) e.preventDefault();
+  });
+}
+
+// True when the drag carries files. Unknown -> true (safe default: block a
+// potential navigation); plain text selections report text/plain and pass.
+function hasDroppedFiles(e) {
+  try {
+    const types = e.dataTransfer && e.dataTransfer.types;
+    if (!types) return true;
+    return Array.prototype.includes.call(types, "Files");
+  } catch (err) {
+    return true;
+  }
 }
 
 function handleDecPasswdSubmit(e) {
@@ -843,42 +862,56 @@ function buildRestoreAttempts(base, cookie, host) {
   return attempts;
 }
 
+// How many cookies.set calls may be in flight at once. A strictly sequential
+// restore of thousands of cookies is slow; the attempts chain of one cookie
+// stays sequential (fallbacks must be tried in order), cookies run in parallel.
+const RESTORE_CONCURRENCY = 6;
+
 async function restoreCookies(cookies) {
   // initialize progress bar
   initRestoreProgressBar(cookies.length)
 
   let total = 0;
+  let skipped = 0;
+  let processed = 0;
 
-  // lets save some syscalls by defining it once up here
-  // if i call it in the loop, its not gonna be very slow but hey,
-  // whose that concerned about that much accuracy of cookie expriation dates
   const epoch = new Date().getTime() / 1000;
 
   // cookie stores are per browser/profile: a backup made in another browser
   // carries store ids that do not exist here (see buildRestoreAttempts)
   const validStoreIds = await getCookieStoreIds();
 
-  for (const cookie of cookies) {
+  const restoreOne = async (cookie) => {
     if (!cookie || typeof cookie.name !== "string" || typeof cookie.value !== "string") {
-      continue;
+      skipped++;
+      return;
     }
     const domain = typeof cookie.domain === "string" ? cookie.domain : "";
     const path = typeof cookie.path === "string" ? cookie.path : "/";
     if (!domain) {
-      continue;
+      skipped++;
+      return;
     }
     const host = domain.startsWith(".") ? domain.slice(1) : domain;
-    let url =
-      "http" +
-      (cookie.secure ? "s" : "") +
-      "://" +
-      host +
-      path;
+    let url;
+    try {
+      // encodeURI saves paths with spaces/unicode; new URL rejects bad hosts
+      url = "http" + (cookie.secure ? "s" : "") + "://" + host + encodeURI(path);
+      new URL(url);
+    } catch (e) {
+      skipped++;
+      unknownErrWarning(cookie.name, host);
+      return;
+    }
 
-    // Firefox writes "expirationDate: null" for session cookies, so guard before comparing
-    if (cookie.expirationDate && epoch > cookie.expirationDate) {
+    // expirationDate must be a number: Firefox writes null for session
+    // cookies and foreign backups may carry anything; a non-number would
+    // fail the comparison below and then be rejected by cookies.set
+    const expirationDate = typeof cookie.expirationDate === "number" ? cookie.expirationDate : null;
+    if (expirationDate && epoch > expirationDate) {
       expirationWarning(cookie.name, url)
-      continue;
+      skipped++;
+      return;
     }
 
     // cookies.set accepts only a fixed set of fields; everything else
@@ -895,8 +928,8 @@ async function restoreCookies(cookies) {
     }
     // if session is true (or a Firefox-made backup has expirationDate: null),
     // then expirationDate needs to be omitted
-    if (cookie.session !== true && cookie.expirationDate != null) {
-      details.expirationDate = cookie.expirationDate;
+    if (cookie.session !== true && expirationDate != null) {
+      details.expirationDate = expirationDate;
     }
     if (cookie.secure != null) details.secure = Boolean(cookie.secure);
     if (cookie.httpOnly != null) details.httpOnly = Boolean(cookie.httpOnly);
@@ -940,7 +973,6 @@ async function restoreCookies(cookies) {
 
     if (restored) {
       total++;
-      updateRestoreProgressBar(total)
     } else {
       // the user-facing message stays localizable and short; the technical
       // reason goes to the console for bug reports
@@ -949,10 +981,26 @@ async function restoreCookies(cookies) {
       } catch (e) {}
       unknownErrWarning(cookie.name, url)
     }
-  }
+  };
 
-  // update messages
-  restoreSuccessAlert(total, cookies.length)
+  let next = 0;
+  const worker = async () => {
+    while (next < cookies.length) {
+      const i = next++;
+      await restoreOne(cookies[i]);
+      // progress counts every processed cookie, not just successes
+      processed++;
+      updateRestoreProgressBar(processed);
+    }
+  };
+  const workers = [];
+  for (let w = 0; w < Math.min(RESTORE_CONCURRENCY, cookies.length); w++) {
+    workers.push(worker());
+  }
+  await Promise.all(workers);
+
+  // update messages: restored + skipped + failed always add up to total
+  restoreSuccessAlert(total, cookies.length, skipped)
 
   // hide progress bar
   hideRestoreProgressBar()
@@ -964,8 +1012,8 @@ function makeDismissable(div) {
   btn.type = "button";
   btn.className = "alert-close";
   btn.textContent = "\u00d7";
-  btn.setAttribute("aria-label", "\u00d7");
-  btn.title = "\u00d7";
+  btn.setAttribute("aria-label", tr("dismissLabel"));
+  btn.title = tr("dismissLabel");
   btn.addEventListener("click", () => div.remove());
   div.appendChild(btn);
   return div;
@@ -993,15 +1041,15 @@ function createSuccessAlert(key, params) {
   return makeDismissable(div);
 }
 
-function unknownErrWarning(cookie_name, cookie_url) {
-  if (cookie_name && cookie_url) {
-    addToWarningMessageList(createWarning("cookieRestoreFail", { name: cookie_name, url: cookie_url }))
+function unknownErrWarning(cookieName, cookieUrl) {
+  if (cookieName && cookieUrl) {
+    addToWarningMessageList(createWarning("cookieRestoreFail", { name: cookieName, url: cookieUrl }))
   }
 }
 
-function expirationWarning(cookie_name, cookie_url) {
-  if (cookie_name && cookie_url) {
-    addToWarningMessageList(createWarning("cookieExpired", { name: cookie_name, url: cookie_url }))
+function expirationWarning(cookieName, cookieUrl) {
+  if (cookieName && cookieUrl) {
+    addToWarningMessageList(createWarning("cookieExpired", { name: cookieName, url: cookieUrl }))
   }
 }
 
@@ -1010,8 +1058,16 @@ function backupSuccessAlert(totalCookies) {
   addToSuccessMessageList(createSuccessAlert("backupSuccess", { count }))
 }
 
-function restoreSuccessAlert(restoredCookies, totalCookies) {
-  addToSuccessMessageList(createSuccessAlert("restoreSuccess", { restored: restoredCookies, total: totalCookies }));
+function restoreSuccessAlert(restoredCookies, totalCookies, skippedCookies) {
+  const skipped = Number(skippedCookies) || 0;
+  const params = { restored: restoredCookies, total: totalCookies };
+  const key = skipped > 0 ? "restoreSuccessSkipped" : "restoreSuccess";
+  if (skipped > 0) params.skipped = skipped;
+  // zero restored is not a success: same text, warning style
+  const node = Number(restoredCookies) === 0
+    ? createWarning(key, params)
+    : createSuccessAlert(key, params);
+  addToSuccessMessageList(node);
 }
 
 function hideBackupButton() {
@@ -1170,7 +1226,9 @@ function updatePasswordToggles() {
 
 function initRestoreProgressBar(maxVal) {
   document.getElementById("progress").style.display = "block";
-  document.getElementById("progressbar").setAttribute("max", maxVal);
+  const bar = document.getElementById("progressbar");
+  bar.setAttribute("max", maxVal);
+  bar.setAttribute("value", 0);
 }
 
 function updateRestoreProgressBar(val) {
@@ -1330,14 +1388,11 @@ function getBackupFileDataAsText(cb) {
       cb(e.target.result);
     }
     reader.onerror = () => {
-      alert(tr("readError"));
+      addToWarningMessageList(createWarning("readError"));
     }
   } else {
     cb(getCkzFileContentsFromTextarea())
   }
 }
 
-// legacy name, kept for compatibility
-function getCkzFileDataAsText(cb) {
-  return getBackupFileDataAsText(cb);
-}
+

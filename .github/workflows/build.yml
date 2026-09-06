@@ -39,6 +39,9 @@ jobs:
             assert.deepStrictEqual(chrome, firefox, 'manifest.json and manifest.firefox.json must differ only in background');
           "
 
+      - name: Smoke tests
+        run: node test/smoke.cjs
+
       - name: Read version from manifest
         run: echo "VERSION=$(node -p "require('./manifest.json').version")" >> "$GITHUB_ENV"
 
