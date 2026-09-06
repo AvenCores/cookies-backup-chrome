@@ -78,7 +78,8 @@ const TRANSLATIONS = {
   "passwordTooShort": "Password is too short, use at least 8 characters!",
   "fileTooLarge": "File is too large ({size})!",
   "showPassword": "Show password",
-  "hidePassword": "Hide password"
+  "hidePassword": "Hide password",
+  "dropHint": "or drag & drop the file here"
 },
 "ru": {
   "appTitle": "Бэкап и восстановление cookies",
@@ -129,7 +130,8 @@ const TRANSLATIONS = {
   "passwordTooShort": "Пароль слишком короткий, нужно минимум 8 символов!",
   "fileTooLarge": "Файл слишком большой ({size})!",
   "showPassword": "Показать пароль",
-  "hidePassword": "Скрыть пароль"
+  "hidePassword": "Скрыть пароль",
+  "dropHint": "или перетащите файл сюда"
 },
 "uk": {
   "appTitle": "Резервна копія та відновлення cookies",

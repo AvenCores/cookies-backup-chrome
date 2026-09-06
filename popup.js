@@ -417,6 +417,7 @@ document.getElementById("btn-upload-fallback").onclick = (e) => {
 };
 
 wirePasswordToggles();
+wireRestoreDropZone();
 
 async function handleEncPasswdSubmit(e) {
   e.preventDefault();
@@ -517,6 +518,7 @@ function hideJsonRestoreConfirm() {
   const input = document.getElementById("restore");
   if (input) input.value = "";
   cookieFile = null;
+  updateDroppedFileName();
 }
 
 async function handleJsonBackup() {
@@ -566,30 +568,118 @@ function handleJsonRestore() {
 }
 
 function handleFileSelect(e) {
-  cookieFile = e.target.files[0];
+  handlePickedBackupFile(e.target.files && e.target.files[0]);
+}
+
+// Shared by the file input and drag&drop: same validation, same UI.
+// Takes a File (or null) instead of an event so both sources behave 1:1.
+function handlePickedBackupFile(file) {
+  cookieFile = file || null;
+  const input = document.getElementById("restore");
   if (!cookieFile) {
     hideDecPasswordInputBox()
     hideJsonRestoreConfirm()
     clearDecPassword();
+    updateDroppedFileName();
     return;
   }
-  const name = cookieFile.name.toLowerCase();
+  const name = String(cookieFile.name || "").toLowerCase();
   if (name.endsWith(".json")) {
     hideFallbackCkzButton()
     showJsonRestoreConfirm()
+    updateDroppedFileName();
     return;
   }
   if (!name.endsWith(".ckz")) {
-    alert(tr("notBackupFile"));
-    e.target.value = "";
+    // inline warning (not alert) so a drop doesn't get stuck behind a modal
+    addToWarningMessageList(createWarning("notBackupFile"));
+    if (input) input.value = "";
     cookieFile = null;
     hideDecPasswordInputBox()
     hideJsonRestoreBox()
+    updateDroppedFileName();
     return;
   }
   hideFallbackCkzButton()
   hideJsonRestoreBox()
   showDecPasswordInputBox()
+  updateDroppedFileName();
+}
+
+// Shows the picked file name under the input. The native input shows it too
+// when the file came from the dialog; for drops the input sync is
+// best-effort (see wireRestoreDropZone), so this label is the reliable one.
+function updateDroppedFileName() {
+  const label = document.getElementById("dropped-file-name");
+  if (!label) return;
+  const file = typeof cookieFile !== "undefined" ? cookieFile : null;
+  if (file && file.name) {
+    label.textContent = file.name;
+    label.title = file.name;
+    label.classList.remove("hidden");
+  } else {
+    label.textContent = "";
+    label.title = "";
+    label.classList.add("hidden");
+  }
+}
+
+// Drag&drop onto the restore upload box. Reuses handlePickedBackupFile, so
+// a dropped file goes through exactly the same path as a dialog-picked one.
+function wireRestoreDropZone() {
+  const zone = document.getElementById("restore-upload-wrap");
+  if (!zone || zone.dataset.dropWired === "1") return;
+  zone.dataset.dropWired = "1";
+  let depth = 0;
+  const allowCopy = (e) => {
+    e.preventDefault();
+    try {
+      if (e.dataTransfer) e.dataTransfer.dropEffect = "copy";
+    } catch (err) {}
+  };
+  zone.addEventListener("dragenter", (e) => {
+    allowCopy(e);
+    depth++;
+    zone.classList.add("dragover");
+  });
+  zone.addEventListener("dragover", allowCopy);
+  zone.addEventListener("dragleave", (e) => {
+    e.preventDefault();
+    depth = Math.max(0, depth - 1);
+    if (depth === 0) zone.classList.remove("dragover");
+  });
+  zone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    depth = 0;
+    zone.classList.remove("dragover");
+    const files = e.dataTransfer && e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+    // if several files were dropped, prefer the first .ckz/.json one
+    let picked = files[0];
+    for (let i = 0; i < files.length; i++) {
+      const n = String(files[i].name || "").toLowerCase();
+      if (n.endsWith(".ckz") || n.endsWith(".json")) {
+        picked = files[i];
+        break;
+      }
+    }
+    // reflect the drop in the native input when possible (best-effort:
+    // restore works from cookieFile either way)
+    try {
+      const input = document.getElementById("restore");
+      if (input && typeof DataTransfer === "function") {
+        const dt = new DataTransfer();
+        dt.items.add(picked);
+        input.files = dt.files;
+      }
+    } catch (err) {}
+    handlePickedBackupFile(picked);
+  });
+  // a missed drop must never navigate the popup / standalone tab away
+  // (dropping a .json onto the tab would otherwise replace the UI)
+  document.addEventListener("dragover", (e) => e.preventDefault());
+  document.addEventListener("drop", (e) => e.preventDefault());
 }
 
 function handleDecPasswdSubmit(e) {

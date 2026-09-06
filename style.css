@@ -318,6 +318,27 @@ body.standalone textarea {
   border: 1.5px dotted var(--border);
 }
 
+/* drag&drop target highlight */
+#restore-upload-wrap.dragover {
+  border-style: solid;
+  border-color: var(--link);
+  box-shadow: var(--focus-ring) 0 0 0 3px;
+}
+
+.drop-hint {
+  font-size: 11px;
+}
+
+.dropped-file-name {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--text);
+}
+
 .btn-primary {
   appearance: none;
   font-size: 14px;
