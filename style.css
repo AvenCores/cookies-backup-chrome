@@ -570,13 +570,17 @@ body.standalone textarea {
 }
 
 .insecure-box .two-col-group {
+  flex-direction: column;
   justify-content: flex-start;
-  flex-wrap: wrap;
+  align-items: stretch;
   row-gap: 6px;
 }
 
-.insecure-box .two-col-group .btn-danger {
-  flex: 1 1 auto;
+.insecure-box .two-col-group .btn-danger,
+.insecure-box .two-col-group .btn-enter {
+  flex: none;
+  width: 100%;
+  white-space: normal;
 }
 
 input[type="password"],
