@@ -1,3 +1,12 @@
+/* popup is only ~285px wide: every container must include padding/border
+   in its width, otherwise .wrap padding (1em + 1.5px border) spills past
+   the viewport and Chrome clips the right edge (see enc-passwd sub-screen) */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 :root {
   --very-light-blue-grey: #eceff1;
   --light-blue-grey: #cfd8dc;
@@ -76,6 +85,9 @@ body {
     Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   width: 285px;
   max-height: 500px;
+  margin: 0;
+  box-sizing: border-box;
+  overflow-x: hidden;
   color: var(--text);
   background-color: var(--bg);
   background-image: linear-gradient(var(--grid-line) 0.4px, transparent 0.4px), linear-gradient(to right, var(--grid-line) 0.4px, var(--bg) 0.4px);
@@ -291,6 +303,10 @@ body.standalone textarea {
   /* bounded so long warning lists scroll inside the popup instead of
      spilling past body's max-height with no way to reach them */
   max-height: 500px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   padding: 0px 5px;
   row-gap: 10px;
 }
@@ -300,6 +316,9 @@ body.standalone textarea {
   flex-direction: column;
   flex-wrap: nowrap;
   row-gap: 10px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   padding: 1em;
   border-radius: 6px;
   background-color: var(--card-bg);
@@ -312,6 +331,9 @@ body.standalone textarea {
   flex-wrap: nowrap;
   flex-direction: column;
   row-gap: 12px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   background: var(--wrap-bg);
   padding: 1em;
   border: 1.5px solid var(--border);
@@ -523,6 +545,7 @@ textarea:focus {
 }
 
 .btn-enter {
+  flex-shrink: 0;
   color: var(--text);
   background-color: var(--wrap-bg);
   padding: 5px 10px;
@@ -604,6 +627,12 @@ textarea:focus {
 
 input[type="file"] {
   font-size: 11px;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 input[type="file"]::file-selector-button {
@@ -741,4 +770,23 @@ input[type="file"]::file-selector-button:active {
   align-items: center;
   column-gap: 4px;
   min-width: 0;
+  max-width: 100%;
+}
+
+/* inside a nowrap row (password + eye + enter) a width:100% input never
+   shrinks and pushes the card past the 285px popup. width:0 + flex:1 lets
+   the field take free space but shrink to zero instead of overflowing */
+.two-col-group input[type="password"],
+.two-col-group input.pwd-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 0;
+}
+
+#enc-passwd-form,
+#dec-passwd-form,
+.gap-5px,
+.gap-15px {
+  min-width: 0;
+  max-width: 100%;
 }
