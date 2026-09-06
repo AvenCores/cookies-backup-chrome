@@ -56,19 +56,64 @@
         <button class="btn-primary" type="button" id="btn-backup" data-i18n="backupBtn">
           Backup all cookies
         </button>
-        <button class="btn-secondary" type="button" id="btn-backup-json" data-i18n="backupJsonBtn">
-          Backup without password (.json)
-        </button>
-        <div class="insecure-box hidden" id="json-export-confirm">
-          <div class="insecure-title" data-i18n="jsonWarningTitle">⚠️ Insecure backup</div>
-          <p class="insecure-text" data-i18n="jsonWarningText">
-            A .json file stores your cookies in plain text WITHOUT encryption. Anyone who gets this file can steal your accounts. Prefer a password-protected .ckz backup.
-          </p>
-          <div class="two-col-group">
-            <button class="btn-danger" type="button" id="btn-json-export-confirm" data-i18n="jsonExportAnyway">
-              Export .json anyway
+        <div class="split-wrap">
+          <div class="split-row">
+            <button class="btn-secondary split-main" type="button" id="btn-backup-plain" data-i18n="exportPlainBtn">
+              Export without password
             </button>
-            <button class="btn-enter text-muted" type="button" id="btn-json-export-cancel" data-i18n="cancelBtn">
+            <button
+              class="btn-secondary split-toggle"
+              type="button"
+              id="btn-format-toggle"
+              aria-haspopup="listbox"
+              aria-expanded="false"
+              title="Export format"
+            >
+              <span id="format-toggle-name">JSON</span>
+              <span class="locale-caret" aria-hidden="true">▾</span>
+            </button>
+          </div>
+          <ul id="format-menu" class="format-menu hidden" role="listbox" tabindex="-1">
+            <li class="format-option selected" role="option" aria-selected="true" data-format="json" tabindex="-1">
+              <span class="format-badge fmt-json" aria-hidden="true">{ }</span>
+              <span class="format-text"><b>JSON</b><small data-i18n="fmtJsonSub">Standard</small></span>
+              <span class="format-check" aria-hidden="true">✓</span>
+            </li>
+            <li class="format-option" role="option" aria-selected="false" data-format="netscape" tabindex="-1">
+              <span class="format-badge fmt-netscape" aria-hidden="true">N</span>
+              <span class="format-text"><b>Netscape</b><small data-i18n="fmtNetscapeSub">Wget / Curl</small></span>
+              <span class="format-check" aria-hidden="true">✓</span>
+            </li>
+            <li class="format-option" role="option" aria-selected="false" data-format="header" tabindex="-1">
+              <span class="format-badge fmt-header" aria-hidden="true">H</span>
+              <span class="format-text"><b>Header String</b><small data-i18n="fmtHeaderSub">name=value;</small></span>
+              <span class="format-check" aria-hidden="true">✓</span>
+            </li>
+            <li class="format-option" role="option" aria-selected="false" data-format="puppeteer" tabindex="-1">
+              <span class="format-badge fmt-puppeteer" aria-hidden="true">P</span>
+              <span class="format-text"><b>Puppeteer</b><small data-i18n="fmtPuppeteerSub">Node.js</small></span>
+              <span class="format-check" aria-hidden="true">✓</span>
+            </li>
+            <li class="format-option" role="option" aria-selected="false" data-format="pydict" tabindex="-1">
+              <span class="format-badge fmt-pydict" aria-hidden="true">Py</span>
+              <span class="format-text"><b>Python Dict</b><small data-i18n="fmtPydictSub">Requests</small></span>
+              <span class="format-check" aria-hidden="true">✓</span>
+            </li>
+            <li class="format-option" role="option" aria-selected="false" data-format="csv" tabindex="-1">
+              <span class="format-badge fmt-csv" aria-hidden="true">&#9638;</span>
+              <span class="format-text"><b>CSV</b><small data-i18n="fmtCsvSub">Excel / Audit</small></span>
+              <span class="format-check" aria-hidden="true">✓</span>
+            </li>
+          </ul>
+        </div>
+        <div class="insecure-box hidden" id="plain-export-confirm">
+          <div class="insecure-title" data-i18n="jsonWarningTitle">⚠️ Insecure backup</div>
+          <p class="insecure-text" id="plain-export-text"></p>
+          <div class="two-col-group">
+            <button class="btn-danger" type="button" id="btn-plain-export-confirm" data-i18n="plainExportAnyway">
+              Export anyway
+            </button>
+            <button class="btn-enter text-muted" type="button" id="btn-plain-export-cancel" data-i18n="cancelBtn">
               Cancel
             </button>
           </div>
@@ -127,7 +172,7 @@
               type="file"
               id="restore"
               name="file"
-              accept=".ckz,.json,application/json"
+              accept=".ckz,.json,.txt,.js,.py,.csv,application/json,text/plain,text/csv,text/javascript"
               tabindex="-1"
               aria-hidden="true"
             />
@@ -138,16 +183,26 @@
         <p class="text-center" id="btn-upload-fallback">
           <a href="#" data-i18n="uploadFallback">Unable to upload a backup file?</a>
         </p>
-        <div class="insecure-box hidden" id="json-restore-confirm">
+        <div class="insecure-box hidden" id="plain-restore-confirm">
           <div class="insecure-title" data-i18n="jsonWarningTitle">⚠️ Insecure backup</div>
-          <p class="insecure-text" data-i18n="jsonRestoreWarning">
-            This .json file is NOT encrypted. Cookies from it will be restored without a password, but anyone who had this file could have read or modified it. Continue only with files you trust.
-          </p>
+          <p class="insecure-text" id="plain-restore-text"></p>
+          <div class="gap-5px hidden" id="restore-domain-wrap">
+            <small><b data-i18n="domainLabel">Domain for Header / Python imports</b></small>
+            <input
+              type="text"
+              id="inp-restore-domain"
+              class="domain-input"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="example.com"
+              data-i18n-placeholder="domainPlaceholder"
+            />
+          </div>
           <div class="two-col-group">
-            <button class="btn-danger" type="button" id="btn-json-restore-confirm" data-i18n="jsonRestoreAnyway">
-              Restore .json anyway
+            <button class="btn-danger" type="button" id="btn-plain-restore-confirm" data-i18n="plainRestoreAnyway">
+              Restore anyway
             </button>
-            <button class="btn-enter text-muted" type="button" id="btn-json-restore-cancel" data-i18n="cancelBtn">
+            <button class="btn-enter text-muted" type="button" id="btn-plain-restore-cancel" data-i18n="cancelBtn">
               Cancel
             </button>
           </div>
@@ -179,6 +234,18 @@
                 <button class="btn-enter text-muted pwd-toggle" type="button" id="toggle-dec-passwd" aria-label="Show password" title="Show password">&#128065;</button>
                 <button class="text-muted btn-enter" type="submit">&#9166;</button>
                 </div>
+              </div>
+              <div class="gap-5px hidden" id="dec-domain-wrap">
+                <small><b data-i18n="domainLabel">Domain for Header / Python imports</b></small>
+                <input
+                  type="text"
+                  id="inp-dec-domain"
+                  class="domain-input"
+                  autocomplete="off"
+                  spellcheck="false"
+                  placeholder="example.com"
+                  data-i18n-placeholder="domainPlaceholder"
+                />
               </div>
               <button class="btn-secondary btn-back" type="button" id="btn-dec-back" data-i18n="backBtn">
                 Back
@@ -281,5 +348,6 @@
   <!-- https://bitwiseshiftleft.github.io/sjcl/sjcl.js -->
   <script src="sjcl.js"></script>
   <script src="locales.js"></script>
+  <script src="formats.js"></script>
   <script src="popup.js"></script>
 </html>

@@ -252,6 +252,10 @@ function doApplyI18n() {
   try {
     updateDroppedFileName();
   } catch (e) {}
+  // re-render the format-dependent export/restore labels for the new language
+  try {
+    refreshDynamicTexts();
+  } catch (e) {}
 }
 
 function updateThemeToggleLabel(theme) {
@@ -539,11 +543,11 @@ document
 
 document.getElementById("btn-backup").onclick = showEncPasswordInputBox;
 
-document.getElementById("btn-backup-json").onclick = showJsonExportWarning;
-document.getElementById("btn-json-export-confirm").onclick = handleJsonBackup;
-document.getElementById("btn-json-export-cancel").onclick = hideJsonExportWarning;
-document.getElementById("btn-json-restore-confirm").onclick = handleJsonRestore;
-document.getElementById("btn-json-restore-cancel").onclick = hideJsonRestoreConfirm;
+document.getElementById("btn-backup-plain").onclick = showPlainExportConfirm;
+document.getElementById("btn-plain-export-confirm").onclick = handlePlainBackup;
+document.getElementById("btn-plain-export-cancel").onclick = hidePlainExportConfirm;
+document.getElementById("btn-plain-restore-confirm").onclick = handlePlainRestore;
+document.getElementById("btn-plain-restore-cancel").onclick = cancelPlainRestore;
 
 document.getElementById("btn-upload-fallback").onclick = (e) => {
   if (e) e.preventDefault();
@@ -559,6 +563,7 @@ wirePasswordToggles();
 wireRestoreDropZone();
 wireFilePicker();
 wireEncSubmitState();
+initExportFormat();
 
 // ---- About / Donate modals ----
 // Credits (author / based on) live inside the About dialog; social links
@@ -728,11 +733,12 @@ async function handleEncPasswdSubmit(e) {
     // COMPAT: iter is stored inside the .ckz payload, so a higher count is
     // still readable by the original extension (old sjcl.decrypt just works
     // slower). Old backups with iter:10000 keep decrypting here untouched.
-    const data = sjcl.encrypt(pass, JSON.stringify(cookies), { ks: 256, iter: 100000 });
-    const filename = backupFileName("ckz");
+    const format = getExportFormat();
+    const data = encryptCookiesForExport(format, cookies, pass);
+    const filename = backupFileNameFull(encryptedSuffixFor(format));
     // show success only if the download actually started (user may cancel
     // the save dialog -> warning only, no misleading success)
-    const started = await downloadJson(data, filename);
+    const started = await downloadTextFile(data, filename);
     if (started) backupSuccessAlert(cookies.length)
   } finally {
     // wipe passwords from memory/DOM so they don't linger in the popup
@@ -742,58 +748,402 @@ async function handleEncPasswdSubmit(e) {
   }
 }
 
-function backupFileName(ext) {
+function backupFileNameFull(suffix) {
   // ISO-like stamp: unambiguous across locales and sorts chronologically
   const d = new Date();
   const pad = (n) => String(n).padStart(2, "0");
   const date = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const time = `${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
-  return `cookies-${date}-${time}.${ext}`;
+  return `cookies-${date}-${time}${suffix}`;
 }
 
-function showJsonExportWarning() {
-  document.getElementById("btn-backup-json").style.display = "none";
-  document.getElementById("json-export-confirm").classList.remove("hidden");
+function backupFileName(ext) {
+  return backupFileNameFull("." + ext);
 }
 
-function hideJsonExportWarning() {
-  document.getElementById("json-export-confirm").classList.add("hidden");
-  document.getElementById("btn-backup-json").style.display = "";
+// ---- multi-format export/import (serializers live in formats.js) ----
+// Every format can be exported with a password (.ckz, encrypted envelope;
+// json keeps the legacy direct-array payload) or without one (plain text).
+
+const KNOWN_EXPORT_FORMATS = ["json", "netscape", "header", "puppeteer", "pydict", "csv"];
+let exportFormat = "json";
+// Picked plain-text backup file, read ahead at pick time: { format, text }
+let pendingPlain = null;
+
+function knownFormatOrJson(id) {
+  try {
+    if (typeof isKnownFormat === "function") return isKnownFormat(id) ? id : "json";
+  } catch (e) {}
+  return KNOWN_EXPORT_FORMATS.indexOf(id) !== -1 ? id : "json";
 }
 
-function showJsonRestoreConfirm() {
+function getExportFormat() {
+  return knownFormatOrJson(exportFormat);
+}
+
+function safeShortName(id) {
+  try {
+    if (typeof formatShortName === "function") return formatShortName(id);
+  } catch (e) {}
+  return String(id);
+}
+
+function safeSerialize(format, cookies) {
+  if (typeof formatSerialize === "function") return formatSerialize(format, cookies);
+  if (format === "json") return JSON.stringify(cookies, null, 2);
+  throw new Error("format support is not available");
+}
+
+function safeParse(format, text, opts) {
+  if (typeof formatParse === "function") return formatParse(format, text, opts);
+  if (format === "json") return JSON.parse(text);
+  throw new Error("format support is not available");
+}
+
+function safeSniff(text, filename) {
+  try {
+    if (typeof sniffPlainFormat === "function") return sniffPlainFormat(text, filename);
+  } catch (e) {}
+  return "json";
+}
+
+function plainSuffixFor(format) {
+  try {
+    if (typeof formatPlainSuffix === "function") return formatPlainSuffix(format);
+  } catch (e) {}
+  return ".txt";
+}
+
+function encryptedSuffixFor(format) {
+  try {
+    if (typeof formatEncryptedSuffix === "function") return formatEncryptedSuffix(format);
+  } catch (e) {}
+  return ".ckz";
+}
+
+function encryptCookiesForExport(format, cookies, pass) {
+  // json keeps the legacy direct-array payload so old extension versions
+  // (and old backups) keep working in both directions
+  if (format === "json") {
+    return sjcl.encrypt(pass, JSON.stringify(cookies), { ks: 256, iter: 100000 });
+  }
+  const plain = safeSerialize(format, cookies);
+  let envelope;
+  try {
+    if (typeof wrapEncryptedPayload === "function") envelope = wrapEncryptedPayload(format, plain);
+  } catch (e) {
+    envelope = null;
+  }
+  if (!envelope) throw new Error("format support is not available");
+  return sjcl.encrypt(pass, envelope, { ks: 256, iter: 100000 });
+}
+
+function cookiesFromDecrypted(decrypted, fallbackDomain) {
+  let unwrapped = null;
+  try {
+    if (typeof unwrapDecryptedPayload === "function") unwrapped = unwrapDecryptedPayload(decrypted);
+  } catch (e) {
+    unwrapped = null;
+  }
+  if (!unwrapped) {
+    // not our envelope: try the legacy direct array before giving up
+    const legacy = JSON.parse(decrypted);
+    if (!Array.isArray(legacy)) throw new Error("invalid backup");
+    return legacy;
+  }
+  if (unwrapped.legacy) return unwrapped.cookies;
+  const opts = fallbackDomain ? { fallbackDomain } : undefined;
+  return safeParse(unwrapped.format, unwrapped.payload, opts);
+}
+
+// Header String / Python Dict carry names+values only, so restoring them
+// needs a domain. It comes from these optional inputs; without it such
+// cookies are skipped and reported by the restore counters.
+function normalizeDomain(v) {
+  if (typeof v !== "string") return "";
+  return v.trim().replace(/^\.+/, "").toLowerCase();
+}
+
+function getRestoreDomain() {
+  try {
+    const el = document.getElementById("inp-restore-domain");
+    return el ? el.value : "";
+  } catch (e) {
+    return "";
+  }
+}
+
+function getDecDomain() {
+  try {
+    const el = document.getElementById("inp-dec-domain");
+    return el ? el.value : "";
+  } catch (e) {
+    return "";
+  }
+}
+
+function menuFormatOptions() {
+  let menu = null;
+  try {
+    menu = document.getElementById("format-menu");
+  } catch (e) {
+    menu = null;
+  }
+  if (!menu || typeof menu.querySelectorAll !== "function") return [];
+  try {
+    return Array.prototype.slice.call(menu.querySelectorAll(".format-option"));
+  } catch (e) {
+    return [];
+  }
+}
+
+function updateFormatToggle() {
+  const toggle = document.getElementById("btn-format-toggle");
+  const nameEl = document.getElementById("format-toggle-name");
+  const short = safeShortName(getExportFormat());
+  if (nameEl) nameEl.textContent = short;
+  if (toggle) {
+    const label = tr("exportTitle") + ": " + short;
+    toggle.setAttribute("aria-label", label);
+    toggle.title = label;
+  }
+}
+
+function refreshFormatGrid() {
+  const current = getExportFormat();
+  for (const option of menuFormatOptions()) {
+    const active = !!(option.dataset && option.dataset.format === current);
+    if (option.classList && typeof option.classList.toggle === "function") {
+      option.classList.toggle("selected", active);
+    }
+    if (typeof option.setAttribute === "function") {
+      option.setAttribute("aria-selected", active ? "true" : "false");
+    }
+  }
+  updateFormatToggle();
+  updatePlainExportLabel();
+}
+
+function updatePlainExportLabel() {
+  const btn = document.getElementById("btn-backup-plain");
+  if (!btn) return;
+  // {format} is our own short display name (JSON, Netscape, ...), never user data.
+  // The button is single-line with ellipsis (see .split-main), so mirror the
+  // full text into the tooltip.
+  btn.textContent = tr("exportPlainBtn", { format: safeShortName(getExportFormat()) });
+  btn.title = btn.textContent;
+}
+
+function setExportFormat(id) {
+  exportFormat = knownFormatOrJson(id);
+  refreshFormatGrid();
+  try {
+    Promise.resolve(api.storage.local.set({ exportFormat })).catch(() => {});
+  } catch (e) {}
+}
+
+function isFormatMenuOpen() {
+  try {
+    const menu = document.getElementById("format-menu");
+    return !!(menu && menu.classList && typeof menu.classList.contains === "function"
+      && !menu.classList.contains("hidden"));
+  } catch (e) {
+    return false;
+  }
+}
+
+function openFormatMenu() {
+  const menu = document.getElementById("format-menu");
+  const toggle = document.getElementById("btn-format-toggle");
+  if (!menu || !toggle) return;
+  refreshFormatGrid();
+  menu.classList.remove("hidden");
+  toggle.setAttribute("aria-expanded", "true");
+  const options = menuFormatOptions();
+  const current = options.find((li) => li.dataset && li.dataset.format === getExportFormat()) || options[0];
+  if (current && typeof current.focus === "function") current.focus();
+}
+
+function closeFormatMenu(refocus) {
+  const menu = document.getElementById("format-menu");
+  const toggle = document.getElementById("btn-format-toggle");
+  if (!menu || !toggle) return;
+  menu.classList.add("hidden");
+  toggle.setAttribute("aria-expanded", "false");
+  if (refocus) {
+    try {
+      toggle.focus();
+    } catch (e) {}
+  }
+}
+
+function wireFormatGrid() {
+  const toggle = document.getElementById("btn-format-toggle");
+  const menu = document.getElementById("format-menu");
+  if (!toggle || !menu || toggle.dataset.wired === "1") return;
+  toggle.dataset.wired = "1";
+  toggle.addEventListener("click", (e) => {
+    if (e && typeof e.stopPropagation === "function") e.stopPropagation();
+    if (isFormatMenuOpen()) closeFormatMenu(false);
+    else openFormatMenu();
+  });
+  toggle.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      if (typeof e.preventDefault === "function") e.preventDefault();
+      openFormatMenu();
+    }
+  });
+  const pick = (target) => {
+    const option = target && target.closest ? target.closest(".format-option") : null;
+    if (!option || !option.dataset || !option.dataset.format) return false;
+    setExportFormat(option.dataset.format);
+    return true;
+  };
+  menu.addEventListener("click", (e) => {
+    if (pick(e.target)) closeFormatMenu(true);
+  });
+  menu.addEventListener("keydown", (e) => {
+    const options = menuFormatOptions();
+    if (!options.length) return;
+    let i = options.indexOf(document.activeElement);
+    if (e.key === "ArrowDown") {
+      if (typeof e.preventDefault === "function") e.preventDefault();
+      options[(i + 1 + options.length) % options.length].focus();
+    } else if (e.key === "ArrowUp") {
+      if (typeof e.preventDefault === "function") e.preventDefault();
+      options[(i - 1 + options.length) % options.length].focus();
+    } else if (e.key === "Home") {
+      if (typeof e.preventDefault === "function") e.preventDefault();
+      options[0].focus();
+    } else if (e.key === "End") {
+      if (typeof e.preventDefault === "function") e.preventDefault();
+      options[options.length - 1].focus();
+    } else if (e.key === "Enter" || e.key === " ") {
+      if (typeof e.preventDefault === "function") e.preventDefault();
+      if (pick(document.activeElement)) closeFormatMenu(true);
+    } else if (e.key === "Escape") {
+      if (typeof e.stopPropagation === "function") e.stopPropagation();
+      closeFormatMenu(true);
+    }
+  });
+  document.addEventListener("click", (e) => {
+    if (!isFormatMenuOpen()) return;
+    try {
+      const wrap = document.querySelector(".split-wrap");
+      if (wrap && e.target && typeof wrap.contains === "function" && wrap.contains(e.target)) return;
+    } catch (err) {}
+    closeFormatMenu(false);
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && isFormatMenuOpen()) {
+      closeFormatMenu(true);
+    }
+  });
+}
+
+async function initExportFormat() {
+  wireFormatGrid();
+  try {
+    const saved = (await api.storage.local.get("exportFormat"))?.exportFormat;
+    if (typeof saved === "string") exportFormat = knownFormatOrJson(saved);
+  } catch (e) {}
+  refreshFormatGrid();
+}
+
+// Re-render the format-dependent labels after a language switch while a
+// confirm box is open (called from doApplyI18n, must never throw)
+function refreshDynamicTexts() {
+  try {
+    updatePlainExportLabel();
+  } catch (e) {}
+  try {
+    const exp = document.getElementById("plain-export-confirm");
+    if (exp && exp.classList && typeof exp.classList.contains === "function"
+        && !exp.classList.contains("hidden")) {
+      fillPlainExportText();
+    }
+  } catch (e) {}
+  try {
+    const res = document.getElementById("plain-restore-confirm");
+    if (res && res.classList && typeof res.classList.contains === "function"
+        && !res.classList.contains("hidden")) {
+      if (pendingPlain && pendingPlain.format) fillPlainRestoreText(pendingPlain.format);
+      else if (isFallbackActive()) fillPlainRestoreText(null);
+    }
+  } catch (e) {}
+}
+
+function showPlainExportConfirm() {
+  document.getElementById("btn-backup").style.display = "none";
+  document.getElementById("btn-backup-plain").style.display = "none";
+  fillPlainExportText();
+  document.getElementById("plain-export-confirm").classList.remove("hidden");
+}
+
+function hidePlainExportConfirm() {
+  document.getElementById("plain-export-confirm").classList.add("hidden");
+  const b1 = document.getElementById("btn-backup");
+  if (b1) b1.style.display = "";
+  const b2 = document.getElementById("btn-backup-plain");
+  if (b2) b2.style.display = "";
+}
+
+function fillPlainExportText() {
+  const el = document.getElementById("plain-export-text");
+  if (!el) return;
+  el.textContent = tr("plainExportText", { format: safeShortName(getExportFormat()) });
+}
+
+function showPlainRestoreConfirm(format) {
   hideDecPasswordInputBox();
-  document.getElementById("json-restore-confirm").classList.remove("hidden");
+  fillPlainRestoreText(format);
+  updateRestoreDomainVisibility(format);
+  document.getElementById("plain-restore-confirm").classList.remove("hidden");
 }
 
-function hideJsonRestoreBanner() {
-  document.getElementById("json-restore-confirm").classList.add("hidden");
+function hidePlainRestoreConfirm() {
+  const el = document.getElementById("plain-restore-confirm");
+  if (el) el.classList.add("hidden");
 }
 
-function hideJsonRestoreConfirm() {
-  hideJsonRestoreBanner();
-  // reset the file input so the user can pick the same file again if needed
+function fillPlainRestoreText(format) {
+  const el = document.getElementById("plain-restore-text");
+  if (!el) return;
+  if (format) {
+    el.textContent = tr("plainRestoreFileText", { format: safeShortName(format) });
+  } else {
+    el.textContent = tr("plainRestorePasteText");
+  }
+}
+
+function updateRestoreDomainVisibility(format) {
+  const wrap = document.getElementById("restore-domain-wrap");
+  if (!wrap || !wrap.classList || typeof wrap.classList.toggle !== "function") return;
+  // Header / Python carry names+values only: offer a domain so they can be restored
+  const need = !format || format === "header" || format === "pydict";
+  wrap.classList.toggle("hidden", !need);
+}
+
+// Cancel is a way back: reset the file input so the same file can be picked again
+function cancelPlainRestore() {
+  hidePlainRestoreConfirm();
   const input = document.getElementById("restore");
   if (input) input.value = "";
   cookieFile = null;
+  pendingPlain = null;
   updateDroppedFileName();
-  // Cancel is a way back: restore the fallback link hidden on file pick
   const fb = document.getElementById("btn-upload-fallback");
   if (fb) fb.style.display = "";
 }
 
 // ---- back navigation: every sub-screen must have a way back without reload ----
 
-// Backup with password -> back to the two backup buttons
+// Backup with password -> back to the export buttons + format grid
 function resetBackupView() {
   clearMessages();
   clearEncPasswords();
   document.getElementById("enc-passwd").style.display = "none";
-  hideJsonExportWarning();
-  const b1 = document.getElementById("btn-backup");
-  if (b1) b1.style.display = "";
-  const b2 = document.getElementById("btn-backup-json");
-  if (b2) b2.style.display = "";
+  hidePlainExportConfirm();
 }
 
 function isFallbackActive() {
@@ -801,15 +1151,17 @@ function isFallbackActive() {
   return !!(wrap && wrap.style.display === "none");
 }
 
-// Restore with a picked .ckz file -> back to the file picker
+// Restore with a picked file -> back to the file picker
 function resetRestoreFileState() {
   const input = document.getElementById("restore");
   if (input) input.value = "";
   cookieFile = null;
+  pendingPlain = null;
   updateDroppedFileName();
   clearDecPassword();
   hideDecPasswordInputBox();
-  hideJsonRestoreBanner();
+  hidePlainRestoreConfirm();
+  hideDecDomainRow();
   const fb = document.getElementById("btn-upload-fallback");
   if (fb) fb.style.display = "";
   const up = document.getElementById("restore-upload-wrap");
@@ -821,13 +1173,15 @@ function exitFallbackMode() {
   const input = document.getElementById("restore");
   if (input) input.value = "";
   cookieFile = null;
+  pendingPlain = null;
   updateDroppedFileName();
   clearDecPassword();
   try {
     document.getElementById("ckz-textarea").value = "";
   } catch (e) {}
   hideDecPasswordInputBox();
-  hideJsonRestoreBanner();
+  hidePlainRestoreConfirm();
+  hideDecDomainRow();
   const ta = document.getElementById("restore-using-text-wrap");
   if (ta) ta.style.display = "none";
   const up = document.getElementById("restore-upload-wrap");
@@ -844,9 +1198,28 @@ function handleRestoreBack() {
   else resetRestoreFileState();
 }
 
-async function handleJsonBackup() {
+function hideDecDomainRow() {
+  const wrap = document.getElementById("dec-domain-wrap");
+  if (wrap && wrap.classList && typeof wrap.classList.add === "function") {
+    wrap.classList.add("hidden");
+  }
+}
+
+// An encrypted Header/Python backup carries names+values only: offer the
+// domain field up-front when the filename already tells the inner format
+// (cookies-...-header.ckz / -pydict.ckz). A renamed file still restores,
+// its domain-less cookies are just skipped and reported.
+function revealDecDomainIfLossy(lowerName) {
+  const wrap = document.getElementById("dec-domain-wrap");
+  if (!wrap || !wrap.classList || typeof wrap.classList.toggle !== "function") return;
+  const lossy = lowerName.indexOf("-header.ckz") !== -1 || lowerName.indexOf("-pydict.ckz") !== -1;
+  wrap.classList.toggle("hidden", !lossy);
+}
+
+async function handlePlainBackup() {
   clearMessages();
 
+  const format = getExportFormat();
   let cookies;
   try {
     cookies = await cookiesGetAll({});
@@ -858,30 +1231,42 @@ async function handleJsonBackup() {
     addToWarningMessageList(createWarning("noCookies"));
     return;
   }
-  // plain JSON: human-readable, NO password, NO encryption.
+  // plain text: human-readable, NO password, NO encryption.
   // The insecure-box above already warned the user before this runs.
-  const data = JSON.stringify(cookies, null, 2);
-  const filename = backupFileName("json");
-  const started = await downloadJson(data, filename);
+  let data;
+  try {
+    data = safeSerialize(format, cookies);
+  } catch (err) {
+    addToWarningMessageList(createWarning("unknownError"));
+    return;
+  }
+  if (!data || !data.trim()) {
+    addToWarningMessageList(createWarning("noCookies"));
+    return;
+  }
+  const filename = backupFileNameFull(plainSuffixFor(format));
+  const started = await downloadTextFile(data, filename);
   if (started) backupSuccessAlert(cookies.length);
 }
 
-function handleJsonRestore() {
+function handlePlainRestore() {
   clearMessages();
-  getBackupFileDataAsText(async (data) => {
-    if (!data) {
+  const finish = async (text, formatHint) => {
+    if (typeof text !== "string" || !text.trim()) {
       addToWarningMessageList(createWarning("invalidFile"));
       return;
     }
-    // same size guard as the .ckz path: never JSON.parse gigabytes
-    const dataBytes = utf8ByteLength(data);
+    // same size guard as the .ckz path: never parse gigabytes
+    const dataBytes = utf8ByteLength(text);
     if (dataBytes > MAX_BACKUP_BYTES) {
       addToWarningMessageList(createWarning("fileTooLarge", { size: formatByteSize(dataBytes) }));
       return;
     }
+    const format = formatHint || safeSniff(text, cookieFile && cookieFile.name);
+    const fallbackDomain = normalizeDomain(getRestoreDomain());
     let cookies;
     try {
-      cookies = JSON.parse(data);
+      cookies = safeParse(format, text, fallbackDomain ? { fallbackDomain } : undefined);
     } catch (error) {
       addToWarningMessageList(createWarning("invalidFile"));
       return;
@@ -894,52 +1279,129 @@ function handleJsonRestore() {
       addToWarningMessageList(createWarning("emptyBackup"));
       return;
     }
-    // extra safety: a .ckz payload is a JSON object/string, never an array,
-    // so an array here really is a plain-JSON backup
     await restoreCookies(cookies);
     // collapse back to the picker so a second click cannot re-submit
     if (isFallbackActive()) exitFallbackMode();
-    else hideJsonRestoreConfirm();
-  });
+    else cancelPlainRestore();
+  };
+  if (pendingPlain && typeof pendingPlain.text === "string") {
+    finish(pendingPlain.text, pendingPlain.format);
+  } else {
+    getBackupFileDataAsText((data) => {
+      finish(data, null);
+    });
+  }
 }
 
 function handleFileSelect(e) {
   handlePickedBackupFile(e.target.files && e.target.files[0]);
 }
 
+function isEncryptedBackupName(lowerName) {
+  return lowerName.endsWith(".ckz");
+}
+
+function isSupportedBackupName(lowerName) {
+  return isEncryptedBackupName(lowerName)
+    || lowerName.endsWith(".json")
+    || lowerName.endsWith(".txt")
+    || lowerName.endsWith(".js")
+    || lowerName.endsWith(".cjs")
+    || lowerName.endsWith(".mjs")
+    || lowerName.endsWith(".py")
+    || lowerName.endsWith(".csv");
+}
+
 // Shared by the file input and drag&drop: same validation, same UI.
 // Takes a File (or null) instead of an event so both sources behave 1:1.
 function handlePickedBackupFile(file) {
   cookieFile = file || null;
+  pendingPlain = null;
   const input = document.getElementById("restore");
   if (!cookieFile) {
     hideDecPasswordInputBox();
-    hideJsonRestoreConfirm();
+    hidePlainRestoreConfirm();
+    hideDecDomainRow();
     clearDecPassword();
     updateDroppedFileName();
     return;
   }
   const name = String(cookieFile.name || "").toLowerCase();
-  if (name.endsWith(".json")) {
+  if (isEncryptedBackupName(name)) {
     hideFallbackCkzButton();
-    showJsonRestoreConfirm();
+    hidePlainRestoreConfirm();
+    revealDecDomainIfLossy(name);
+    showDecPasswordInputBox();
     updateDroppedFileName();
     return;
   }
-  if (!name.endsWith(".ckz")) {
+  if (!isSupportedBackupName(name)) {
     // inline warning (not alert) so a drop doesn't get stuck behind a modal
     addToWarningMessageList(createWarning("notBackupFile"));
     if (input) input.value = "";
     cookieFile = null;
     hideDecPasswordInputBox();
-    hideJsonRestoreBanner();
+    hidePlainRestoreConfirm();
+    hideDecDomainRow();
     updateDroppedFileName();
     return;
   }
   hideFallbackCkzButton();
-  hideJsonRestoreBanner();
-  showDecPasswordInputBox();
+  hideDecPasswordInputBox();
+  hideDecDomainRow();
+  clearDecPassword();
   updateDroppedFileName();
+  preparePlainFileRestore(cookieFile);
+}
+
+// Plain-text files are sniffed at pick time so the confirm box can name the
+// detected format; the text is kept for the confirm button (no second read).
+function preparePlainFileRestore(file) {
+  try {
+    if (file && typeof file.size === "number" && file.size > MAX_BACKUP_BYTES) {
+      addToWarningMessageList(createWarning("fileTooLarge", { size: formatByteSize(file.size) }));
+      const input = document.getElementById("restore");
+      if (input) input.value = "";
+      cookieFile = null;
+      updateDroppedFileName();
+      return;
+    }
+  } catch (e) {}
+  let reader = null;
+  try {
+    reader = new FileReader();
+  } catch (e) {
+    reader = null;
+  }
+  if (!reader) {
+    // should not happen in the popup: fall back to sniffing at confirm time
+    showPlainRestoreConfirm(null);
+    return;
+  }
+  reader.onload = (e) => {
+    // the user may have picked another file while this one was reading
+    if (cookieFile !== file) return;
+    const text = e.target ? e.target.result : null;
+    if (typeof text !== "string" || !text) {
+      addToWarningMessageList(createWarning("invalidFile"));
+      return;
+    }
+    if (utf8ByteLength(text) > MAX_BACKUP_BYTES) {
+      addToWarningMessageList(createWarning("fileTooLarge", { size: formatByteSize(utf8ByteLength(text)) }));
+      return;
+    }
+    const format = safeSniff(text, file.name);
+    pendingPlain = { format, text };
+    showPlainRestoreConfirm(format);
+  };
+  reader.onerror = () => {
+    addToWarningMessageList(createWarning("readError"));
+  };
+  try {
+    reader.readAsText(file);
+  } catch (e) {
+    addToWarningMessageList(createWarning("readError"));
+  }
 }
 
 // Shows the picked file name in the custom status line next to the
@@ -1009,11 +1471,11 @@ function wireRestoreDropZone() {
     zone.classList.remove("dragover");
     const files = e.dataTransfer && e.dataTransfer.files;
     if (!files || files.length === 0) return;
-    // if several files were dropped, prefer the first .ckz/.json one
+    // if several files were dropped, prefer the first supported backup one
     let picked = files[0];
     for (let i = 0; i < files.length; i++) {
       const n = String(files[i].name || "").toLowerCase();
-      if (n.endsWith(".ckz") || n.endsWith(".json")) {
+      if (isSupportedBackupName(n)) {
         picked = files[i];
         break;
       }
@@ -1031,7 +1493,7 @@ function wireRestoreDropZone() {
     handlePickedBackupFile(picked);
   });
   // a missed FILE drop must never navigate the popup / standalone tab away
-  // (dropping a .json onto the tab would otherwise replace the UI).
+  // (dropping a .csv onto the tab would otherwise replace the UI).
   // Non-file drags (e.g. selected text into the paste textarea) are left
   // alone so the browser handles them natively.
   document.addEventListener("dragover", (e) => {
@@ -1083,11 +1545,9 @@ function handleDecPasswdSubmit(e) {
       clearDecPassword();
       return;
     }
-    let cookies;
-
+    let decrypted;
     try {
-      const decrypted = sjcl.decrypt(pass, data)
-      cookies = JSON.parse(decrypted);
+      decrypted = sjcl.decrypt(pass, data)
     } catch (error) {
       // COMPAT: decrypt path untouched — old iter:10000 backups decrypt here.
       // Inline warnings instead of alert() so the popup doesn't lose focus.
@@ -1098,6 +1558,17 @@ function handleDecPasswdSubmit(e) {
       } else {
         addToWarningMessageList(createWarning("unknownError"));
       }
+      clearDecPassword();
+      return;
+    }
+
+    // the .ckz envelope holds any export format (json stays a legacy
+    // direct array); Header/Python payloads need the optional domain below
+    let cookies;
+    try {
+      cookies = cookiesFromDecrypted(decrypted, normalizeDomain(getDecDomain()));
+    } catch (error) {
+      addToWarningMessageList(createWarning("invalidFile"));
       clearDecPassword();
       return;
     }
@@ -1508,8 +1979,8 @@ function hideBackupButton() {
 
 function showEncPasswordInputBox(e) {
   hideBackupButton()
-  document.getElementById("btn-backup-json").style.display = "none";
-  document.getElementById("json-export-confirm").classList.add("hidden");
+  document.getElementById("btn-backup-plain").style.display = "none";
+  document.getElementById("plain-export-confirm").classList.add("hidden");
   document.getElementById("enc-passwd").style.display = "flex";
   updateEncSubmitState();
   // activate the input box
@@ -1683,8 +2154,12 @@ function showFallbackCkzInput() {
   // show the fallback
   document.getElementById("restore-using-text-wrap").style.display = "flex"
   document.getElementById("dec-passwd").style.display = "flex";
-  // plain-JSON paste uses the same textarea, so offer the insecure restore path too
-  document.getElementById("json-restore-confirm").classList.remove("hidden");
+  // pasted plain text (any format) uses the same textarea, so offer the
+  // password-less restore path too; the format is sniffed at click time
+  pendingPlain = null;
+  fillPlainRestoreText(null);
+  updateRestoreDomainVisibility(null);
+  document.getElementById("plain-restore-confirm").classList.remove("hidden");
 }
 
 function getCkzFileContentsFromTextarea() {
@@ -1789,7 +2264,7 @@ async function getCookieStoreIds() {
 // a listener created here would die with it, while the background outlives
 // the dialog. This function only forwards the payload and reports the
 // outcome, keeping the boolean contract of callers (true = download started).
-async function downloadJson(data, filename) {
+async function downloadTextFile(data, filename) {
   let res;
   try {
     res = await sendDownloadRequest(data, filename);

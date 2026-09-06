@@ -127,10 +127,15 @@ async function downloadBackup(data, filename) {
   if (!filename || filename.length > 255) {
     throw new Error("invalid filename");
   }
-  // allowlist: backups are only ever .ckz (encrypted) or .json (plain).
-  // Without this any sender could make the browser download an executable.
+  // allowlist: backups are .ckz (encrypted, any inner format) or plain-text
+  // exports (.json, .txt for Netscape/Header, .js for Puppeteer,
+  // .py for Python Dict, .csv for CSV). Without this any sender could make
+  // the browser download an executable.
   const lowerName = filename.toLowerCase();
-  if (!lowerName.endsWith(".ckz") && !lowerName.endsWith(".json")) {
+  if (!lowerName.endsWith(".ckz") && !lowerName.endsWith(".json")
+      && !lowerName.endsWith(".txt") && !lowerName.endsWith(".js")
+      && !lowerName.endsWith(".cjs") && !lowerName.endsWith(".mjs")
+      && !lowerName.endsWith(".py") && !lowerName.endsWith(".csv")) {
     throw new Error("invalid filename");
   }
   if (!api.downloads || typeof api.downloads.download !== "function") {

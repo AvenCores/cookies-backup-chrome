@@ -1,13 +1,42 @@
 # Changelog
 
 Формат — [Keep a Changelog](https://keepachangelog.com/ru/1.1.0/).
-Версия в `manifest.json` / `manifest.firefox.json` поднимается в момент релиза;
-всё ниже — незарелизнутые изменения после `V4.2.1`.
+Версия в `manifest.json` / `manifest.firefox.json` поднимается в момент релиза.
 
 ## [4.2.1] — 2026-09-06
 
 ### Added — новое
 
+- Экспорт и импорт 6 форматов: JSON (Standard), Netscape (Wget / Curl, `.txt`,
+  с `#HttpOnly_`-префиксом), Header String (`name=value;`), Puppeteer
+  (Node.js, `.js`), Python Dict (Requests, `.py`), CSV (Excel / Audit, `.csv`).
+  Новый модуль `formats.js` (сериализация/парсинг без DOM, толерантные парсеры:
+  одинарные кавычки и trailing commas в Puppeteer, оба стиля кавычек
+  в Python Dict).
+- Каждый формат — с паролем и без: без пароля скачивается plain-файл
+  (`.json`, `-netscape.txt`, `-header.txt`, `-puppeteer.js`, `-requests.py`,
+  `-audit.csv`); с паролем — `.ckz` (JSON хранится legacy-массивом для
+  совместимости со старыми версиями, остальные форматы — конвертом
+  `{"format","version","payload"}`).
+- Импорт определяет формат по расширению и содержимому, для Header/Python
+  есть опциональное поле домена (иначе такие cookies пропускаются и честно
+  считаются в итогах восстановления). Выбор формата запоминается.
+- Allowlist `background.js` расширен: `.ckz`, `.json`, `.txt`, `.js`,
+  `.cjs`, `.mjs`, `.py`, `.csv`.
+- Новые ключи локалей: `exportTitle`, `fmtJsonSub`, `fmtNetscapeSub`,
+  `fmtHeaderSub`, `fmtPuppeteerSub`, `fmtPydictSub`, `fmtCsvSub`,
+  `exportPlainBtn`, `plainExportText`, `plainExportAnyway`,
+  `plainRestoreFileText`, `plainRestorePasteText`, `plainRestoreAnyway`,
+  `domainLabel`, `domainPlaceholder` (en + ru переведены, остальные языки —
+  английские заглушки); удалены устаревшие `backupJsonBtn`,
+  `jsonWarningText`, `jsonRestoreWarning`, `jsonExportAnyway`,
+  `jsonRestoreAnyway`.
+- Выбор формата экспорта — компактная кнопка-селектор справа от кнопки
+  «Сохранить без пароля» (текущий формат + `▾`, выпадающее меню с 6 опциями,
+  закрытие по клику мимо и `Escape`, навигация стрелками).
+  Кнопка формата фиксированной ширины, обе кнопки всегда в одну строку
+  с обрезкой длинных подписей многоточием + тултипом — ряд не прыгает
+  при смене формата.
 - Футер popup: кнопки «О программе» и «Донат» вместо статичных кредитов.
   Кредиты (автор `AvenCores / github`, `основано на candh/cookies-backup-chrome`)
   переехали внутрь модалки «О программе», туда же — кнопки соцсетей из шапки
