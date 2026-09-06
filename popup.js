@@ -225,6 +225,11 @@ function applyI18n() {
   try {
     updatePasswordToggles();
   } catch (e) {}
+  // refresh the picked-file status so a picked name survives the language
+  // switch (guarded: cookieFile may still be in TDZ on the very first run)
+  try {
+    updateDroppedFileName();
+  } catch (e) {}
 }
 
 function updateThemeToggleLabel(theme) {
@@ -485,6 +490,10 @@ document
   .getElementById("restore")
   .addEventListener("change", handleFileSelect, false);
 
+// Declared up-front: wireFilePicker() -> updateDroppedFileName() reads it
+// during wiring, which runs before the old declaration site below.
+let cookieFile;
+
 document
   .getElementById("dec-passwd-form")
   .addEventListener("submit", handleDecPasswdSubmit, false);
@@ -513,6 +522,7 @@ wireAboutAndDonate();
 
 wirePasswordToggles();
 wireRestoreDropZone();
+wireFilePicker();
 wireEncSubmitState();
 
 // ---- About / Donate modals ----
@@ -696,8 +706,6 @@ async function handleEncPasswdSubmit(e) {
     delete form.dataset.busy;
   }
 }
-
-let cookieFile;
 
 function backupFileName(ext) {
   // ISO-like stamp: unambiguous across locales and sorts chronologically
@@ -899,22 +907,40 @@ function handlePickedBackupFile(file) {
   updateDroppedFileName();
 }
 
-// Shows the picked file name under the input. The native input shows it too
-// when the file came from the dialog; for drops the input sync is
-// best-effort (see wireRestoreDropZone), so this label is the reliable one.
+// Shows the picked file name in the custom status line next to the
+// "Choose file" button (the native input is visually hidden, so the browser
+// never renders its own unstyled "No file chosen" text). Falls back to the
+// localized "no file" text when nothing is picked.
 function updateDroppedFileName() {
-  const label = document.getElementById("dropped-file-name");
-  if (!label) return;
+  const status = document.getElementById("picked-file-status");
+  if (!status) return;
   const file = cookieFile || null;
   if (file && file.name) {
-    label.textContent = file.name;
-    label.title = file.name;
-    label.classList.remove("hidden");
+    status.textContent = file.name;
+    status.title = file.name;
+    status.classList.remove("text-muted");
   } else {
-    label.textContent = "";
-    label.title = "";
-    label.classList.add("hidden");
+    status.textContent = tr("noFileChosen");
+    status.title = "";
+    status.classList.add("text-muted");
   }
+}
+
+// The native file input is visually hidden (see .file-input-hidden): the
+// label above acts as the visible button. Labels aren't keyboard-focusable,
+// so Enter/Space is wired by hand to open the dialog.
+function wireFilePicker() {
+  const label = document.getElementById("restore-picker-label");
+  const input = document.getElementById("restore");
+  if (!label || !input || label.dataset.wired === "1") return;
+  label.dataset.wired = "1";
+  label.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      input.click();
+    }
+  });
+  updateDroppedFileName();
 }
 
 // Drag&drop onto the restore upload box. Reuses handlePickedBackupFile, so

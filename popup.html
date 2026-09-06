@@ -120,15 +120,20 @@
         <span class="title" data-i18n="restoreTitle">Restore Cookies</span>
         <div id="restore-upload-wrap" class="wrap-tight">
           <label for="restore" data-i18n="selectFile">Select your latest .ckz or .json file</label>
-          <input
-            class="text-muted"
-            type="file"
-            id="restore"
-            name="file"
-            accept=".ckz,.json,application/json"
-          />
+          <div class="file-picker-row">
+            <label for="restore" class="btn-secondary file-picker-btn" id="restore-picker-label" tabindex="0"><span data-i18n="chooseFile">Choose file</span></label>
+            <input
+              class="file-input-hidden"
+              type="file"
+              id="restore"
+              name="file"
+              accept=".ckz,.json,application/json"
+              tabindex="-1"
+              aria-hidden="true"
+            />
+            <span id="picked-file-status" class="text-muted file-status">No file chosen</span>
+          </div>
           <small class="text-muted drop-hint" data-i18n="dropHint">or drag &amp; drop the file here</small>
-          <small id="dropped-file-name" class="dropped-file-name hidden" title=""></small>
         </div>
         <p class="text-center" id="btn-upload-fallback">
           <a href="#" data-i18n="uploadFallback">Unable to upload a backup file?</a>

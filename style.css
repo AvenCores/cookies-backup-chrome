@@ -363,6 +363,11 @@ body.standalone textarea {
   border: 1.5px dotted var(--border);
 }
 
+#restore-upload-wrap > label {
+  display: block;
+  text-align: center;
+}
+
 /* drag&drop target highlight */
 #restore-upload-wrap.dragover {
   border-style: solid;
@@ -372,16 +377,51 @@ body.standalone textarea {
 
 .drop-hint {
   font-size: 11px;
+  text-align: center;
 }
 
-.dropped-file-name {
+.file-picker-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* the native input is visually hidden: the label above acts as the styled
+   button, and #picked-file-status shows the name. Keeps working for
+   screen readers and the drag&drop DataTransfer sync in popup.js */
+.file-input-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.file-picker-btn {
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.file-picker-btn:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 1px;
+}
+
+.file-status {
   display: block;
+  min-width: 0;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 11px;
-  color: var(--text);
+  text-align: center;
 }
 
 .btn-primary {
@@ -873,8 +913,10 @@ input[type="file"]::file-selector-button:active {
 
 /* helper classes */
 .title {
+  display: block;
   font-weight: bold;
   font-size: 14px;
+  text-align: center;
 }
 
 .large-title {
