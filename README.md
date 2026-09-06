@@ -56,7 +56,7 @@
 
 | Файл | Назначение |
 |---|---|
-| `manifest.json` / `manifest.firefox.json` | MV3-манифесты (v4.2): `cookies`, `downloads`, `storage`, `host_permissions: <all_urls>`, `action.default_popup = popup.html`, `browser_specific_settings.gecko` (id, `strict_min_version: 109.0`). Два файла отличаются **только** секцией `background`: Chrome требует `service_worker`, Firefox — `scripts` (один файл на оба браузера невозможен: Chromium отвергает `scripts` в MV3, Firefox не умеет в `service_worker`). CI проверяет, что файлы идентичны кроме `background`. |
+| `manifest.json` / `manifest.firefox.json` | MV3-манифесты (v4.2): `cookies`, `downloads`, `storage`, `host_permissions: <all_urls>`, `action.default_popup = popup.html`, `browser_specific_settings.gecko` (id, `strict_min_version: 140.0`, `data_collection_permissions: {required: ["none"]}`) + `gecko_android.strict_min_version: 142.0`. Два файла отличаются **только** секцией `background`: Chrome требует `service_worker`, Firefox — `scripts` (один файл на оба браузера невозможен: Chromium отвергает `scripts` в MV3, Firefox игнорирует `service_worker`). CI проверяет, что файлы идентичны кроме `background`. |
 | `popup.html` | UI: шапка (выбор языка, тема), блок бэкапа, блок восстановления, прогресс, сообщения, `open-tab-wrap` для Firefox. Подключает `sjcl.js` → `locales.js` → `popup.js`. |
 | `popup.js` | Вся логика: i18n, тема, бэкап `.ckz`/`.json`, восстановление, прогресс, алерты, скачивание, fallback-вставка, Firefox standalone-режим (`?standalone=1`). |
 | `background.js` | Единственный путь скачивания: сообщение `{type: "downloadBackup", data, filename}` с валидацией (тип/размер payload, имя файла без путей) → blob-URL там, где доступен DOM (Firefox event page), иначе `data:`-URL вручную (`TextEncoder` + `btoa`). Чистит URL по `downloads.onChanged`, показывает файл по `downloads.show`. |
@@ -157,7 +157,7 @@ Chrome и Chromium не умеют ставить `.zip` напрямую как
 ## 🦊 Совместимость
 
 - Chromium (Chrome/Edge/Opera и др.): полный popup-режим.
-- Firefox ≥ 109 (MV3): полный UI во вкладке (`?standalone=1`), скачивание напрямую из вкладки; устанавливается Firefox-сборка (см. выше).
+- Firefox ≥ 140 (MV3, desktop) / ≥ 142 (Android): полный UI во вкладке (`?standalone=1`), скачивание напрямую из вкладки; устанавливается Firefox-сборка (см. выше).
 - Перенос Chrome ↔ Firefox поддерживается; различия `sameSite`/`storeId`/сессионных cookie нормализуются автоматически.
 
 ## 🔧 Сборка
