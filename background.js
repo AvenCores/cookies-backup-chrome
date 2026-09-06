@@ -34,11 +34,21 @@ api.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return;
   }
 
-  downloadBackup(message.data, message.filename)
-    .then((id) => sendResponse({ ok: true, id: id }))
-    .catch((error) => sendResponse({ ok: false, error: String(error?.message || error) }));
+  const promise = downloadBackup(message.data, message.filename).then(
+    (id) => ({ ok: true, id: id }),
+    (error) => ({ ok: false, error: String(error?.message || error) })
+  );
 
-  return true; // keep the channel open, the response is async
+  // Chrome answers via sendResponse + `return true`, Firefox prefers the
+  // returned promise (browser.* is promise-only). Serve both from a single
+  // promise so exactly one response path is used per caller:
+  // - sendResponse was passed (Chrome, old Chromiums): use it, return true;
+  // - no sendResponse (some Firefox builds): return the promise itself.
+  if (typeof sendResponse === "function") {
+    promise.then(sendResponse);
+    return true; // keep the channel open, the response is async
+  }
+  return promise;
 });
 
 // Builds a data: URL from a string without FileReader/URL.createObjectURL,

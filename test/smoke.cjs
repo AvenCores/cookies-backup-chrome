@@ -130,7 +130,11 @@ function makeBgContext({ blobUrls }) {
       setTimeout(() => { if (!done) resolve({ response: "NO_RESPONSE", keepAlive: ret }); }, 500);
     });
   const fireChanged = (delta) => changed.slice().forEach((fn) => fn(delta));
-  return { state, changed, send, fireChanged };
+  // Firefox-style caller: browser.runtime.sendMessage takes a single argument
+  // and the onMessage listener answers via the returned promise (no
+  // sendResponse callback). Old code returned `true` and never resolved.
+  const sendFirefox = (msg) => Promise.resolve(msgListener(msg, {}));
+  return { state, changed, send, sendFirefox, fireChanged };
 }
 
 (async () => {
@@ -191,6 +195,55 @@ function makeBgContext({ blobUrls }) {
     const other = await bg.send({ type: "other" });
     ok("bg ignores foreign messages", () => {
       assert.strictEqual(other.response, "NO_RESPONSE");
+    });
+  }
+
+  // Firefox-style messaging: no sendResponse callback, the listener must
+  // answer through the returned promise (browser.* is promise-only, and a
+  // function 2nd arg to sendMessage is misread as (extensionId, message)).
+  {
+    const bg = makeBgContext({ blobUrls: true });
+    const response = await bg.sendFirefox({ type: "downloadBackup", data: "hello-firefox", filename: "cookies-2026-01-01-00-00-00-audit.csv" });
+    ok("bg answers Firefox-style callers via returned promise", () => {
+      assert.deepStrictEqual(JSON.parse(JSON.stringify(response)), { ok: true, id: 42 });
+      assert.strictEqual(bg.state.downloads[0].filename, "cookies-2026-01-01-00-00-00-audit.csv");
+    });
+    const foreign = await bg.sendFirefox({ type: "other" });
+    ok("bg ignores foreign Firefox-style messages", () => {
+      assert.strictEqual(foreign, undefined);
+    });
+  }
+
+  // ---------- 2c. formats.js round-trips every export format ----------
+  // Guards the export side: serializers must produce text that parses back
+  // to the same cookies (incl. commas/quotes/unicode in values for CSV).
+  {
+    const fctx = {};
+    vm.createContext(fctx);
+    vm.runInContext(fs.readFileSync(path.join(ROOT, "formats.js"), "utf8"), fctx);
+    const res = vm.runInContext(
+      `(() => {
+        const sample = [
+          { name: "sess", value: "a,b\\"c", domain: ".example.com", path: "/", secure: true, httpOnly: true, expirationDate: 2000000000, sameSite: "lax", hostOnly: false, storeId: "0" },
+          { name: "uni", value: "привет", domain: "example.com", path: "/", hostOnly: true, session: true },
+        ];
+        const out = {};
+        for (const f of ["json", "netscape", "header", "puppeteer", "pydict", "csv"]) {
+          const text = formatSerialize(f, sample);
+          const parsed = formatParse(f, text, { fallbackDomain: "example.com" });
+          out[f] = { len: text.length, count: parsed.length, names: parsed.map((c) => c.name).join(",") };
+        }
+        return JSON.stringify(out);
+      })()`,
+      fctx
+    );
+    ok("all export formats serialize and parse back", () => {
+      const r = JSON.parse(res);
+      for (const f of ["json", "netscape", "header", "puppeteer", "pydict", "csv"]) {
+        assert.strictEqual(r[f].count, 2, f + " must round-trip 2 cookies");
+        assert.strictEqual(r[f].names, "sess,uni", f + " must keep cookie names");
+        assert.ok(r[f].len > 0, f + " must produce text");
+      }
     });
   }
 
@@ -279,6 +332,10 @@ function makeBgContext({ blobUrls }) {
     for (const token of ["downloadsDownload", "utf8ByteLength", "typeof id !=="]) {
       assert.ok(bgSrc.includes(token), "background.js must contain " + token);
     }
+  });
+  ok("messaging is Firefox-safe", () => {
+    assert.ok(popup.includes("api.runtime.sendMessage({ type"), "popup.js must use single-arg sendMessage on Firefox");
+    assert.ok(bgSrc.includes("return promise;"), "background.js must answer via returned promise");
   });
   const locales = fs.readFileSync(path.join(ROOT, "locales.js"), "utf8");
   ok("locales have no dead keys", () => {

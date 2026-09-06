@@ -2503,6 +2503,55 @@ async function downloadTextFile(data, filename) {
 function sendDownloadRequest(data, filename) {
   // the saveAs dialog can stay open for a while, so this call gets a longer
   // timeout than the default 10s used for instant API calls above
+  if (isFirefox) {
+    // Firefox disambiguates runtime.sendMessage(message, secondArg) by type:
+    // a function second arg is not valid `options`, so (message, callback)
+    // is read as (extensionId, message) and rejected. The promise-only form
+    // with a single argument works in Firefox (and modern Chrome), so use it
+    // here instead of the shared callback+promise helper above.
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const timer = setTimeout(() => {
+        if (!settled) {
+          settled = true;
+          reject(new Error("API call timed out: sendMessage"));
+        }
+      }, 120000);
+      let maybe;
+      try {
+        maybe = api.runtime.sendMessage({ type: "downloadBackup", data: data, filename: filename });
+      } catch (error) {
+        if (!settled) {
+          settled = true;
+          clearTimeout(timer);
+          reject(error instanceof Error ? error : new Error(String(error)));
+        }
+        return;
+      }
+      if (maybe && typeof maybe.then === "function") {
+        maybe.then(
+          (value) => {
+            if (!settled) {
+              settled = true;
+              clearTimeout(timer);
+              resolve(value === undefined ? null : value);
+            }
+          },
+          (error) => {
+            if (!settled) {
+              settled = true;
+              clearTimeout(timer);
+              reject(error instanceof Error ? error : new Error(String(error)));
+            }
+          }
+        );
+      } else if (!settled) {
+        settled = true;
+        clearTimeout(timer);
+        reject(new Error("API not available: sendMessage"));
+      }
+    });
+  }
   return callExtensionApiWithTimeout(
     api.runtime,
     "sendMessage",
