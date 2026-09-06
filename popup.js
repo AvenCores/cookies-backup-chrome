@@ -418,6 +418,7 @@ document.getElementById("btn-upload-fallback").onclick = (e) => {
 
 wirePasswordToggles();
 wireRestoreDropZone();
+wireEncSubmitState();
 
 async function handleEncPasswdSubmit(e) {
   e.preventDefault();
@@ -1022,6 +1023,7 @@ function showEncPasswordInputBox(e) {
   document.getElementById("btn-backup-json").style.display = "none";
   document.getElementById("json-export-confirm").classList.add("hidden");
   document.getElementById("enc-passwd").style.display = "flex";
+  updateEncSubmitState();
   // activate the input box
   document.getElementById("inp-enc-passwd").focus();
 }
@@ -1079,6 +1081,38 @@ function clearEncPasswords() {
       if (el) el.value = "";
     } catch (e) {}
   }
+  updateEncSubmitState();
+}
+
+// The backup Enter highlights only when BOTH password fields hold the same
+// suitable password (min 8 chars). Pure CSS :valid can't express "both match",
+// so the state is mirrored into a .ready class on the submit button.
+function updateEncSubmitState() {
+  const btn = document.getElementById("btn-enc-submit");
+  if (!btn) return;
+  let ready = false;
+  try {
+    const p1 = document.getElementById("inp-enc-passwd");
+    const p2 = document.getElementById("inp-enc-passwd2");
+    if (p1 && p2) {
+      const v1 = p1.value || "";
+      const v2 = p2.value || "";
+      ready = v1.length >= 8 && v2 !== "" && v1 === v2;
+    }
+  } catch (e) {
+    ready = false;
+  }
+  btn.classList.toggle("ready", ready);
+}
+
+function wireEncSubmitState() {
+  for (const id of ["inp-enc-passwd", "inp-enc-passwd2"]) {
+    const el = document.getElementById(id);
+    if (!el || el.dataset.readyWired === "1") continue;
+    el.dataset.readyWired = "1";
+    el.addEventListener("input", updateEncSubmitState);
+  }
+  updateEncSubmitState();
 }
 
 function clearDecPassword() {

@@ -537,6 +537,42 @@ textarea:focus {
   flex-shrink: 0;
 }
 
+/* backup submit highlights only when BOTH password fields match (class set
+   by JS). The generic input:valid rule above would light it up from the
+   first field alone, so it is neutralized for this form unless .ready. */
+#enc-passwd-form .two-col-group input:valid ~ .btn-enter[type="submit"]:not(.ready),
+#enc-passwd-form .two-col-group input:valid ~ .btn-enter[type="submit"]:not(.ready):hover,
+#enc-passwd-form .two-col-group input:valid ~ .btn-enter[type="submit"]:not(.ready):active {
+  background-color: var(--wrap-bg);
+  border-color: var(--border);
+  color: var(--text);
+  box-shadow: var(--input-shadow) 0px 1px 0px 0px inset;
+}
+
+#enc-passwd-form .btn-enter[type="submit"].ready {
+  background-color: #2ea44f;
+  border-color: rgba(27, 31, 35, 0.15);
+  color: #fff;
+}
+
+#enc-passwd-form .btn-enter[type="submit"].ready:hover {
+  background-color: #2c974b;
+}
+
+#enc-passwd-form .btn-enter[type="submit"].ready:active {
+  background-color: #298e46;
+}
+
+[data-theme="dark"] #enc-passwd-form .btn-enter[type="submit"].ready {
+  background-color: #238636;
+  border-color: rgba(240, 246, 252, 0.1);
+}
+
+[data-theme="dark"] #enc-passwd-form .btn-enter[type="submit"].ready:hover,
+[data-theme="dark"] #enc-passwd-form .btn-enter[type="submit"].ready:active {
+  background-color: #2ea043;
+}
+
 input[type="file"] {
   font-size: 11px;
 }
