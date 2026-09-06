@@ -97,6 +97,8 @@ body.standalone {
 
 body.standalone .container-main-screen {
   width: 340px;
+  /* the tab scrolls via the page itself, don't cap the column */
+  max-height: none;
 }
 
 body.standalone textarea {
@@ -286,6 +288,9 @@ body.standalone textarea {
   flex-wrap: nowrap;
   overflow-y: auto;
   overflow-x: hidden;
+  /* bounded so long warning lists scroll inside the popup instead of
+     spilling past body's max-height with no way to reach them */
+  max-height: 500px;
   padding: 0px 5px;
   row-gap: 10px;
 }

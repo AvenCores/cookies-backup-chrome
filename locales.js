@@ -79,7 +79,8 @@ const TRANSLATIONS = {
   "dropHint": "or drag & drop the file here",
   "restoreSuccessSkipped": "Successfully restored <b>{restored}</b> cookies out of <b>{total}</b> (<b>{skipped}</b> skipped)",
   "restoreSuccessFailed": "Successfully restored <b>{restored}</b> cookies out of <b>{total}</b> (<b>{skipped}</b> skipped, <b>{failed}</b> failed)",
-  "dismissLabel": "Dismiss"
+  "dismissLabel": "Dismiss",
+  "emptyBackup": "Backup file contains no cookies!"
 },
 "ru": {
   "appTitle": "Бэкап и восстановление cookies",
@@ -131,7 +132,8 @@ const TRANSLATIONS = {
   "dropHint": "или перетащите файл сюда",
   "restoreSuccessSkipped": "Успешно восстановлено <b>{restored}</b> cookies из <b>{total}</b> (пропущено: <b>{skipped}</b>)",
   "restoreSuccessFailed": "Успешно восстановлено <b>{restored}</b> cookies из <b>{total}</b> (пропущено: <b>{skipped}</b>, не удалось: <b>{failed}</b>)",
-  "dismissLabel": "Закрыть"
+  "dismissLabel": "Закрыть",
+  "emptyBackup": "В файле бэкапа нет cookies!"
 },
 "uk": {
   "appTitle": "Резервна копія та відновлення cookies",
@@ -183,7 +185,8 @@ const TRANSLATIONS = {
   "dropHint": "або перетягніть файл сюди",
   "restoreSuccessSkipped": "Успішно відновлено <b>{restored}</b> cookies з <b>{total}</b> (пропущено: <b>{skipped}</b>)",
   "restoreSuccessFailed": "Успішно відновлено <b>{restored}</b> cookies з <b>{total}</b> (пропущено: <b>{skipped}</b>, не вдалося: <b>{failed}</b>)",
-  "dismissLabel": "Закрити"
+  "dismissLabel": "Закрити",
+  "emptyBackup": "У файлі копії немає cookies!"
 },
 "de": {
   "appTitle": "Cookies sichern & wiederherstellen",
@@ -235,7 +238,8 @@ const TRANSLATIONS = {
   "dropHint": "oder Datei hierher ziehen",
   "restoreSuccessSkipped": "Erfolgreich <b>{restored}</b> von <b>{total}</b> Cookies wiederhergestellt (<b>{skipped}</b> übersprungen)",
   "restoreSuccessFailed": "Erfolgreich <b>{restored}</b> von <b>{total}</b> Cookies wiederhergestellt (<b>{skipped}</b> übersprungen, <b>{failed}</b> fehlgeschlagen)",
-  "dismissLabel": "Schließen"
+  "dismissLabel": "Schließen",
+  "emptyBackup": "Die Backup-Datei enthält keine Cookies!"
 },
 "fr": {
   "appTitle": "Sauvegarde et restauration des cookies",
@@ -287,7 +291,8 @@ const TRANSLATIONS = {
   "dropHint": "ou glissez-déposez le fichier ici",
   "restoreSuccessSkipped": "<b>{restored}</b> cookies restaurés sur <b>{total}</b> (<b>{skipped}</b> ignorés)",
   "restoreSuccessFailed": "<b>{restored}</b> cookies restaurés sur <b>{total}</b> (<b>{skipped}</b> ignorés, <b>{failed}</b> en échec)",
-  "dismissLabel": "Fermer"
+  "dismissLabel": "Fermer",
+  "emptyBackup": "Le fichier de sauvegarde ne contient aucun cookie !"
 },
 "es": {
   "appTitle": "Copia de seguridad y restauración de cookies",
@@ -339,7 +344,8 @@ const TRANSLATIONS = {
   "dropHint": "o arrastra el archivo aquí",
   "restoreSuccessSkipped": "<b>{restored}</b> cookies restauradas de <b>{total}</b> (<b>{skipped}</b> omitidas)",
   "restoreSuccessFailed": "<b>{restored}</b> cookies restauradas de <b>{total}</b> (<b>{skipped}</b> omitidas, <b>{failed}</b> fallidas)",
-  "dismissLabel": "Cerrar"
+  "dismissLabel": "Cerrar",
+  "emptyBackup": "¡El archivo de respaldo no contiene cookies!"
 },
 "pt": {
   "appTitle": "Backup e restauração de cookies",
@@ -391,7 +397,8 @@ const TRANSLATIONS = {
   "dropHint": "ou arraste o arquivo para cá",
   "restoreSuccessSkipped": "<b>{restored}</b> cookies restaurados de <b>{total}</b> (<b>{skipped}</b> ignorados)",
   "restoreSuccessFailed": "<b>{restored}</b> cookies restaurados de <b>{total}</b> (<b>{skipped}</b> ignorados, <b>{failed}</b> com falha)",
-  "dismissLabel": "Fechar"
+  "dismissLabel": "Fechar",
+  "emptyBackup": "O arquivo de backup não contém cookies!"
 },
 "it": {
   "appTitle": "Backup e ripristino dei cookie",
@@ -443,7 +450,8 @@ const TRANSLATIONS = {
   "dropHint": "oppure trascina il file qui",
   "restoreSuccessSkipped": "<b>{restored}</b> cookie ripristinati su <b>{total}</b> (<b>{skipped}</b> ignorati)",
   "restoreSuccessFailed": "<b>{restored}</b> cookie ripristinati su <b>{total}</b> (<b>{skipped}</b> ignorati, <b>{failed}</b> non riusciti)",
-  "dismissLabel": "Chiudi"
+  "dismissLabel": "Chiudi",
+  "emptyBackup": "Il file di backup non contiene cookie!"
 },
 "pl": {
   "appTitle": "Kopia zapasowa i przywracanie cookies",
@@ -495,7 +503,8 @@ const TRANSLATIONS = {
   "dropHint": "lub przeciągnij tu plik",
   "restoreSuccessSkipped": "Pomyślnie przywrócono <b>{restored}</b> z <b>{total}</b> plików cookie (pominięto: <b>{skipped}</b>)",
   "restoreSuccessFailed": "Pomyślnie przywrócono <b>{restored}</b> z <b>{total}</b> plików cookie (pominięto: <b>{skipped}</b>, nieudane: <b>{failed}</b>)",
-  "dismissLabel": "Zamknij"
+  "dismissLabel": "Zamknij",
+  "emptyBackup": "Plik kopii nie zawiera plików cookie!"
 },
 "nl": {
   "appTitle": "Cookies back-uppen & herstellen",
@@ -547,7 +556,8 @@ const TRANSLATIONS = {
   "dropHint": "of sleep het bestand hierheen",
   "restoreSuccessSkipped": "Succesvol <b>{restored}</b> van <b>{total}</b> cookies hersteld (<b>{skipped}</b> overgeslagen)",
   "restoreSuccessFailed": "Succesvol <b>{restored}</b> van <b>{total}</b> cookies hersteld (<b>{skipped}</b> overgeslagen, <b>{failed}</b> mislukt)",
-  "dismissLabel": "Sluiten"
+  "dismissLabel": "Sluiten",
+  "emptyBackup": "Het back-upbestand bevat geen cookies!"
 },
 "sv": {
   "appTitle": "Säkerhetskopiera & återställ cookies",
@@ -599,7 +609,8 @@ const TRANSLATIONS = {
   "dropHint": "eller dra och släpp filen här",
   "restoreSuccessSkipped": "Återställde <b>{restored}</b> av <b>{total}</b> cookies (<b>{skipped}</b> överhoppade)",
   "restoreSuccessFailed": "Återställde <b>{restored}</b> av <b>{total}</b> cookies (<b>{skipped}</b> överhoppade, <b>{failed}</b> misslyckades)",
-  "dismissLabel": "Stäng"
+  "dismissLabel": "Stäng",
+  "emptyBackup": "Backupfilen innehåller inga cookies!"
 },
 "da": {
   "appTitle": "Backup & gendannelse af cookies",
@@ -651,7 +662,8 @@ const TRANSLATIONS = {
   "dropHint": "eller træk filen hertil",
   "restoreSuccessSkipped": "Gendannede <b>{restored}</b> af <b>{total}</b> cookies (<b>{skipped}</b> sprunget over)",
   "restoreSuccessFailed": "Gendannede <b>{restored}</b> af <b>{total}</b> cookies (<b>{skipped}</b> sprunget over, <b>{failed}</b> mislykkedes)",
-  "dismissLabel": "Luk"
+  "dismissLabel": "Luk",
+  "emptyBackup": "Backupfilen indeholder ingen cookies!"
 },
 "fi": {
   "appTitle": "Evästeiden varmuuskopiointi ja palautus",
@@ -703,7 +715,8 @@ const TRANSLATIONS = {
   "dropHint": "tai vedä tiedosto tähän",
   "restoreSuccessSkipped": "Palautettiin <b>{restored}</b> / <b>{total}</b> evästettä (ohitettu: <b>{skipped}</b>)",
   "restoreSuccessFailed": "Palautettiin <b>{restored}</b> / <b>{total}</b> evästettä (ohitettu: <b>{skipped}</b>, epäonnistui: <b>{failed}</b>)",
-  "dismissLabel": "Sulje"
+  "dismissLabel": "Sulje",
+  "emptyBackup": "Varmuuskopiotiedosto ei sisällä evästeitä!"
 },
 "no": {
   "appTitle": "Sikkerhetskopier & gjenopprett informasjonskapsler",
@@ -755,7 +768,8 @@ const TRANSLATIONS = {
   "dropHint": "eller dra filen hit",
   "restoreSuccessSkipped": "Gjenopprettet <b>{restored}</b> av <b>{total}</b> informasjonskapsler (<b>{skipped}</b> hoppet over)",
   "restoreSuccessFailed": "Gjenopprettet <b>{restored}</b> av <b>{total}</b> informasjonskapsler (<b>{skipped}</b> hoppet over, <b>{failed}</b> mislyktes)",
-  "dismissLabel": "Lukk"
+  "dismissLabel": "Lukk",
+  "emptyBackup": "Backupfilen inneholder ingen informasjonskapsler!"
 },
 "cs": {
   "appTitle": "Záloha a obnova cookies",
@@ -807,7 +821,8 @@ const TRANSLATIONS = {
   "dropHint": "nebo sem soubor přetáhněte",
   "restoreSuccessSkipped": "Úspěšně obnoveno <b>{restored}</b> z <b>{total}</b> cookies (přeskočeno: <b>{skipped}</b>)",
   "restoreSuccessFailed": "Úspěšně obnoveno <b>{restored}</b> z <b>{total}</b> cookies (přeskočeno: <b>{skipped}</b>, selhalo: <b>{failed}</b>)",
-  "dismissLabel": "Zavřít"
+  "dismissLabel": "Zavřít",
+  "emptyBackup": "Soubor zálohy neobsahuje žádné cookies!"
 },
 "sk": {
   "appTitle": "Záloha a obnova cookies",
@@ -859,7 +874,8 @@ const TRANSLATIONS = {
   "dropHint": "alebo sem súbor presuňte",
   "restoreSuccessSkipped": "Úspešne obnovených <b>{restored}</b> z <b>{total}</b> cookies (preskočené: <b>{skipped}</b>)",
   "restoreSuccessFailed": "Úspešne obnovených <b>{restored}</b> z <b>{total}</b> cookies (preskočené: <b>{skipped}</b>, zlyhalo: <b>{failed}</b>)",
-  "dismissLabel": "Zavrieť"
+  "dismissLabel": "Zavrieť",
+  "emptyBackup": "Súbor zálohy neobsahuje žiadne cookies!"
 },
 "hu": {
   "appTitle": "Cookie-k biztonsági mentése és visszaállítása",
@@ -911,7 +927,8 @@ const TRANSLATIONS = {
   "dropHint": "vagy húzza ide a fájlt",
   "restoreSuccessSkipped": "Sikeresen visszaállítva <b>{restored}</b> / <b>{total}</b> cookie (kihagyva: <b>{skipped}</b>)",
   "restoreSuccessFailed": "Sikeresen visszaállítva <b>{restored}</b> / <b>{total}</b> cookie (kihagyva: <b>{skipped}</b>, sikertelen: <b>{failed}</b>)",
-  "dismissLabel": "Bezárás"
+  "dismissLabel": "Bezárás",
+  "emptyBackup": "A mentésfájl nem tartalmaz cookie-kat!"
 },
 "ro": {
   "appTitle": "Backup și restaurare cookies",
@@ -963,7 +980,8 @@ const TRANSLATIONS = {
   "dropHint": "sau trage fișierul aici",
   "restoreSuccessSkipped": "S-au restaurat <b>{restored}</b> din <b>{total}</b> cookie-uri (ignorate: <b>{skipped}</b>)",
   "restoreSuccessFailed": "S-au restaurat <b>{restored}</b> din <b>{total}</b> cookie-uri (ignorate: <b>{skipped}</b>, eșuate: <b>{failed}</b>)",
-  "dismissLabel": "Închide"
+  "dismissLabel": "Închide",
+  "emptyBackup": "Fișierul de backup nu conține cookie-uri!"
 },
 "tr": {
   "appTitle": "Çerezleri yedekle ve geri yükle",
@@ -1015,7 +1033,8 @@ const TRANSLATIONS = {
   "dropHint": "veya dosyayı buraya sürükleyin",
   "restoreSuccessSkipped": "<b>{total}</b> çerezden <b>{restored}</b> tanesi geri yüklendi (<b>{skipped}</b> atlandı)",
   "restoreSuccessFailed": "<b>{total}</b> çerezden <b>{restored}</b> tanesi geri yüklendi (<b>{skipped}</b> atlandı, <b>{failed}</b> başarısız)",
-  "dismissLabel": "Kapat"
+  "dismissLabel": "Kapat",
+  "emptyBackup": "Yedek dosyasında çerez yok!"
 },
 "zh-CN": {
   "appTitle": "Cookie 备份与恢复",
@@ -1067,7 +1086,8 @@ const TRANSLATIONS = {
   "dropHint": "或将文件拖到此处",
   "restoreSuccessSkipped": "共 <b>{total}</b> 个 Cookie，成功恢复 <b>{restored}</b> 个 (已跳过 <b>{skipped}</b> 个)",
   "restoreSuccessFailed": "共 <b>{total}</b> 个 Cookie，成功恢复 <b>{restored}</b> 个 (已跳过 <b>{skipped}</b> 个，失败 <b>{failed}</b> 个)",
-  "dismissLabel": "关闭"
+  "dismissLabel": "关闭",
+  "emptyBackup": "备份文件中没有 Cookie！"
 },
 "zh-TW": {
   "appTitle": "Cookie 備份與還原",
@@ -1119,7 +1139,8 @@ const TRANSLATIONS = {
   "dropHint": "或將檔案拖到此處",
   "restoreSuccessSkipped": "共 <b>{total}</b> 個 Cookie，成功還原 <b>{restored}</b> 個 (已略過 <b>{skipped}</b> 個)",
   "restoreSuccessFailed": "共 <b>{total}</b> 個 Cookie，成功還原 <b>{restored}</b> 個 (已略過 <b>{skipped}</b> 個，失敗 <b>{failed}</b> 個)",
-  "dismissLabel": "關閉"
+  "dismissLabel": "關閉",
+  "emptyBackup": "備份檔案中沒有 Cookie！"
 },
 "ja": {
   "appTitle": "Cookie のバックアップと復元",
@@ -1171,7 +1192,8 @@ const TRANSLATIONS = {
   "dropHint": "またはファイルをここにドラッグ＆ドロップ",
   "restoreSuccessSkipped": "<b>{total}</b> 件中 <b>{restored}</b> 件の Cookie を復元しました (<b>{skipped}</b> 件スキップ)",
   "restoreSuccessFailed": "<b>{total}</b> 件中 <b>{restored}</b> 件の Cookie を復元しました (<b>{skipped}</b> 件スキップ、<b>{failed}</b> 件失敗)",
-  "dismissLabel": "閉じる"
+  "dismissLabel": "閉じる",
+  "emptyBackup": "バックアップファイルに Cookie が含まれていません！"
 },
 "ko": {
   "appTitle": "쿠키 백업 및 복원",
@@ -1223,7 +1245,8 @@ const TRANSLATIONS = {
   "dropHint": "또는 파일을 여기로 드래그하세요",
   "restoreSuccessSkipped": "<b>{total}</b>개 중 <b>{restored}</b>개의 쿠키를 복원했습니다 (<b>{skipped}</b>개 건너뜀)",
   "restoreSuccessFailed": "<b>{total}</b>개 중 <b>{restored}</b>개의 쿠키를 복원했습니다 (<b>{skipped}</b>개 건너뜀, <b>{failed}</b>개 실패)",
-  "dismissLabel": "닫기"
+  "dismissLabel": "닫기",
+  "emptyBackup": "백업 파일에 쿠키가 없습니다!"
 },
 "ar": {
   "appTitle": "نسخ الكوكيز احتياطيًا واستعادتها",
@@ -1275,7 +1298,8 @@ const TRANSLATIONS = {
   "dropHint": "أو اسحب الملف إلى هنا",
   "restoreSuccessSkipped": "تمت استعادة <b>{restored}</b> من <b>{total}</b> من الكوكيز (تم تخطي <b>{skipped}</b>)",
   "restoreSuccessFailed": "تمت استعادة <b>{restored}</b> من <b>{total}</b> من الكوكيز (تم تخطي <b>{skipped}</b>، فشل <b>{failed}</b>)",
-  "dismissLabel": "إغلاق"
+  "dismissLabel": "إغلاق",
+  "emptyBackup": "ملف النسخة الاحتياطية لا يحتوي على أي كوكيز!"
 },
 "hi": {
   "appTitle": "कुकीज़ बैकअप और रिस्टोर",
@@ -1327,6 +1351,7 @@ const TRANSLATIONS = {
   "dropHint": "या फ़ाइल को यहाँ ड्रैग करें",
   "restoreSuccessSkipped": "<b>{total}</b> में से <b>{restored}</b> कुकीज़ रिस्टोर कीं (<b>{skipped}</b> छोड़ी गईं)",
   "restoreSuccessFailed": "<b>{total}</b> में से <b>{restored}</b> कुकीज़ रिस्टोर कीं (<b>{skipped}</b> छोड़ी गईं, <b>{failed}</b> विफल)",
-  "dismissLabel": "बंद करें"
+  "dismissLabel": "बंद करें",
+  "emptyBackup": "बैकअप फ़ाइल में कोई कुकीज़ नहीं हैं!"
 }
 };

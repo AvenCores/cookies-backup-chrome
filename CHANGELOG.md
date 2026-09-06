@@ -13,7 +13,7 @@
 - Кнопки показать/скрыть пароль (`👁`/`🙈`) в формах шифрования и расшифровки.
 - Drag&drop `.ckz`/`.json` на зону загрузки в блоке Restore + подпись с именем
   выбранного файла. Промахнувшийся дроп мимо зоны больше не уводит popup/вкладку.
-- Smoke-тесты `test/smoke.cjs` (17 тестов: SJCL-совместимость, оба download-пути,
+- Smoke-тесты `test/smoke.cjs` (18 тестов: SJCL-совместимость, оба download-пути,
   валидация (включая allowlist расширений), полнота локалей, паритет версий
   манифестов, статичные стражи) + шаг `Smoke tests` в CI (`.github/workflows/build.yml`).
 - Поддержка Firefox MV3: `manifest.firefox.json`, полный UI во вкладке
@@ -21,7 +21,7 @@
 - В манифестах: `action.default_icon`, `minimum_chrome_version: 88`.
 - Новые ключи локалей: `dropHint`, `passwordMismatch`, `passwordTooShort`,
   `fileTooLarge`, `showPassword`/`hidePassword`, `restoreSuccessSkipped`,
-  `restoreSuccessFailed`, `dismissLabel`, `backBtn` — все 25 языков полные.
+  `restoreSuccessFailed`, `emptyBackup`, `dismissLabel`, `backBtn` — все 25 языков полные.
 - Кнопки «Назад» (`←`/`→` в RTL) в формах шифрования и расшифровки:
   возврат из под-экранов бэкапа, выбора `.ckz` и paste-режима без перезагрузки.
 
@@ -81,6 +81,25 @@
   протухший blob-URL подбирается на следующем скачивании + 5-минутный
   страховочный таймер.
 - README: пароль ≥8 символов, ISO-имя файла, `iter: 100000`.
+- `.json`-restore тоже проверяет размер до `JSON.parse` (защита от OOM
+  на огромных файлах); пустой бэкап (`[]`) — отдельный ключ `emptyBackup`.
+- Restore переносит контейнеры Firefox (`firstPartyDomain`) и partitioned
+  CHIPS (`partitionKey`, с fallback без него); `__Host-`/`__Secure-`-коэрсия
+  больше не теряет store/partition/container.
+- Пути с `#`/`?` больше не превращаются во фрагмент/query при сборке `url`.
+- Куки больше ~4 КБ скипаются досрочно, а не жгут все попытки `cookies.set`.
+- После успешного restore UI схлопывается обратно к выбору файла (повторный
+  Enter не пере-заливает тот же бэкап); `nb`/`nn` маппятся на `no`.
+- Лимиты меряются в байтах (`utf8ByteLength`), а не в UTF-16-юнитах.
+- `downloads.download` в фоне работает и на старых Chromium (callback-форма),
+  плюс проверка `typeof id === "number"`.
+- Длинные списки предупреждений скроллятся внутри popup (`max-height` у
+  контейнера; в standalone-вкладке без капа).
+- Языковое меню — с клавиатуры (стрелки/Home/End/Enter/Esc), у полей пароля
+  и textarea появились `aria-label`.
+- Консоль больше не заваливается тысячами строк: первые 20 ошибок подробно,
+  дальше — одна итоговая.
+- CI: тег релиза сверяется с версией манифеста.
 - Кнопки вылезали за пределы popup на языках с длинными переводами
   (de, fr, ru, uk, es, pt, sk, hi и др.): у `.btn-primary`/`.btn-secondary`/
   `.btn-danger` снят `white-space: nowrap` — текст переносится, а ряд кнопок

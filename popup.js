@@ -70,6 +70,8 @@ function normalizeLocale(raw) {
     return _localeLowerMap["zh-cn"] || "zh-CN";
   }
   const base = low.split("-")[0];
+  // Norwegian Bokmål/Nynorsk share the "no" translation
+  if (base === "nb" || base === "nn") return _localeLowerMap["no"] || null;
   if (_localeLowerMap[base]) return _localeLowerMap[base];
   // fallback: first locale sharing the same base language
   for (const code of Object.keys(_localeLowerMap)) {
@@ -172,6 +174,17 @@ function applyI18n() {
     const key = el.getAttribute("data-i18n-placeholder");
     if (key) el.placeholder = tr(key);
   });
+  // password fields and the paste area have visual captions only (<small>);
+  // mirror them into aria-labels so screen readers name the controls
+  for (const [id, key] of [
+    ["inp-enc-passwd", "encPlaceholder"],
+    ["inp-enc-passwd2", "encConfirmPlaceholder"],
+    ["inp-dec-passwd", "decPlaceholder"],
+    ["ckz-textarea", "pasteTitle"],
+  ]) {
+    const el = document.getElementById(id);
+    if (el) el.setAttribute("aria-label", tr(key));
+  }
   // full title on hover: the header shows one truncated line for long locales
   const titleEl = document.querySelector("#header .large-title span[data-i18n]");
   if (titleEl) titleEl.title = titleEl.textContent;
@@ -243,6 +256,8 @@ function appendLocaleOption(menu, code, flagText, nameText, selected) {
   li.setAttribute("role", "option");
   li.setAttribute("aria-selected", selected ? "true" : "false");
   li.dataset.code = code;
+  // roving focus: options are reachable by arrows once the menu is open
+  li.tabIndex = -1;
   const flag = document.createElement("span");
   flag.className = "locale-flag";
   flag.setAttribute("aria-hidden", "true");
@@ -252,6 +267,12 @@ function appendLocaleOption(menu, code, flagText, nameText, selected) {
   name.textContent = nameText;
   li.append(flag, name);
   li.addEventListener("click", () => selectLocale(code));
+  li.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      selectLocale(code);
+    }
+  });
   menu.appendChild(li);
 }
 
@@ -273,6 +294,11 @@ function openLocaleMenu() {
   buildLocaleMenu();
   menu.classList.remove("hidden");
   btn.setAttribute("aria-expanded", "true");
+  // move focus into the menu so arrows work immediately
+  const items = [...menu.querySelectorAll(".locale-option")];
+  const wanted = localeMode === AUTO_LOCALE ? AUTO_LOCALE : currentLocale;
+  const current = items.find((li) => li.dataset.code === wanted) || items[0];
+  if (current) current.focus();
 }
 
 function closeLocaleMenu() {
@@ -292,6 +318,37 @@ function wireLocalePicker() {
     e.stopPropagation();
     if (menu.classList.contains("hidden")) openLocaleMenu();
     else closeLocaleMenu();
+  });
+  // Down/Up on the button opens the menu (Enter/Space click natively)
+  btn.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      openLocaleMenu();
+    }
+  });
+  // listbox keyboard: arrows/Home/End move, Enter/Space is handled per
+  // option, Escape closes and returns focus to the button
+  menu.addEventListener("keydown", (e) => {
+    const items = [...menu.querySelectorAll(".locale-option")];
+    if (!items.length) return;
+    let i = items.indexOf(document.activeElement);
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      items[(i + 1 + items.length) % items.length].focus();
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      items[(i - 1 + items.length) % items.length].focus();
+    } else if (e.key === "Home") {
+      e.preventDefault();
+      items[0].focus();
+    } else if (e.key === "End") {
+      e.preventDefault();
+      items[items.length - 1].focus();
+    } else if (e.key === "Escape") {
+      e.stopPropagation();
+      closeLocaleMenu();
+      btn.focus();
+    }
   });
   document.addEventListener("click", (e) => {
     if (!menu.classList.contains("hidden") && !document.getElementById("locale-picker").contains(e.target)) {
@@ -323,6 +380,10 @@ async function selectLocale(code) {
   }
   applyI18n();
   closeLocaleMenu();
+  // the menu rebuild above destroys the focused option: park focus back
+  try {
+    document.getElementById("locale-button").focus();
+  } catch (e) {}
 }
 
 // null until the user picks a theme manually, then remembered in storage
@@ -618,6 +679,12 @@ function handleJsonRestore() {
       addToWarningMessageList(createWarning("invalidFile"));
       return;
     }
+    // same size guard as the .ckz path: never JSON.parse gigabytes
+    const dataBytes = utf8ByteLength(data);
+    if (dataBytes > MAX_BACKUP_BYTES) {
+      addToWarningMessageList(createWarning("fileTooLarge", { size: formatByteSize(dataBytes) }));
+      return;
+    }
     let cookies;
     try {
       cookies = JSON.parse(data);
@@ -629,9 +696,16 @@ function handleJsonRestore() {
       addToWarningMessageList(createWarning("invalidFile"));
       return;
     }
+    if (cookies.length === 0) {
+      addToWarningMessageList(createWarning("emptyBackup"));
+      return;
+    }
     // extra safety: a .ckz payload is a JSON object/string, never an array,
     // so an array here really is a plain-JSON backup
     await restoreCookies(cookies);
+    // collapse back to the picker so a second click cannot re-submit
+    if (isFallbackActive()) exitFallbackMode();
+    else hideJsonRestoreConfirm();
   });
 }
 
@@ -821,16 +895,36 @@ function handleDecPasswdSubmit(e) {
       clearDecPassword();
       return;
     }
+    if (cookies.length === 0) {
+      addToWarningMessageList(createWarning("emptyBackup"));
+      clearDecPassword();
+      return;
+    }
 
     await restoreCookies(cookies);
-    // wipe the decryption password after a successful restore
-    clearDecPassword();
+    // success: collapse back to the file picker so a second Enter cannot
+    // re-submit the same backup; the summary message stays visible.
+    // (resetRestoreFileState also wipes the decryption password)
+    resetRestoreFileState();
   })
 }
 
 // ---- compat-safe pre-validation (no format change) ----
 // Kept in sync with MAX_DOWNLOAD_BYTES in background.js (see its comment).
 const MAX_BACKUP_BYTES = 32 * 1024 * 1024;
+
+// Byte length of a string, not UTF-16 units: cookie values and pasted
+// payloads can hold multibyte characters, and the limits above are bytes.
+function utf8ByteLength(s) {
+  if (typeof s !== "string") return 0;
+  // fast path: every char is at most 4 bytes, so short strings fit for sure
+  if (s.length <= MAX_BACKUP_BYTES / 4) return s.length;
+  try {
+    return new TextEncoder().encode(s).length;
+  } catch (e) {
+    return s.length * 3; // conservative upper bound, never under-reports
+  }
+}
 
 function formatByteSize(n) {
   if (typeof n !== "number" || !isFinite(n) || n < 0) return String(n);
@@ -843,7 +937,7 @@ function formatByteSize(n) {
 // This check is format-preserving: it only rejects what decrypt would reject.
 function isPlausibleCkzPayload(data) {
   if (typeof data !== "string" || !data) return false;
-  if (data.length > MAX_BACKUP_BYTES) return false;
+  if (utf8ByteLength(data) > MAX_BACKUP_BYTES) return false;
   const trimmed = data.trim();
   if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) return false;
   try {
@@ -868,8 +962,8 @@ function precheckBackupPayload() {
   } catch (e) {}
   try {
     const text = getCkzFileContentsFromTextarea();
-    if (text && text.length > MAX_BACKUP_BYTES) {
-      return { ok: false, reason: "too-large", size: formatByteSize(text.length) };
+    if (text && utf8ByteLength(text) > MAX_BACKUP_BYTES) {
+      return { ok: false, reason: "too-large", size: formatByteSize(utf8ByteLength(text)) };
     }
   } catch (e) {}
   return { ok: true };
@@ -913,6 +1007,14 @@ function buildRestoreAttempts(base, cookie, host) {
     push(current);
   }
 
+  // partitioned (CHIPS) cookies need partitionKey, but only where the
+  // browser understands it — retry without it instead of losing the cookie
+  if (current.partitionKey !== undefined) {
+    const { partitionKey, ...noPartition } = current;
+    current = { ...noPartition };
+    push(current);
+  }
+
   // __Host- / __Secure- prefixed names have extra rules in Chromium
   const name = cookie && typeof cookie.name === "string" ? cookie.name : "";
   if (name.startsWith("__Host-")) {
@@ -926,6 +1028,11 @@ function buildRestoreAttempts(base, cookie, host) {
     if (current.httpOnly !== undefined) coerced.httpOnly = current.httpOnly;
     if (current.expirationDate !== undefined) coerced.expirationDate = current.expirationDate;
     if (current.sameSite !== undefined) coerced.sameSite = current.sameSite;
+    // keep the cookie in its store/container/partition when the prefix was
+    // the only problem
+    if (current.storeId !== undefined) coerced.storeId = current.storeId;
+    if (current.partitionKey !== undefined) coerced.partitionKey = current.partitionKey;
+    if (current.firstPartyDomain !== undefined) coerced.firstPartyDomain = current.firstPartyDomain;
     push(coerced);
   } else if (name.startsWith("__Secure-") && current.secure !== true) {
     const coercedPath = typeof current.path === "string" ? current.path : "/";
@@ -942,7 +1049,7 @@ const RESTORE_CONCURRENCY = 6;
 
 async function restoreCookies(cookies) {
   // initialize progress bar
-  initRestoreProgressBar(cookies.length)
+  initRestoreProgressBar(cookies.length);
 
   let total = 0;
   let skipped = 0;
@@ -969,10 +1076,21 @@ async function restoreCookies(cookies) {
     const host = domain.startsWith(".") ? domain.slice(1) : domain;
     let url;
     try {
-      // encodeURI saves paths with spaces/unicode; new URL rejects bad hosts
-      url = "http" + (cookie.secure ? "s" : "") + "://" + host + encodeURI(path);
+      // encodeURI saves paths with spaces/unicode; new URL rejects bad hosts.
+      // encodeURI leaves "#" and "?" untouched — they would turn the path
+      // into a fragment/query, so escape them by hand.
+      url = "http" + (cookie.secure ? "s" : "") + "://" + host
+        + encodeURI(path).replace(/#/g, "%23").replace(/\?/g, "%3F");
       new URL(url);
     } catch (e) {
+      skipped++;
+      unknownErrWarning(cookie.name, host);
+      return;
+    }
+
+    // cookies bigger than ~4KB are rejected by cookies.set in every browser:
+    // skip early with the same message instead of burning all attempts
+    if (utf8ByteLength(cookie.name) + utf8ByteLength(cookie.value) > 4096) {
       skipped++;
       unknownErrWarning(cookie.name, host);
       return;
@@ -983,7 +1101,7 @@ async function restoreCookies(cookies) {
     // fail the comparison below and then be rejected by cookies.set
     const expirationDate = typeof cookie.expirationDate === "number" ? cookie.expirationDate : null;
     if (expirationDate && epoch > expirationDate) {
-      expirationWarning(cookie.name, url)
+      expirationWarning(cookie.name, url);
       skipped++;
       return;
     }
@@ -1028,6 +1146,16 @@ async function restoreCookies(cookies) {
         details.storeId = cookie.storeId;
       }
     }
+    // Firefox containers: without firstPartyDomain a container cookie is
+    // silently restored into the default container
+    if (isFirefox && typeof cookie.firstPartyDomain === "string" && cookie.firstPartyDomain) {
+      details.firstPartyDomain = cookie.firstPartyDomain;
+    }
+    // CHIPS: without partitionKey a partitioned cookie restores unpartitioned
+    if (!isFirefox && cookie.partitionKey && typeof cookie.partitionKey === "object"
+        && typeof cookie.partitionKey.topLevelSite === "string" && cookie.partitionKey.topLevelSite) {
+      details.partitionKey = { topLevelSite: cookie.partitionKey.topLevelSite };
+    }
 
     let restored = false;
     let lastError = null;
@@ -1050,10 +1178,13 @@ async function restoreCookies(cookies) {
     } else {
       failed++;
       // the user-facing message stays localizable and short; the technical
-      // reason goes to the console for bug reports
-      try {
-        console.warn("Cookie restore failed:", cookie.name, url, lastError && (lastError.message || lastError));
-      } catch (e) {}
+      // reason goes to the console for bug reports (capped: a huge backup
+      // with thousands of bad cookies must not flood the console)
+      if (failed <= 20) {
+        try {
+          console.warn("Cookie restore failed:", cookie.name, url, lastError && (lastError.message || lastError));
+        } catch (e) {}
+      }
       unknownErrWarning(cookie.name, url);
     }
   };
@@ -1074,11 +1205,17 @@ async function restoreCookies(cookies) {
   }
   await Promise.all(workers);
 
+  if (failed > 20) {
+    try {
+      console.warn("Cookie restore failed: ...and", failed - 20, "more (see warnings above)");
+    } catch (e) {}
+  }
+
   // update messages: restored + skipped + failed always add up to total
-  restoreSuccessAlert(total, cookies.length, skipped, failed)
+  restoreSuccessAlert(total, cookies.length, skipped, failed);
 
   // hide progress bar
-  hideRestoreProgressBar()
+  hideRestoreProgressBar();
 }
 
 // NOTE: most of these methods are shallow, but i wanted to separate application logic from the DOM
@@ -1338,7 +1475,11 @@ function showFallbackCkzInput() {
 }
 
 function getCkzFileContentsFromTextarea() {
-  return document.getElementById("ckz-textarea").value.trim()
+  const v = document.getElementById("ckz-textarea").value;
+  if (!v) return v;
+  // avoid duplicating a huge paste in memory when there is nothing to trim
+  const t = v.trim();
+  return t.length === v.length ? v : t;
 }
 
 // Chrome's extension APIs were callback-only for a long time and return

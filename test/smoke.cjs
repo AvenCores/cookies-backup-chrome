@@ -202,8 +202,14 @@ function makeBgContext({ blobUrls }) {
     }
   });
   ok("popup restores in parallel with honest counters", () => {
-    for (const token of ["RESTORE_CONCURRENCY", "restoreOne", "skipped++", "failed++", "restoreSuccessFailed", "updateRestoreProgressBar(processed)"]) {
+    for (const token of ["RESTORE_CONCURRENCY", "restoreOne", "skipped++", "failed++", "restoreSuccessFailed", "emptyBackup", "firstPartyDomain", "partitionKey", "utf8ByteLength", "updateRestoreProgressBar(processed)"]) {
       assert.ok(popup.includes(token), "popup.js must contain " + token);
+    }
+  });
+  const bgSrc = fs.readFileSync(path.join(ROOT, "background.js"), "utf8");
+  ok("background downloads old-Chrome compatible", () => {
+    for (const token of ["downloadsDownload", "utf8ByteLength", "typeof id !=="]) {
+      assert.ok(bgSrc.includes(token), "background.js must contain " + token);
     }
   });
   const locales = fs.readFileSync(path.join(ROOT, "locales.js"), "utf8");
