@@ -183,6 +183,9 @@ function applyI18n() {
   // refresh theme toggle label for the new language
   const theme = document.documentElement.getAttribute("data-theme") || "light";
   updateThemeToggleLabel(theme);
+  try {
+    updatePasswordToggles();
+  } catch (e) {}
 }
 
 function updateThemeToggleLabel(theme) {
@@ -413,14 +416,34 @@ document.getElementById("btn-upload-fallback").onclick = (e) => {
   showFallbackCkzInput();
 };
 
+wirePasswordToggles();
+
 async function handleEncPasswdSubmit(e) {
   e.preventDefault();
 
   const form = document.getElementById("enc-passwd-form");
   if (form.dataset.busy === "1") return;
 
-  const pass = getEncPasswd();
-  if (!pass || pass.length < 3) {
+  // COMPAT: stricter policy applies to NEW backups only. Decrypt path stays
+  // lenient (min 3) so old short-password backups keep working.
+  let pass = getEncPasswd();
+  const pass2El = document.getElementById("inp-enc-passwd2");
+  const pass2 = pass2El ? pass2El.value : null;
+  if (!pass || pass.length < 8) {
+    clearMessages();
+    addToWarningMessageList(createWarning("passwordTooShort"));
+    return;
+  }
+  // if the confirm field exists (new UI), it must match; old UI without it
+  // keeps working as before
+  if (pass2 !== null && pass2 !== "" && pass !== pass2) {
+    clearMessages();
+    addToWarningMessageList(createWarning("passwordMismatch"));
+    return;
+  }
+  if (pass2 !== null && pass2 === "") {
+    clearMessages();
+    addToWarningMessageList(createWarning("passwordMismatch"));
     return;
   }
 
@@ -439,7 +462,10 @@ async function handleEncPasswdSubmit(e) {
       return;
     }
     if (cookies.length > 0) {
-      const data = sjcl.encrypt(pass, JSON.stringify(cookies), { ks: 256 });
+      // COMPAT: iter is stored inside the .ckz payload, so a higher count is
+      // still readable by the original extension (old sjcl.decrypt just works
+      // slower). Old backups with iter:10000 keep decrypting here untouched.
+      const data = sjcl.encrypt(pass, JSON.stringify(cookies), { ks: 256, iter: 100000 });
       const filename = backupFileName("ckz");
       // show success only if the download actually started (user may cancel
       // the save dialog -> warning only, no misleading success)
@@ -449,6 +475,9 @@ async function handleEncPasswdSubmit(e) {
       alert(tr("noCookies"));
     }
   } finally {
+    // wipe passwords from memory/DOM so they don't linger in the popup
+    pass = null;
+    clearEncPasswords();
     delete form.dataset.busy;
   }
 }
@@ -541,6 +570,7 @@ function handleFileSelect(e) {
   if (!cookieFile) {
     hideDecPasswordInputBox()
     hideJsonRestoreConfirm()
+    clearDecPassword();
     return;
   }
   const name = cookieFile.name.toLowerCase();
@@ -571,30 +601,97 @@ function handleDecPasswdSubmit(e) {
   }
 
   clearMessages();
+  // pre-validation before the expensive PBKDF2: rejects garbage without
+  // burning 100k iterations and avoids misleading "wrong password"
+  const precheck = precheckBackupPayload();
+  if (!precheck.ok) {
+    if (precheck.reason === "too-large") {
+      addToWarningMessageList(createWarning("fileTooLarge", { size: precheck.size }));
+    } else {
+      addToWarningMessageList(createWarning("invalidFile"));
+    }
+    return;
+  }
+
   getBackupFileDataAsText(async (data) => {
+    // re-check the actual content (file could have changed / textarea edited)
+    if (!isPlausibleCkzPayload(data)) {
+      addToWarningMessageList(createWarning("invalidFile"));
+      return;
+    }
     let cookies;
 
     try {
       const decrypted = sjcl.decrypt(pass, data)
       cookies = JSON.parse(decrypted);
     } catch (error) {
+      // COMPAT: decrypt path untouched — old iter:10000 backups decrypt here.
+      // Inline warnings instead of alert() so the popup doesn't lose focus.
       if (error instanceof sjcl.exception.corrupt) {
-        alert(tr("wrongPassword"));
+        addToWarningMessageList(createWarning("wrongPassword"));
       } else if (error instanceof sjcl.exception.invalid) {
-        alert(tr("invalidFile"));
+        addToWarningMessageList(createWarning("invalidFile"));
       } else {
-        alert(tr("unknownError"));
+        addToWarningMessageList(createWarning("unknownError"));
       }
       return;
     }
 
     if (!Array.isArray(cookies)) {
-      alert(tr("invalidFile"));
+      addToWarningMessageList(createWarning("invalidFile"));
       return;
     }
 
     await restoreCookies(cookies);
+    // wipe the decryption password after a successful restore
+    clearDecPassword();
   })
+}
+
+// ---- compat-safe pre-validation (no format change) ----
+const MAX_BACKUP_BYTES = 100 * 1024 * 1024;
+
+function formatByteSize(n) {
+  if (typeof n !== "number" || !isFinite(n) || n < 0) return String(n);
+  if (n < 1024) return `${n} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+// SJCL payload is a JSON object with iv/ct/salt — never an array/string.
+// This check is format-preserving: it only rejects what decrypt would reject.
+function isPlausibleCkzPayload(data) {
+  if (typeof data !== "string" || !data) return false;
+  if (data.length > MAX_BACKUP_BYTES) return false;
+  const trimmed = data.trim();
+  if (!trimmed.startsWith("{") || !trimmed.endsWith("}")) return false;
+  try {
+    const obj = JSON.parse(trimmed);
+    return !!obj && typeof obj === "object" && !Array.isArray(obj)
+      && typeof obj.iv === "string" && typeof obj.ct === "string";
+  } catch (e) {
+    return false;
+  }
+}
+
+// Fast check on file size / textarea length before doing PBKDF2 work
+function precheckBackupPayload() {
+  try {
+    if (typeof cookieFile !== "undefined" && cookieFile && typeof cookieFile.size === "number") {
+      if (cookieFile.size > MAX_BACKUP_BYTES) {
+        return { ok: false, reason: "too-large", size: formatByteSize(cookieFile.size) };
+      }
+      // non-empty small files still need the content check after reading
+      return { ok: true };
+    }
+  } catch (e) {}
+  try {
+    const text = getCkzFileContentsFromTextarea();
+    if (text && text.length > MAX_BACKUP_BYTES) {
+      return { ok: false, reason: "too-large", size: formatByteSize(text.length) };
+    }
+  } catch (e) {}
+  return { ok: true };
 }
 
 // One cookie, several increasingly lenient ways to store it. The first
@@ -882,6 +979,69 @@ function getEncPasswd() {
 
 function getDecPasswd() {
   return document.getElementById("inp-dec-passwd").value;
+}
+
+// Wipe password fields so secrets don't linger in the popup DOM
+function clearEncPasswords() {
+  for (const id of ["inp-enc-passwd", "inp-enc-passwd2"]) {
+    try {
+      const el = document.getElementById(id);
+      if (el) el.value = "";
+    } catch (e) {}
+  }
+}
+
+function clearDecPassword() {
+  try {
+    const el = document.getElementById("inp-dec-passwd");
+    if (el) el.value = "";
+  } catch (e) {}
+}
+
+// Show/hide toggles: UI-only, never touch the stored value or the .ckz format
+function wirePasswordToggles() {
+  for (const [btnId, inputIds] of [
+    ["toggle-enc-passwd", ["inp-enc-passwd", "inp-enc-passwd2"]],
+    ["toggle-dec-passwd", ["inp-dec-passwd"]],
+  ]) {
+    const btn = document.getElementById(btnId);
+    if (!btn || btn.dataset.wired === "1") continue;
+    btn.dataset.wired = "1";
+    btn.addEventListener("click", () => {
+      const first = inputIds.map((id) => document.getElementById(id)).find(Boolean);
+      if (!first) return;
+      const show = first.type === "password";
+      for (const id of inputIds) {
+        try {
+          const el = document.getElementById(id);
+          if (el) el.type = show ? "text" : "password";
+        } catch (e) {}
+      }
+      updatePasswordToggles();
+      try {
+        first.focus();
+      } catch (e) {}
+    });
+  }
+  updatePasswordToggles();
+}
+
+function updatePasswordToggles() {
+  // label follows the current state (shown -> offer to hide)
+  for (const [btnId, inputId] of [
+    ["toggle-enc-passwd", "inp-enc-passwd"],
+    ["toggle-dec-passwd", "inp-dec-passwd"],
+  ]) {
+    const btn = document.getElementById(btnId);
+    const input = document.getElementById(inputId);
+    if (!btn || !input) continue;
+    const shown = input.type !== "password";
+    const label = shown ? tr("hidePassword") : tr("showPassword");
+    btn.setAttribute("aria-label", label);
+    btn.title = label;
+    // keep the eye meaningful without extra i18n churn
+    btn.textContent = shown ? "🙈" : "👁";
+  }
 }
 
 function initRestoreProgressBar(maxVal) {

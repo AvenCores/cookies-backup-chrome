@@ -72,7 +72,13 @@ const TRANSLATIONS = {
   "cancelBtn": "Cancel",
   "notBackupFile": "Not a .ckz or .json file. Please select again!",
   "autoOption": "Auto",
-  "autoHint": "Follow the browser language"
+  "autoHint": "Follow the browser language",
+  "encConfirmPlaceholder": "repeat password",
+  "passwordMismatch": "Passwords do not match!",
+  "passwordTooShort": "Password is too short, use at least 8 characters!",
+  "fileTooLarge": "File is too large ({size})!",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password"
 },
 "ru": {
   "appTitle": "Бэкап и восстановление cookies",
@@ -117,7 +123,13 @@ const TRANSLATIONS = {
   "cancelBtn": "Отмена",
   "notBackupFile": "Это не .ckz и не .json файл. Выберите снова!",
   "autoOption": "Авто",
-  "autoHint": "Следовать языку браузера"
+  "autoHint": "Следовать языку браузера",
+  "encConfirmPlaceholder": "повторите пароль",
+  "passwordMismatch": "Пароли не совпадают!",
+  "passwordTooShort": "Пароль слишком короткий, нужно минимум 8 символов!",
+  "fileTooLarge": "Файл слишком большой ({size})!",
+  "showPassword": "Показать пароль",
+  "hidePassword": "Скрыть пароль"
 },
 "uk": {
   "appTitle": "Резервна копія та відновлення cookies",

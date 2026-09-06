@@ -83,13 +83,28 @@
                 type="password"
                 name="enc-passwd"
                 id="inp-enc-passwd"
-                minlength="3"
+                class="pwd-input"
+                minlength="8"
                 required
                 autocomplete="new-password"
                 placeholder="password"
                 data-i18n-placeholder="encPlaceholder"
               />
+              <button class="btn-enter text-muted pwd-toggle" type="button" id="toggle-enc-passwd" aria-label="Show password" title="Show password">&#128065;</button>
               <button class="btn-enter text-muted" type="submit">&#9166;</button>
+            </div>
+            <div class="two-col-group">
+              <input
+                type="password"
+                name="enc-passwd2"
+                id="inp-enc-passwd2"
+                class="pwd-input"
+                minlength="8"
+                required
+                autocomplete="new-password"
+                placeholder="repeat password"
+                data-i18n-placeholder="encConfirmPlaceholder"
+              />
             </div>
             <small class="text-muted" data-i18n="encHint"
               >Please don't forget this password, You'll need it when you
@@ -134,7 +149,7 @@
               <textarea
                 id="ckz-textarea"
                 rows="5"
-                placeholder="{iv: 'kjFC7RBV-N4', 'v': 1, 'iter': 10000, ...}"
+                placeholder="{iv: 'kjFC7RBV-N4', 'v': 1, 'iter': ..., ...}"
               ></textarea>
             </div>
             <div class="gap-5px">
@@ -144,12 +159,14 @@
                   type="password"
                   name="dec-passwd"
                   id="inp-dec-passwd"
+                  class="pwd-input"
                   minlength="3"
                   required
                   autocomplete="current-password"
                   placeholder="password"
                   data-i18n-placeholder="decPlaceholder"
                 />
+                <button class="btn-enter text-muted pwd-toggle" type="button" id="toggle-dec-passwd" aria-label="Show password" title="Show password">&#128065;</button>
                 <button class="text-muted btn-enter" type="submit">&#9166;</button>
               </div>
             </div>
