@@ -978,3 +978,130 @@ input[type="file"]::file-selector-button:active {
   min-width: 0;
   max-width: 100%;
 }
+
+/* ---- animations (all subtle; disabled under prefers-reduced-motion) ---- */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes overlay-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modal-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes menu-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* press feedback on every clickable control */
+.btn-primary,
+.btn-secondary,
+.btn-danger,
+.btn-enter,
+.theme-toggle,
+.locale-button {
+  transition: transform 0.12s ease, box-shadow 0.15s ease,
+    background-color 0.15s ease-in-out, color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out;
+}
+
+.btn-primary:active,
+.btn-secondary:active,
+.btn-danger:active,
+.btn-enter:active {
+  transform: scale(0.97);
+}
+
+/* playful wobble of the theme icon on hover */
+.theme-toggle svg {
+  transition: transform 0.25s ease;
+}
+
+.theme-toggle:hover svg {
+  transform: rotate(25deg);
+}
+
+/* language menu opens with a small drop */
+.locale-menu {
+  animation: menu-drop 0.15s ease;
+  transform-origin: top left;
+}
+
+.locale-option {
+  transition: background-color 0.12s ease;
+}
+
+/* sub-screens (password forms, insecure warnings) fade up every time
+   they are shown — the animation restarts on display:none -> visible */
+#enc-passwd,
+#dec-passwd,
+.insecure-box {
+  animation: fade-up 0.2s ease;
+}
+
+/* success/warning alerts slide in when appended */
+.alert {
+  animation: fade-up 0.22s ease;
+}
+
+/* about/donate dialogs: overlay fades, card pops */
+.modal-overlay {
+  animation: overlay-fade 0.18s ease;
+}
+
+.modal {
+  animation: modal-pop 0.22s ease;
+}
+
+/* animated language switch (see applyI18n in popup.js) */
+.container-main-screen {
+  transition: opacity 0.13s ease, transform 0.13s ease;
+}
+
+.container-main-screen.locale-switching {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+/* drag&drop highlight eases in instead of snapping */
+#restore-upload-wrap {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

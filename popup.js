@@ -189,7 +189,29 @@ function appendFormattedText(container, key, params) {
   }
 }
 
+// Animated language switch: fade the column out, swap every text, fade
+// back in. Honors prefers-reduced-motion; re-entrant calls (double click)
+// fall back to an instant swap so the UI can never get stuck mid-fade.
 function applyI18n() {
+  const root = document.querySelector(".container-main-screen");
+  let reduce = false;
+  try {
+    reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  } catch (e) {}
+  if (!root || reduce || root.dataset.i18nBusy === "1") {
+    doApplyI18n();
+    return;
+  }
+  root.dataset.i18nBusy = "1";
+  root.classList.add("locale-switching");
+  setTimeout(() => {
+    doApplyI18n();
+    root.classList.remove("locale-switching");
+    delete root.dataset.i18nBusy;
+  }, 130);
+}
+
+function doApplyI18n() {
   document.documentElement.lang = currentLocale;
   document.documentElement.dir = RTL_LOCALES.includes(currentLocale.split("-")[0]) ? "rtl" : "ltr";
   document.querySelectorAll("[data-i18n]").forEach((el) => {
@@ -259,7 +281,8 @@ async function initI18n() {
     }
   }
   currentLocale = localeMode === AUTO_LOCALE ? await detectLocale() : localeMode;
-  applyI18n();
+  // first paint: swap instantly, no fade delay on popup open
+  doApplyI18n();
   wireLocalePicker();
 }
 
@@ -395,21 +418,26 @@ function wireLocalePicker() {
 }
 
 async function selectLocale(code) {
+  // resolve first: picking the already-active language (or Auto while the
+  // detected language is unchanged) must be a no-op — no fade, no rewrite
+  let nextMode;
+  let nextLocale;
   if (code === AUTO_LOCALE) {
-    localeMode = AUTO_LOCALE;
-    try {
-      await api.storage.local.set({ locale: AUTO_LOCALE });
-    } catch (e) {}
-    currentLocale = await detectLocale();
+    nextMode = AUTO_LOCALE;
+    nextLocale = await detectLocale();
   } else {
-    const norm = normalizeLocale(code) || "en";
-    localeMode = norm;
-    currentLocale = norm;
-    try {
-      await api.storage.local.set({ locale: currentLocale });
-    } catch (e) {}
+    nextMode = normalizeLocale(code) || "en";
+    nextLocale = nextMode;
   }
-  applyI18n();
+  const changed = nextLocale !== currentLocale || nextMode !== localeMode;
+  localeMode = nextMode;
+  currentLocale = nextLocale;
+  if (changed) {
+    try {
+      await api.storage.local.set({ locale: localeMode });
+    } catch (e) {}
+    applyI18n();
+  }
   closeLocaleMenu();
   // the menu rebuild above destroys the focused option: park focus back
   try {
