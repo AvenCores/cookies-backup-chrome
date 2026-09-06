@@ -870,21 +870,39 @@ function normalizeDomain(v) {
   return v.trim().replace(/^\.+/, "").toLowerCase();
 }
 
-function cookieMatchesDomain(cookie, want) {
+function cookieMatchesAnyDomain(cookie, wants) {
   const d = cookie && typeof cookie.domain === "string"
     ? cookie.domain.toLowerCase().replace(/^\.+/, "")
     : "";
   // domain-less cookies (Header/Python without a fallback, empty CSV cells)
   // cannot match anything, but restore reports them as skipped anyway
   if (!d) return true;
-  return d === want || d.endsWith("." + want);
+  return wants.some((want) => d === want || d.endsWith("." + want));
 }
 
-function filterCookiesToDomain(cookies, domain) {
-  if (!domain) return cookies;
-  const want = String(domain).toLowerCase().replace(/^\.+/, "");
-  if (!want) return cookies;
-  return cookies.filter((c) => cookieMatchesDomain(c, want));
+// "only specific domains": the checkbox field accepts several sites at once
+// ("example.com, other.com"); cookies from other domains are dropped.
+function parseDomainList(raw) {
+  if (typeof raw !== "string") return [];
+  const seen = new Set();
+  const out = [];
+  for (const part of raw.split(",")) {
+    const d = normalizeDomain(part);
+    if (d && !seen.has(d)) {
+      seen.add(d);
+      out.push(d);
+    }
+  }
+  return out;
+}
+
+function filterCookiesToDomains(cookies, list) {
+  if (!Array.isArray(list) || !list.length) return cookies;
+  const wants = list
+    .map((w) => String(w).toLowerCase().replace(/^\.+/, ""))
+    .filter(Boolean);
+  if (!wants.length) return cookies;
+  return cookies.filter((c) => cookieMatchesAnyDomain(c, wants));
 }
 
 function isDomainOverrideChecked(chkId) {
@@ -1330,10 +1348,13 @@ function handlePlainRestore() {
       return;
     }
     const format = formatHint || safeSniff(text, cookieFile && cookieFile.name);
-    const fallbackDomain = normalizeDomain(getRestoreDomain() || getDecDomain());
+    // several sites at once: "example.com, other.com". Domain-less cookies
+    // (Header/Python) receive the first one while parsing, then the whole
+    // list filters the restore.
+    const domainList = parseDomainList(getRestoreDomain() || getDecDomain());
     let cookies;
     try {
-      cookies = safeParse(format, text, fallbackDomain ? { fallbackDomain } : undefined);
+      cookies = safeParse(format, text, domainList.length ? { fallbackDomain: domainList[0] } : undefined);
     } catch (error) {
       addToWarningMessageList(createWarning("invalidFile"));
       return;
@@ -1342,12 +1363,17 @@ function handlePlainRestore() {
       addToWarningMessageList(createWarning("invalidFile"));
       return;
     }
-    // "only a specific domain": drop cookies from other domains (Header /
-    // Python cookies already received the entered domain while parsing)
-    if (fallbackDomain) cookies = filterCookiesToDomain(cookies, fallbackDomain);
     if (cookies.length === 0) {
       addToWarningMessageList(createWarning("emptyBackup"));
       return;
+    }
+    // "only specific domains": drop cookies from other domains
+    if (domainList.length) {
+      cookies = filterCookiesToDomains(cookies, domainList);
+      if (cookies.length === 0) {
+        addToWarningMessageList(createWarning("noDomainCookies", { domains: domainList.join(", ") }));
+        return;
+      }
     }
     await restoreCookies(cookies);
     // collapse back to the picker so a second click cannot re-submit
@@ -1644,12 +1670,12 @@ function handleDecPasswdSubmit(e) {
     }
 
     // the .ckz envelope holds any export format (json stays a legacy
-    // direct array); the optional domain below assigns Header/Python
-    // cookies AND filters every format down to it when the checkbox is on
-    const decDomain = normalizeDomain(getDecDomain());
+    // direct array); the optional domains below assign Header/Python
+    // cookies AND filter every format down to them when the checkbox is on
+    const decDomainList = parseDomainList(getDecDomain());
     let cookies;
     try {
-      cookies = cookiesFromDecrypted(decrypted, decDomain);
+      cookies = cookiesFromDecrypted(decrypted, decDomainList.length ? decDomainList[0] : "");
     } catch (error) {
       addToWarningMessageList(createWarning("invalidFile"));
       clearDecPassword();
@@ -1661,11 +1687,18 @@ function handleDecPasswdSubmit(e) {
       clearDecPassword();
       return;
     }
-    if (decDomain) cookies = filterCookiesToDomain(cookies, decDomain);
     if (cookies.length === 0) {
       addToWarningMessageList(createWarning("emptyBackup"));
       clearDecPassword();
       return;
+    }
+    if (decDomainList.length) {
+      cookies = filterCookiesToDomains(cookies, decDomainList);
+      if (cookies.length === 0) {
+        addToWarningMessageList(createWarning("noDomainCookies", { domains: decDomainList.join(", ") }));
+        clearDecPassword();
+        return;
+      }
     }
 
     await restoreCookies(cookies);

@@ -102,7 +102,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "ru": {
   "appTitle": "Бэкап и восстановление cookies",
@@ -177,7 +178,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Восстановить вставленное",
   "domainLabel": "Домен для импорта Header / Python (например example.com)",
   "domainOnlyLabel": "Импортировать лишь конкретный домен",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "В этом бэкапе нет cookies для {domains}!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "uk": {
   "appTitle": "Резервна копія та відновлення cookies",
@@ -252,7 +254,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "de": {
   "appTitle": "Cookies sichern & wiederherstellen",
@@ -327,7 +330,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "fr": {
   "appTitle": "Sauvegarde et restauration des cookies",
@@ -402,7 +406,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "es": {
   "appTitle": "Copia de seguridad y restauración de cookies",
@@ -477,7 +482,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "pt": {
   "appTitle": "Backup e restauração de cookies",
@@ -552,7 +558,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "it": {
   "appTitle": "Backup e ripristino dei cookie",
@@ -627,7 +634,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "pl": {
   "appTitle": "Kopia zapasowa i przywracanie cookies",
@@ -702,7 +710,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "nl": {
   "appTitle": "Cookies back-uppen & herstellen",
@@ -777,7 +786,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "sv": {
   "appTitle": "Säkerhetskopiera & återställ cookies",
@@ -852,7 +862,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "da": {
   "appTitle": "Backup & gendannelse af cookies",
@@ -927,7 +938,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "fi": {
   "appTitle": "Evästeiden varmuuskopiointi ja palautus",
@@ -1002,7 +1014,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "no": {
   "appTitle": "Sikkerhetskopier & gjenopprett informasjonskapsler",
@@ -1077,7 +1090,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "cs": {
   "appTitle": "Záloha a obnova cookies",
@@ -1152,7 +1166,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "sk": {
   "appTitle": "Záloha a obnova cookies",
@@ -1227,7 +1242,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "hu": {
   "appTitle": "Cookie-k biztonsági mentése és visszaállítása",
@@ -1302,7 +1318,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "ro": {
   "appTitle": "Backup și restaurare cookies",
@@ -1377,7 +1394,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "tr": {
   "appTitle": "Çerezleri yedekle ve geri yükle",
@@ -1452,7 +1470,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "zh-CN": {
   "appTitle": "Cookie 备份与恢复",
@@ -1527,7 +1546,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "zh-TW": {
   "appTitle": "Cookie 備份與還原",
@@ -1602,7 +1622,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "ja": {
   "appTitle": "Cookie のバックアップと復元",
@@ -1677,7 +1698,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "ko": {
   "appTitle": "쿠키 백업 및 복원",
@@ -1752,7 +1774,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "ar": {
   "appTitle": "نسخ الكوكيز احتياطيًا واستعادتها",
@@ -1827,7 +1850,8 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 },
 "hi": {
   "appTitle": "कुकीज़ बैकअप और रिस्टोर",
@@ -1902,6 +1926,7 @@ const TRANSLATIONS = {
   "pasteRestoreBtn": "Restore pasted backup",
   "domainLabel": "Domain for Header / Python imports (e.g. example.com)",
   "domainOnlyLabel": "Import only a specific domain",
-  "domainPlaceholder": "example.com"
+  "noDomainCookies": "No cookies for {domains} in this backup!",
+  "domainPlaceholder": "example.com, other.com"
 }
 };
