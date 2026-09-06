@@ -66,6 +66,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Export .json anyway",
   "jsonRestoreAnyway": "Restore .json anyway",
   "cancelBtn": "Cancel",
+  "backBtn": "Back",
   "notBackupFile": "Not a .ckz or .json file. Please select again!",
   "autoOption": "Auto",
   "autoHint": "Follow the browser language",
@@ -116,6 +117,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Всё равно сохранить .json",
   "jsonRestoreAnyway": "Всё равно восстановить .json",
   "cancelBtn": "Отмена",
+  "backBtn": "Назад",
   "notBackupFile": "Это не .ckz и не .json файл. Выберите снова!",
   "autoOption": "Авто",
   "autoHint": "Следовать языку браузера",
@@ -166,6 +168,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Все одно зберегти .json",
   "jsonRestoreAnyway": "Все одно відновити .json",
   "cancelBtn": "Скасувати",
+  "backBtn": "Назад",
   "notBackupFile": "Це не .ckz і не .json файл. Виберіть знову!",
   "autoOption": "Авто",
   "autoHint": "Дотримуватися мови браузера"
@@ -207,6 +210,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": ".json trotzdem exportieren",
   "jsonRestoreAnyway": ".json trotzdem wiederherstellen",
   "cancelBtn": "Abbrechen",
+  "backBtn": "Zurück",
   "notBackupFile": "Keine .ckz- oder .json-Datei. Bitte erneut wählen!",
   "autoOption": "Auto",
   "autoHint": "Browsersprache folgen"
@@ -248,6 +252,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Exporter le .json quand même",
   "jsonRestoreAnyway": "Restaurer le .json quand même",
   "cancelBtn": "Annuler",
+  "backBtn": "Retour",
   "notBackupFile": "Ce n’est ni un fichier .ckz ni .json. Veuillez réessayer !",
   "autoOption": "Auto",
   "autoHint": "Suivre la langue du navigateur"
@@ -289,6 +294,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Exportar .json igualmente",
   "jsonRestoreAnyway": "Restaurar .json igualmente",
   "cancelBtn": "Cancelar",
+  "backBtn": "Atrás",
   "notBackupFile": "No es un archivo .ckz ni .json. ¡Seleccione de nuevo!",
   "autoOption": "Automático",
   "autoHint": "Seguir el idioma del navegador"
@@ -330,6 +336,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Exportar .json mesmo assim",
   "jsonRestoreAnyway": "Restaurar .json mesmo assim",
   "cancelBtn": "Cancelar",
+  "backBtn": "Voltar",
   "notBackupFile": "Não é um arquivo .ckz nem .json. Selecione novamente!",
   "autoOption": "Automático",
   "autoHint": "Seguir o idioma do navegador"
@@ -371,6 +378,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Esporta .json comunque",
   "jsonRestoreAnyway": "Ripristina .json comunque",
   "cancelBtn": "Annulla",
+  "backBtn": "Indietro",
   "notBackupFile": "Non è un file .ckz né .json. Seleziona di nuovo!",
   "autoOption": "Auto",
   "autoHint": "Segui la lingua del browser"
@@ -412,6 +420,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Mimo to eksportuj .json",
   "jsonRestoreAnyway": "Mimo to przywróć .json",
   "cancelBtn": "Anuluj",
+  "backBtn": "Wstecz",
   "notBackupFile": "To nie jest plik .ckz ani .json. Wybierz ponownie!",
   "autoOption": "Auto",
   "autoHint": "Używaj języka przeglądarki"
@@ -453,6 +462,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": ".json toch exporteren",
   "jsonRestoreAnyway": ".json toch herstellen",
   "cancelBtn": "Annuleren",
+  "backBtn": "Terug",
   "notBackupFile": "Geen .ckz- of .json-bestand. Selecteer opnieuw!",
   "autoOption": "Auto",
   "autoHint": "Browsertaal volgen"
@@ -494,6 +504,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Exportera .json ändå",
   "jsonRestoreAnyway": "Återställ .json ändå",
   "cancelBtn": "Avbryt",
+  "backBtn": "Tillbaka",
   "notBackupFile": "Inte en .ckz- eller .json-fil. Välj igen!",
   "autoOption": "Auto",
   "autoHint": "Följ webbläsarens språk"
@@ -535,6 +546,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Eksporter .json alligevel",
   "jsonRestoreAnyway": "Gendan .json alligevel",
   "cancelBtn": "Annuller",
+  "backBtn": "Tilbage",
   "notBackupFile": "Ikke en .ckz- eller .json-fil. Vælg igen!",
   "autoOption": "Auto",
   "autoHint": "Følg browsersproget"
@@ -576,6 +588,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Vie .json silti",
   "jsonRestoreAnyway": "Palauta .json silti",
   "cancelBtn": "Peruuta",
+  "backBtn": "Takaisin",
   "notBackupFile": "Ei .ckz- eikä .json-tiedosto. Valitse uudelleen!",
   "autoOption": "Auto",
   "autoHint": "Seuraa selaimen kieltä"
@@ -617,6 +630,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Eksporter .json likevel",
   "jsonRestoreAnyway": "Gjenopprett .json likevel",
   "cancelBtn": "Avbryt",
+  "backBtn": "Tilbake",
   "notBackupFile": "Ikke en .ckz- eller .json-fil. Velg igjen!",
   "autoOption": "Auto",
   "autoHint": "Følg nettleserens språk"
@@ -658,6 +672,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Přesto exportovat .json",
   "jsonRestoreAnyway": "Přesto obnovit .json",
   "cancelBtn": "Zrušit",
+  "backBtn": "Zpět",
   "notBackupFile": "Není to soubor .ckz ani .json. Vyberte znovu!",
   "autoOption": "Auto",
   "autoHint": "Řídit se jazykem prohlížeče"
@@ -699,6 +714,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Napriek tomu exportovať .json",
   "jsonRestoreAnyway": "Napriek tomu obnoviť .json",
   "cancelBtn": "Zrušiť",
+  "backBtn": "Späť",
   "notBackupFile": "Nie je to súbor .ckz ani .json. Vyberte znova!",
   "autoOption": "Auto",
   "autoHint": "Riadiť sa jazykom prehliadača"
@@ -740,6 +756,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": ".json exportálása mégis",
   "jsonRestoreAnyway": ".json visszaállítása mégis",
   "cancelBtn": "Mégse",
+  "backBtn": "Vissza",
   "notBackupFile": "Nem .ckz vagy .json fájl. Válasszon újra!",
   "autoOption": "Auto",
   "autoHint": "A böngésző nyelvét követi"
@@ -781,6 +798,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Exportă .json oricum",
   "jsonRestoreAnyway": "Restaurează .json oricum",
   "cancelBtn": "Anulează",
+  "backBtn": "Înapoi",
   "notBackupFile": "Nu este un fișier .ckz sau .json. Selectați din nou!",
   "autoOption": "Auto",
   "autoHint": "Folosește limba browserului"
@@ -822,6 +840,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "Yine de .json dışa aktar",
   "jsonRestoreAnyway": "Yine de .json geri yükle",
   "cancelBtn": "İptal",
+  "backBtn": "Geri",
   "notBackupFile": ".ckz veya .json dosyası değil. Lütfen tekrar seçin!",
   "autoOption": "Otomatik",
   "autoHint": "Tarayıcının dilini kullan"
@@ -863,6 +882,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "仍要导出 .json",
   "jsonRestoreAnyway": "仍要恢复 .json",
   "cancelBtn": "取消",
+  "backBtn": "返回",
   "notBackupFile": "不是 .ckz 或 .json 文件，请重新选择！",
   "autoOption": "自动",
   "autoHint": "跟随浏览器语言"
@@ -904,6 +924,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "仍要匯出 .json",
   "jsonRestoreAnyway": "仍要還原 .json",
   "cancelBtn": "取消",
+  "backBtn": "返回",
   "notBackupFile": "不是 .ckz 或 .json 檔案，請重新選擇！",
   "autoOption": "自動",
   "autoHint": "跟隨瀏覽器語言"
@@ -945,6 +966,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": ".json をそれでもエクスポート",
   "jsonRestoreAnyway": ".json をそれでも復元",
   "cancelBtn": "キャンセル",
+  "backBtn": "戻る",
   "notBackupFile": ".ckz でも .json でもありません。もう一度選択してください！",
   "autoOption": "自動",
   "autoHint": "ブラウザの言語に従う"
@@ -986,6 +1008,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "그래도 .json 내보내기",
   "jsonRestoreAnyway": "그래도 .json 복원",
   "cancelBtn": "취소",
+  "backBtn": "뒤로",
   "notBackupFile": ".ckz 또는 .json 파일이 아닙니다. 다시 선택하세요!",
   "autoOption": "자동",
   "autoHint": "브라우저 언어 따르기"
@@ -1027,6 +1050,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "تصدير .json على أي حال",
   "jsonRestoreAnyway": "استعادة .json على أي حال",
   "cancelBtn": "إلغاء",
+  "backBtn": "رجوع",
   "notBackupFile": "ليس ملف .ckz أو .json. اختر مجددًا!",
   "autoOption": "تلقائي",
   "autoHint": "اتباع لغة المتصفح"
@@ -1068,6 +1092,7 @@ const TRANSLATIONS = {
   "jsonExportAnyway": "फिर भी .json एक्सपोर्ट करें",
   "jsonRestoreAnyway": "फिर भी .json रिस्टोर करें",
   "cancelBtn": "रद्द करें",
+  "backBtn": "वापस",
   "notBackupFile": ".ckz या .json फ़ाइल नहीं है। कृपया फिर से चुनें!",
   "autoOption": "ऑटो",
   "autoHint": "ब्राउज़र की भाषा का उपयोग करें"

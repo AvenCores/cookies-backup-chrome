@@ -19,7 +19,10 @@
   (`popup.html?standalone=1`), CI-проверка «манифесты различаются только в `background`».
 - В манифестах: `action.default_icon`, `minimum_chrome_version: 88`.
 - Новые ключи локалей: `dropHint`, `passwordMismatch`, `passwordTooShort`,
-  `fileTooLarge`, `showPassword`/`hidePassword`, `restoreSuccessSkipped`, `dismissLabel`.
+  `fileTooLarge`, `showPassword`/`hidePassword`, `restoreSuccessSkipped`, `dismissLabel`,
+  `backBtn`.
+- Кнопки «Назад» (`←`/`→` в RTL) в формах шифрования и расшифровки:
+  возврат из под-экранов бэкапа, выбора `.ckz` и paste-режима без перезагрузки.
 
 ### Security — безопасность (совместимо с оригинальным расширением)
 
@@ -61,6 +64,8 @@
 - `expirationDate` не-число из чужих бэкапов больше не уходит в `cookies.set`.
 - Пути с пробелами/юникодом и кривые хосты: `encodeURI` + проверка `new URL()`
   вместо гарантированного `cookieRestoreFail`.
+- Cancel в `.json`-подтверждении restore не возвращал ссылку
+  «Unable to upload a backup file?» — теперь возвращает (выход из тупика).
 
 ### Removed — удалено
 

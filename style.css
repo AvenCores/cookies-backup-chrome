@@ -414,6 +414,20 @@ body.standalone textarea {
   background-color: var(--file-btn-bg-active);
 }
 
+.btn-back {
+  align-self: center;
+  margin-top: 2px;
+  padding: 4px 12px;
+}
+
+.btn-back::before {
+  content: "\2190\00a0";
+}
+
+[dir="rtl"] .btn-back::before {
+  content: "\2192\00a0";
+}
+
 .btn-danger {
   appearance: none;
   font-size: 13px;

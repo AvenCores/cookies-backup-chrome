@@ -416,6 +416,9 @@ document.getElementById("btn-upload-fallback").onclick = (e) => {
   showFallbackCkzInput();
 };
 
+document.getElementById("btn-enc-back").onclick = resetBackupView;
+document.getElementById("btn-dec-back").onclick = handleRestoreBack;
+
 wirePasswordToggles();
 wireRestoreDropZone();
 wireEncSubmitState();
@@ -521,6 +524,71 @@ function hideJsonRestoreConfirm() {
   if (input) input.value = "";
   cookieFile = null;
   updateDroppedFileName();
+  // Cancel is a way back: restore the fallback link hidden on file pick
+  const fb = document.getElementById("btn-upload-fallback");
+  if (fb) fb.style.display = "";
+}
+
+// ---- back navigation: every sub-screen must have a way back without reload ----
+
+// Backup with password -> back to the two backup buttons
+function resetBackupView() {
+  clearMessages();
+  clearEncPasswords();
+  document.getElementById("enc-passwd").style.display = "none";
+  hideJsonExportWarning();
+  const b1 = document.getElementById("btn-backup");
+  if (b1) b1.style.display = "";
+  const b2 = document.getElementById("btn-backup-json");
+  if (b2) b2.style.display = "";
+}
+
+function isFallbackActive() {
+  const wrap = document.getElementById("restore-upload-wrap");
+  return !!(wrap && wrap.style.display === "none");
+}
+
+// Restore with a picked .ckz file -> back to the file picker
+function resetRestoreFileState() {
+  const input = document.getElementById("restore");
+  if (input) input.value = "";
+  cookieFile = null;
+  updateDroppedFileName();
+  clearDecPassword();
+  hideDecPasswordInputBox();
+  hideJsonRestoreBanner();
+  const fb = document.getElementById("btn-upload-fallback");
+  if (fb) fb.style.display = "";
+  const up = document.getElementById("restore-upload-wrap");
+  if (up) up.style.display = "";
+}
+
+// Paste-fallback mode -> back to the file picker
+function exitFallbackMode() {
+  const input = document.getElementById("restore");
+  if (input) input.value = "";
+  cookieFile = null;
+  updateDroppedFileName();
+  clearDecPassword();
+  try {
+    document.getElementById("ckz-textarea").value = "";
+  } catch (e) {}
+  hideDecPasswordInputBox();
+  hideJsonRestoreBanner();
+  const ta = document.getElementById("restore-using-text-wrap");
+  if (ta) ta.style.display = "none";
+  const up = document.getElementById("restore-upload-wrap");
+  if (up) up.style.display = "";
+  const fb = document.getElementById("btn-upload-fallback");
+  if (fb) fb.style.display = "";
+}
+
+// Single Back button in the restore form covers both sub-screens:
+// paste-fallback and picked-file states.
+function handleRestoreBack() {
+  clearMessages();
+  if (isFallbackActive()) exitFallbackMode();
+  else resetRestoreFileState();
 }
 
 async function handleJsonBackup() {
