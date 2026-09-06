@@ -1,7 +1,9 @@
 // Smoke tests for cookies-backup-chrome. Run: node test/smoke.cjs
 // Covers: SJCL cross-compat (old iter:10000 <-> new iter:100000),
+// locales completeness (every locale carries every en key),
 // background.js download message flow (both URL strategies + validation),
-// and static guards against reintroducing removed duplication/dead keys.
+// manifest version parity, and static guards against reintroducing
+// removed duplication/dead keys.
 "use strict";
 
 const fs = require("fs");
@@ -44,6 +46,34 @@ ok("sjcl old/new payloads cross-decrypt", () => {
   assert.strictEqual(r.oldOk, true);
   assert.strictEqual(r.newOk, true);
   assert.strictEqual(r.wrong, "corrupt");
+});
+
+// ---------- 1b. locales completeness: every locale must carry every en key ----------
+// (const-bindings don't leak to the vm sandbox object, so inspect from inside)
+const localesSrc = fs.readFileSync(path.join(ROOT, "locales.js"), "utf8");
+const localesCtx = {};
+vm.createContext(localesCtx);
+vm.runInContext(localesSrc, localesCtx);
+const localesMissing = vm.runInContext(
+  `(() => {
+    const enKeys = Object.keys(TRANSLATIONS.en).sort();
+    const out = {};
+    for (const entry of AVAILABLE_LOCALES) {
+      const dict = TRANSLATIONS[entry.code];
+      if (!dict) {
+        out[entry.code] = ["__MISSING_DICT__"];
+        continue;
+      }
+      const miss = enKeys.filter((k) => !(k in dict));
+      if (miss.length) out[entry.code] = miss;
+    }
+    return JSON.stringify(out);
+  })()`,
+  localesCtx
+);
+
+ok("locales are complete (no missing keys)", () => {
+  assert.deepStrictEqual(JSON.parse(localesMissing), {});
 });
 
 // ---------- 2. background.js message flow ----------
@@ -154,6 +184,10 @@ function makeBgContext({ blobUrls }) {
       assert.strictEqual(trav.response.ok, true);
       assert.strictEqual(bg.state.downloads[nBefore].filename, "evil.ckz");
     });
+    const badExt = await bg.send({ type: "downloadBackup", data: "abc", filename: "evil.exe" });
+    ok("bg rejects disallowed extension", () => {
+      assert.strictEqual(badExt.response.ok, false);
+    });
     const other = await bg.send({ type: "other" });
     ok("bg ignores foreign messages", () => {
       assert.strictEqual(other.response, "NO_RESPONSE");
@@ -168,7 +202,7 @@ function makeBgContext({ blobUrls }) {
     }
   });
   ok("popup restores in parallel with honest counters", () => {
-    for (const token of ["RESTORE_CONCURRENCY", "restoreOne", "skipped++", "updateRestoreProgressBar(processed)"]) {
+    for (const token of ["RESTORE_CONCURRENCY", "restoreOne", "skipped++", "failed++", "restoreSuccessFailed", "updateRestoreProgressBar(processed)"]) {
       assert.ok(popup.includes(token), "popup.js must contain " + token);
     }
   });
@@ -187,6 +221,11 @@ function makeBgContext({ blobUrls }) {
       assert.ok(m.minimum_chrome_version);
     });
   }
+  ok("manifests share version", () => {
+    const a = JSON.parse(fs.readFileSync(path.join(ROOT, "manifest.json"), "utf8"));
+    const b = JSON.parse(fs.readFileSync(path.join(ROOT, "manifest.firefox.json"), "utf8"));
+    assert.strictEqual(a.version, b.version);
+  });
 
   console.log("\n" + passed + " smoke tests passed");
 })().catch((e) => {

@@ -13,14 +13,15 @@
 - Кнопки показать/скрыть пароль (`👁`/`🙈`) в формах шифрования и расшифровки.
 - Drag&drop `.ckz`/`.json` на зону загрузки в блоке Restore + подпись с именем
   выбранного файла. Промахнувшийся дроп мимо зоны больше не уводит popup/вкладку.
-- Smoke-тесты `test/smoke.cjs` (14 тестов: SJCL-совместимость, оба download-пути,
-  валидация, статичные стражи) + шаг `Smoke tests` в CI (`.github/workflows/build.yml`).
+- Smoke-тесты `test/smoke.cjs` (17 тестов: SJCL-совместимость, оба download-пути,
+  валидация (включая allowlist расширений), полнота локалей, паритет версий
+  манифестов, статичные стражи) + шаг `Smoke tests` в CI (`.github/workflows/build.yml`).
 - Поддержка Firefox MV3: `manifest.firefox.json`, полный UI во вкладке
   (`popup.html?standalone=1`), CI-проверка «манифесты различаются только в `background`».
 - В манифестах: `action.default_icon`, `minimum_chrome_version: 88`.
 - Новые ключи локалей: `dropHint`, `passwordMismatch`, `passwordTooShort`,
-  `fileTooLarge`, `showPassword`/`hidePassword`, `restoreSuccessSkipped`, `dismissLabel`,
-  `backBtn`.
+  `fileTooLarge`, `showPassword`/`hidePassword`, `restoreSuccessSkipped`,
+  `restoreSuccessFailed`, `dismissLabel`, `backBtn` — все 25 языков полные.
 - Кнопки «Назад» (`←`/`→` в RTL) в формах шифрования и расшифровки:
   возврат из под-экранов бэкапа, выбора `.ckz` и paste-режима без перезагрузки.
 
@@ -32,9 +33,11 @@
 - Политика паролей ужесточена только на запись: минимум 8 символов и совпадение
   повтора. Расшифровка старых коротких паролей (от 3 символов) не тронута.
 - Пароли затираются из DOM после операций (бэкап — всегда, restore — после успеха).
-- Предвалидация `.ckz` до дорогого PBKDF2 (структура `iv`/`ct`, лимит 100 МБ).
-- Валидация в `background.js`: тип/размер payload (лимит 64 МБ), имя файла
-  обрезается до basename (защита от path traversal).
+- Предвалидация `.ckz` до дорогого PBKDF2 (структура `iv`/`ct`, лимит 32 МБ,
+  синхронизирован с фоном; запас на ~33% base64-инфляцию `data:` URL).
+- Валидация в `background.js`: тип/размер payload (лимит 32 МБ), имя файла
+  обрезается до basename (защита от path traversal) и проверяется по allowlist
+  (только `.ckz`/`.json`).
 
 ### Changed — изменено
 
@@ -66,6 +69,18 @@
   вместо гарантированного `cookieRestoreFail`.
 - Cancel в `.json`-подтверждении restore не возвращал ссылку
   «Unable to upload a backup file?» — теперь возвращает (выход из тупика).
+- Пароль расшифровки затирался только после успеха — теперь и на всех путях
+  ошибок (`wrongPassword`/`invalidFile`/пречек).
+- Итог restore не считал упавшие `cookies.set`: добавлен счётчик `failed`
+  и ключ `restoreSuccessFailed` (`restored + skipped + failed = total`).
+- `alert()` для «нет cookies» заменён инлайн-варнингами (для `openTabFail`
+  в Firefox-popup оставлен сознательно: UI сообщений там скрыт).
+- Двойной `if` совпадения паролей схлопнут, расставлены `;`, убран лишний
+  `role="button"`, стабильный ключ дедупа попыток restore.
+- `onChanged`-слушатель больше не течёт при усыплении service worker:
+  протухший blob-URL подбирается на следующем скачивании + 5-минутный
+  страховочный таймер.
+- README: пароль ≥8 символов, ISO-имя файла, `iter: 100000`.
 - Кнопки вылезали за пределы popup на языках с длинными переводами
   (de, fr, ru, uk, es, pt, sk, hi и др.): у `.btn-primary`/`.btn-secondary`/
   `.btn-danger` снят `white-space: nowrap` — текст переносится, а ряд кнопок

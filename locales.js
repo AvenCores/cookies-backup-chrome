@@ -78,6 +78,7 @@ const TRANSLATIONS = {
   "hidePassword": "Hide password",
   "dropHint": "or drag & drop the file here",
   "restoreSuccessSkipped": "Successfully restored <b>{restored}</b> cookies out of <b>{total}</b> (<b>{skipped}</b> skipped)",
+  "restoreSuccessFailed": "Successfully restored <b>{restored}</b> cookies out of <b>{total}</b> (<b>{skipped}</b> skipped, <b>{failed}</b> failed)",
   "dismissLabel": "Dismiss"
 },
 "ru": {
@@ -129,6 +130,7 @@ const TRANSLATIONS = {
   "hidePassword": "Скрыть пароль",
   "dropHint": "или перетащите файл сюда",
   "restoreSuccessSkipped": "Успешно восстановлено <b>{restored}</b> cookies из <b>{total}</b> (пропущено: <b>{skipped}</b>)",
+  "restoreSuccessFailed": "Успешно восстановлено <b>{restored}</b> cookies из <b>{total}</b> (пропущено: <b>{skipped}</b>, не удалось: <b>{failed}</b>)",
   "dismissLabel": "Закрыть"
 },
 "uk": {
@@ -171,7 +173,17 @@ const TRANSLATIONS = {
   "backBtn": "Назад",
   "notBackupFile": "Це не .ckz і не .json файл. Виберіть знову!",
   "autoOption": "Авто",
-  "autoHint": "Дотримуватися мови браузера"
+  "autoHint": "Дотримуватися мови браузера",
+  "encConfirmPlaceholder": "повторіть пароль",
+  "passwordMismatch": "Паролі не збігаються!",
+  "passwordTooShort": "Пароль закороткий, потрібно щонайменше 8 символів!",
+  "fileTooLarge": "Файл завеликий ({size})!",
+  "showPassword": "Показати пароль",
+  "hidePassword": "Сховати пароль",
+  "dropHint": "або перетягніть файл сюди",
+  "restoreSuccessSkipped": "Успішно відновлено <b>{restored}</b> cookies з <b>{total}</b> (пропущено: <b>{skipped}</b>)",
+  "restoreSuccessFailed": "Успішно відновлено <b>{restored}</b> cookies з <b>{total}</b> (пропущено: <b>{skipped}</b>, не вдалося: <b>{failed}</b>)",
+  "dismissLabel": "Закрити"
 },
 "de": {
   "appTitle": "Cookies sichern & wiederherstellen",
@@ -213,7 +225,17 @@ const TRANSLATIONS = {
   "backBtn": "Zurück",
   "notBackupFile": "Keine .ckz- oder .json-Datei. Bitte erneut wählen!",
   "autoOption": "Auto",
-  "autoHint": "Browsersprache folgen"
+  "autoHint": "Browsersprache folgen",
+  "encConfirmPlaceholder": "Passwort wiederholen",
+  "passwordMismatch": "Passwörter stimmen nicht überein!",
+  "passwordTooShort": "Passwort zu kurz, mindestens 8 Zeichen verwenden!",
+  "fileTooLarge": "Datei ist zu groß ({size})!",
+  "showPassword": "Passwort anzeigen",
+  "hidePassword": "Passwort verbergen",
+  "dropHint": "oder Datei hierher ziehen",
+  "restoreSuccessSkipped": "Erfolgreich <b>{restored}</b> von <b>{total}</b> Cookies wiederhergestellt (<b>{skipped}</b> übersprungen)",
+  "restoreSuccessFailed": "Erfolgreich <b>{restored}</b> von <b>{total}</b> Cookies wiederhergestellt (<b>{skipped}</b> übersprungen, <b>{failed}</b> fehlgeschlagen)",
+  "dismissLabel": "Schließen"
 },
 "fr": {
   "appTitle": "Sauvegarde et restauration des cookies",
@@ -255,7 +277,17 @@ const TRANSLATIONS = {
   "backBtn": "Retour",
   "notBackupFile": "Ce n’est ni un fichier .ckz ni .json. Veuillez réessayer !",
   "autoOption": "Auto",
-  "autoHint": "Suivre la langue du navigateur"
+  "autoHint": "Suivre la langue du navigateur",
+  "encConfirmPlaceholder": "répéter le mot de passe",
+  "passwordMismatch": "Les mots de passe ne correspondent pas !",
+  "passwordTooShort": "Mot de passe trop court, 8 caractères minimum !",
+  "fileTooLarge": "Fichier trop volumineux ({size}) !",
+  "showPassword": "Afficher le mot de passe",
+  "hidePassword": "Masquer le mot de passe",
+  "dropHint": "ou glissez-déposez le fichier ici",
+  "restoreSuccessSkipped": "<b>{restored}</b> cookies restaurés sur <b>{total}</b> (<b>{skipped}</b> ignorés)",
+  "restoreSuccessFailed": "<b>{restored}</b> cookies restaurés sur <b>{total}</b> (<b>{skipped}</b> ignorés, <b>{failed}</b> en échec)",
+  "dismissLabel": "Fermer"
 },
 "es": {
   "appTitle": "Copia de seguridad y restauración de cookies",
@@ -297,7 +329,17 @@ const TRANSLATIONS = {
   "backBtn": "Atrás",
   "notBackupFile": "No es un archivo .ckz ni .json. ¡Seleccione de nuevo!",
   "autoOption": "Automático",
-  "autoHint": "Seguir el idioma del navegador"
+  "autoHint": "Seguir el idioma del navegador",
+  "encConfirmPlaceholder": "repite la contraseña",
+  "passwordMismatch": "¡Las contraseñas no coinciden!",
+  "passwordTooShort": "¡Contraseña muy corta, usa al menos 8 caracteres!",
+  "fileTooLarge": "¡Archivo demasiado grande ({size})!",
+  "showPassword": "Mostrar contraseña",
+  "hidePassword": "Ocultar contraseña",
+  "dropHint": "o arrastra el archivo aquí",
+  "restoreSuccessSkipped": "<b>{restored}</b> cookies restauradas de <b>{total}</b> (<b>{skipped}</b> omitidas)",
+  "restoreSuccessFailed": "<b>{restored}</b> cookies restauradas de <b>{total}</b> (<b>{skipped}</b> omitidas, <b>{failed}</b> fallidas)",
+  "dismissLabel": "Cerrar"
 },
 "pt": {
   "appTitle": "Backup e restauração de cookies",
@@ -339,7 +381,17 @@ const TRANSLATIONS = {
   "backBtn": "Voltar",
   "notBackupFile": "Não é um arquivo .ckz nem .json. Selecione novamente!",
   "autoOption": "Automático",
-  "autoHint": "Seguir o idioma do navegador"
+  "autoHint": "Seguir o idioma do navegador",
+  "encConfirmPlaceholder": "repita a senha",
+  "passwordMismatch": "As senhas não coincidem!",
+  "passwordTooShort": "Senha muito curta, use pelo menos 8 caracteres!",
+  "fileTooLarge": "Arquivo muito grande ({size})!",
+  "showPassword": "Mostrar senha",
+  "hidePassword": "Ocultar senha",
+  "dropHint": "ou arraste o arquivo para cá",
+  "restoreSuccessSkipped": "<b>{restored}</b> cookies restaurados de <b>{total}</b> (<b>{skipped}</b> ignorados)",
+  "restoreSuccessFailed": "<b>{restored}</b> cookies restaurados de <b>{total}</b> (<b>{skipped}</b> ignorados, <b>{failed}</b> com falha)",
+  "dismissLabel": "Fechar"
 },
 "it": {
   "appTitle": "Backup e ripristino dei cookie",
@@ -381,7 +433,17 @@ const TRANSLATIONS = {
   "backBtn": "Indietro",
   "notBackupFile": "Non è un file .ckz né .json. Seleziona di nuovo!",
   "autoOption": "Auto",
-  "autoHint": "Segui la lingua del browser"
+  "autoHint": "Segui la lingua del browser",
+  "encConfirmPlaceholder": "ripeti la password",
+  "passwordMismatch": "Le password non corrispondono!",
+  "passwordTooShort": "Password troppo corta, usa almeno 8 caratteri!",
+  "fileTooLarge": "File troppo grande ({size})!",
+  "showPassword": "Mostra password",
+  "hidePassword": "Nascondi password",
+  "dropHint": "oppure trascina il file qui",
+  "restoreSuccessSkipped": "<b>{restored}</b> cookie ripristinati su <b>{total}</b> (<b>{skipped}</b> ignorati)",
+  "restoreSuccessFailed": "<b>{restored}</b> cookie ripristinati su <b>{total}</b> (<b>{skipped}</b> ignorati, <b>{failed}</b> non riusciti)",
+  "dismissLabel": "Chiudi"
 },
 "pl": {
   "appTitle": "Kopia zapasowa i przywracanie cookies",
@@ -423,7 +485,17 @@ const TRANSLATIONS = {
   "backBtn": "Wstecz",
   "notBackupFile": "To nie jest plik .ckz ani .json. Wybierz ponownie!",
   "autoOption": "Auto",
-  "autoHint": "Używaj języka przeglądarki"
+  "autoHint": "Używaj języka przeglądarki",
+  "encConfirmPlaceholder": "powtórz hasło",
+  "passwordMismatch": "Hasła nie są zgodne!",
+  "passwordTooShort": "Hasło za krótkie, użyj co najmniej 8 znaków!",
+  "fileTooLarge": "Plik jest za duży ({size})!",
+  "showPassword": "Pokaż hasło",
+  "hidePassword": "Ukryj hasło",
+  "dropHint": "lub przeciągnij tu plik",
+  "restoreSuccessSkipped": "Pomyślnie przywrócono <b>{restored}</b> z <b>{total}</b> plików cookie (pominięto: <b>{skipped}</b>)",
+  "restoreSuccessFailed": "Pomyślnie przywrócono <b>{restored}</b> z <b>{total}</b> plików cookie (pominięto: <b>{skipped}</b>, nieudane: <b>{failed}</b>)",
+  "dismissLabel": "Zamknij"
 },
 "nl": {
   "appTitle": "Cookies back-uppen & herstellen",
@@ -465,7 +537,17 @@ const TRANSLATIONS = {
   "backBtn": "Terug",
   "notBackupFile": "Geen .ckz- of .json-bestand. Selecteer opnieuw!",
   "autoOption": "Auto",
-  "autoHint": "Browsertaal volgen"
+  "autoHint": "Browsertaal volgen",
+  "encConfirmPlaceholder": "herhaal wachtwoord",
+  "passwordMismatch": "Wachtwoorden komen niet overeen!",
+  "passwordTooShort": "Wachtwoord te kort, gebruik minimaal 8 tekens!",
+  "fileTooLarge": "Bestand is te groot ({size})!",
+  "showPassword": "Wachtwoord tonen",
+  "hidePassword": "Wachtwoord verbergen",
+  "dropHint": "of sleep het bestand hierheen",
+  "restoreSuccessSkipped": "Succesvol <b>{restored}</b> van <b>{total}</b> cookies hersteld (<b>{skipped}</b> overgeslagen)",
+  "restoreSuccessFailed": "Succesvol <b>{restored}</b> van <b>{total}</b> cookies hersteld (<b>{skipped}</b> overgeslagen, <b>{failed}</b> mislukt)",
+  "dismissLabel": "Sluiten"
 },
 "sv": {
   "appTitle": "Säkerhetskopiera & återställ cookies",
@@ -507,7 +589,17 @@ const TRANSLATIONS = {
   "backBtn": "Tillbaka",
   "notBackupFile": "Inte en .ckz- eller .json-fil. Välj igen!",
   "autoOption": "Auto",
-  "autoHint": "Följ webbläsarens språk"
+  "autoHint": "Följ webbläsarens språk",
+  "encConfirmPlaceholder": "upprepa lösenord",
+  "passwordMismatch": "Lösenorden stämmer inte överens!",
+  "passwordTooShort": "Lösenordet är för kort, använd minst 8 tecken!",
+  "fileTooLarge": "Filen är för stor ({size})!",
+  "showPassword": "Visa lösenord",
+  "hidePassword": "Dölj lösenord",
+  "dropHint": "eller dra och släpp filen här",
+  "restoreSuccessSkipped": "Återställde <b>{restored}</b> av <b>{total}</b> cookies (<b>{skipped}</b> överhoppade)",
+  "restoreSuccessFailed": "Återställde <b>{restored}</b> av <b>{total}</b> cookies (<b>{skipped}</b> överhoppade, <b>{failed}</b> misslyckades)",
+  "dismissLabel": "Stäng"
 },
 "da": {
   "appTitle": "Backup & gendannelse af cookies",
@@ -549,7 +641,17 @@ const TRANSLATIONS = {
   "backBtn": "Tilbage",
   "notBackupFile": "Ikke en .ckz- eller .json-fil. Vælg igen!",
   "autoOption": "Auto",
-  "autoHint": "Følg browsersproget"
+  "autoHint": "Følg browsersproget",
+  "encConfirmPlaceholder": "gentag adgangskode",
+  "passwordMismatch": "Adgangskoderne stemmer ikke overens!",
+  "passwordTooShort": "Adgangskoden er for kort, brug mindst 8 tegn!",
+  "fileTooLarge": "Filen er for stor ({size})!",
+  "showPassword": "Vis adgangskode",
+  "hidePassword": "Skjul adgangskode",
+  "dropHint": "eller træk filen hertil",
+  "restoreSuccessSkipped": "Gendannede <b>{restored}</b> af <b>{total}</b> cookies (<b>{skipped}</b> sprunget over)",
+  "restoreSuccessFailed": "Gendannede <b>{restored}</b> af <b>{total}</b> cookies (<b>{skipped}</b> sprunget over, <b>{failed}</b> mislykkedes)",
+  "dismissLabel": "Luk"
 },
 "fi": {
   "appTitle": "Evästeiden varmuuskopiointi ja palautus",
@@ -591,7 +693,17 @@ const TRANSLATIONS = {
   "backBtn": "Takaisin",
   "notBackupFile": "Ei .ckz- eikä .json-tiedosto. Valitse uudelleen!",
   "autoOption": "Auto",
-  "autoHint": "Seuraa selaimen kieltä"
+  "autoHint": "Seuraa selaimen kieltä",
+  "encConfirmPlaceholder": "toista salasana",
+  "passwordMismatch": "Salasanat eivät täsmää!",
+  "passwordTooShort": "Salasana on liian lyhyt, käytä vähintään 8 merkkiä!",
+  "fileTooLarge": "Tiedosto on liian suuri ({size})!",
+  "showPassword": "Näytä salasana",
+  "hidePassword": "Piilota salasana",
+  "dropHint": "tai vedä tiedosto tähän",
+  "restoreSuccessSkipped": "Palautettiin <b>{restored}</b> / <b>{total}</b> evästettä (ohitettu: <b>{skipped}</b>)",
+  "restoreSuccessFailed": "Palautettiin <b>{restored}</b> / <b>{total}</b> evästettä (ohitettu: <b>{skipped}</b>, epäonnistui: <b>{failed}</b>)",
+  "dismissLabel": "Sulje"
 },
 "no": {
   "appTitle": "Sikkerhetskopier & gjenopprett informasjonskapsler",
@@ -633,7 +745,17 @@ const TRANSLATIONS = {
   "backBtn": "Tilbake",
   "notBackupFile": "Ikke en .ckz- eller .json-fil. Velg igjen!",
   "autoOption": "Auto",
-  "autoHint": "Følg nettleserens språk"
+  "autoHint": "Følg nettleserens språk",
+  "encConfirmPlaceholder": "gjenta passord",
+  "passwordMismatch": "Passordene stemmer ikke overens!",
+  "passwordTooShort": "Passordet er for kort, bruk minst 8 tegn!",
+  "fileTooLarge": "Filen er for stor ({size})!",
+  "showPassword": "Vis passord",
+  "hidePassword": "Skjul passord",
+  "dropHint": "eller dra filen hit",
+  "restoreSuccessSkipped": "Gjenopprettet <b>{restored}</b> av <b>{total}</b> informasjonskapsler (<b>{skipped}</b> hoppet over)",
+  "restoreSuccessFailed": "Gjenopprettet <b>{restored}</b> av <b>{total}</b> informasjonskapsler (<b>{skipped}</b> hoppet over, <b>{failed}</b> mislyktes)",
+  "dismissLabel": "Lukk"
 },
 "cs": {
   "appTitle": "Záloha a obnova cookies",
@@ -675,7 +797,17 @@ const TRANSLATIONS = {
   "backBtn": "Zpět",
   "notBackupFile": "Není to soubor .ckz ani .json. Vyberte znovu!",
   "autoOption": "Auto",
-  "autoHint": "Řídit se jazykem prohlížeče"
+  "autoHint": "Řídit se jazykem prohlížeče",
+  "encConfirmPlaceholder": "zopakujte heslo",
+  "passwordMismatch": "Hesla se neshodují!",
+  "passwordTooShort": "Heslo je příliš krátké, použijte alespoň 8 znaků!",
+  "fileTooLarge": "Soubor je příliš velký ({size})!",
+  "showPassword": "Zobrazit heslo",
+  "hidePassword": "Skrýt heslo",
+  "dropHint": "nebo sem soubor přetáhněte",
+  "restoreSuccessSkipped": "Úspěšně obnoveno <b>{restored}</b> z <b>{total}</b> cookies (přeskočeno: <b>{skipped}</b>)",
+  "restoreSuccessFailed": "Úspěšně obnoveno <b>{restored}</b> z <b>{total}</b> cookies (přeskočeno: <b>{skipped}</b>, selhalo: <b>{failed}</b>)",
+  "dismissLabel": "Zavřít"
 },
 "sk": {
   "appTitle": "Záloha a obnova cookies",
@@ -717,7 +849,17 @@ const TRANSLATIONS = {
   "backBtn": "Späť",
   "notBackupFile": "Nie je to súbor .ckz ani .json. Vyberte znova!",
   "autoOption": "Auto",
-  "autoHint": "Riadiť sa jazykom prehliadača"
+  "autoHint": "Riadiť sa jazykom prehliadača",
+  "encConfirmPlaceholder": "zopakujte heslo",
+  "passwordMismatch": "Heslá sa nezhodujú!",
+  "passwordTooShort": "Heslo je príliš krátke, použite aspoň 8 znakov!",
+  "fileTooLarge": "Súbor je príliš veľký ({size})!",
+  "showPassword": "Zobraziť heslo",
+  "hidePassword": "Skryť heslo",
+  "dropHint": "alebo sem súbor presuňte",
+  "restoreSuccessSkipped": "Úspešne obnovených <b>{restored}</b> z <b>{total}</b> cookies (preskočené: <b>{skipped}</b>)",
+  "restoreSuccessFailed": "Úspešne obnovených <b>{restored}</b> z <b>{total}</b> cookies (preskočené: <b>{skipped}</b>, zlyhalo: <b>{failed}</b>)",
+  "dismissLabel": "Zavrieť"
 },
 "hu": {
   "appTitle": "Cookie-k biztonsági mentése és visszaállítása",
@@ -759,7 +901,17 @@ const TRANSLATIONS = {
   "backBtn": "Vissza",
   "notBackupFile": "Nem .ckz vagy .json fájl. Válasszon újra!",
   "autoOption": "Auto",
-  "autoHint": "A böngésző nyelvét követi"
+  "autoHint": "A böngésző nyelvét követi",
+  "encConfirmPlaceholder": "jelszó mégegyszer",
+  "passwordMismatch": "A jelszavak nem egyeznek!",
+  "passwordTooShort": "A jelszó túl rövid, legalább 8 karaktert használjon!",
+  "fileTooLarge": "A fájl túl nagy ({size})!",
+  "showPassword": "Jelszó megjelenítése",
+  "hidePassword": "Jelszó elrejtése",
+  "dropHint": "vagy húzza ide a fájlt",
+  "restoreSuccessSkipped": "Sikeresen visszaállítva <b>{restored}</b> / <b>{total}</b> cookie (kihagyva: <b>{skipped}</b>)",
+  "restoreSuccessFailed": "Sikeresen visszaállítva <b>{restored}</b> / <b>{total}</b> cookie (kihagyva: <b>{skipped}</b>, sikertelen: <b>{failed}</b>)",
+  "dismissLabel": "Bezárás"
 },
 "ro": {
   "appTitle": "Backup și restaurare cookies",
@@ -801,7 +953,17 @@ const TRANSLATIONS = {
   "backBtn": "Înapoi",
   "notBackupFile": "Nu este un fișier .ckz sau .json. Selectați din nou!",
   "autoOption": "Auto",
-  "autoHint": "Folosește limba browserului"
+  "autoHint": "Folosește limba browserului",
+  "encConfirmPlaceholder": "repetă parola",
+  "passwordMismatch": "Parolele nu coincid!",
+  "passwordTooShort": "Parola este prea scurtă, folosiți cel puțin 8 caractere!",
+  "fileTooLarge": "Fișierul este prea mare ({size})!",
+  "showPassword": "Arată parola",
+  "hidePassword": "Ascunde parola",
+  "dropHint": "sau trage fișierul aici",
+  "restoreSuccessSkipped": "S-au restaurat <b>{restored}</b> din <b>{total}</b> cookie-uri (ignorate: <b>{skipped}</b>)",
+  "restoreSuccessFailed": "S-au restaurat <b>{restored}</b> din <b>{total}</b> cookie-uri (ignorate: <b>{skipped}</b>, eșuate: <b>{failed}</b>)",
+  "dismissLabel": "Închide"
 },
 "tr": {
   "appTitle": "Çerezleri yedekle ve geri yükle",
@@ -843,7 +1005,17 @@ const TRANSLATIONS = {
   "backBtn": "Geri",
   "notBackupFile": ".ckz veya .json dosyası değil. Lütfen tekrar seçin!",
   "autoOption": "Otomatik",
-  "autoHint": "Tarayıcının dilini kullan"
+  "autoHint": "Tarayıcının dilini kullan",
+  "encConfirmPlaceholder": "parolayı tekrarla",
+  "passwordMismatch": "Parolalar eşleşmiyor!",
+  "passwordTooShort": "Parola çok kısa, en az 8 karakter kullanın!",
+  "fileTooLarge": "Dosya çok büyük ({size})!",
+  "showPassword": "Parolayı göster",
+  "hidePassword": "Parolayı gizle",
+  "dropHint": "veya dosyayı buraya sürükleyin",
+  "restoreSuccessSkipped": "<b>{total}</b> çerezden <b>{restored}</b> tanesi geri yüklendi (<b>{skipped}</b> atlandı)",
+  "restoreSuccessFailed": "<b>{total}</b> çerezden <b>{restored}</b> tanesi geri yüklendi (<b>{skipped}</b> atlandı, <b>{failed}</b> başarısız)",
+  "dismissLabel": "Kapat"
 },
 "zh-CN": {
   "appTitle": "Cookie 备份与恢复",
@@ -885,7 +1057,17 @@ const TRANSLATIONS = {
   "backBtn": "返回",
   "notBackupFile": "不是 .ckz 或 .json 文件，请重新选择！",
   "autoOption": "自动",
-  "autoHint": "跟随浏览器语言"
+  "autoHint": "跟随浏览器语言",
+  "encConfirmPlaceholder": "重复密码",
+  "passwordMismatch": "两次输入的密码不一致！",
+  "passwordTooShort": "密码太短，请至少使用 8 个字符！",
+  "fileTooLarge": "文件过大 ({size})！",
+  "showPassword": "显示密码",
+  "hidePassword": "隐藏密码",
+  "dropHint": "或将文件拖到此处",
+  "restoreSuccessSkipped": "共 <b>{total}</b> 个 Cookie，成功恢复 <b>{restored}</b> 个 (已跳过 <b>{skipped}</b> 个)",
+  "restoreSuccessFailed": "共 <b>{total}</b> 个 Cookie，成功恢复 <b>{restored}</b> 个 (已跳过 <b>{skipped}</b> 个，失败 <b>{failed}</b> 个)",
+  "dismissLabel": "关闭"
 },
 "zh-TW": {
   "appTitle": "Cookie 備份與還原",
@@ -927,7 +1109,17 @@ const TRANSLATIONS = {
   "backBtn": "返回",
   "notBackupFile": "不是 .ckz 或 .json 檔案，請重新選擇！",
   "autoOption": "自動",
-  "autoHint": "跟隨瀏覽器語言"
+  "autoHint": "跟隨瀏覽器語言",
+  "encConfirmPlaceholder": "重複密碼",
+  "passwordMismatch": "兩次輸入的密碼不一致！",
+  "passwordTooShort": "密碼太短，請至少使用 8 個字元！",
+  "fileTooLarge": "檔案過大 ({size})！",
+  "showPassword": "顯示密碼",
+  "hidePassword": "隱藏密碼",
+  "dropHint": "或將檔案拖到此處",
+  "restoreSuccessSkipped": "共 <b>{total}</b> 個 Cookie，成功還原 <b>{restored}</b> 個 (已略過 <b>{skipped}</b> 個)",
+  "restoreSuccessFailed": "共 <b>{total}</b> 個 Cookie，成功還原 <b>{restored}</b> 個 (已略過 <b>{skipped}</b> 個，失敗 <b>{failed}</b> 個)",
+  "dismissLabel": "關閉"
 },
 "ja": {
   "appTitle": "Cookie のバックアップと復元",
@@ -969,7 +1161,17 @@ const TRANSLATIONS = {
   "backBtn": "戻る",
   "notBackupFile": ".ckz でも .json でもありません。もう一度選択してください！",
   "autoOption": "自動",
-  "autoHint": "ブラウザの言語に従う"
+  "autoHint": "ブラウザの言語に従う",
+  "encConfirmPlaceholder": "パスワード再入力",
+  "passwordMismatch": "パスワードが一致しません！",
+  "passwordTooShort": "パスワードが短すぎます。8文字以上で入力してください！",
+  "fileTooLarge": "ファイルが大きすぎます ({size})！",
+  "showPassword": "パスワードを表示",
+  "hidePassword": "パスワードを非表示",
+  "dropHint": "またはファイルをここにドラッグ＆ドロップ",
+  "restoreSuccessSkipped": "<b>{total}</b> 件中 <b>{restored}</b> 件の Cookie を復元しました (<b>{skipped}</b> 件スキップ)",
+  "restoreSuccessFailed": "<b>{total}</b> 件中 <b>{restored}</b> 件の Cookie を復元しました (<b>{skipped}</b> 件スキップ、<b>{failed}</b> 件失敗)",
+  "dismissLabel": "閉じる"
 },
 "ko": {
   "appTitle": "쿠키 백업 및 복원",
@@ -1011,7 +1213,17 @@ const TRANSLATIONS = {
   "backBtn": "뒤로",
   "notBackupFile": ".ckz 또는 .json 파일이 아닙니다. 다시 선택하세요!",
   "autoOption": "자동",
-  "autoHint": "브라우저 언어 따르기"
+  "autoHint": "브라우저 언어 따르기",
+  "encConfirmPlaceholder": "비밀번호 확인",
+  "passwordMismatch": "비밀번호가 일치하지 않습니다!",
+  "passwordTooShort": "비밀번호가 너무 짧습니다. 8자 이상 사용하세요!",
+  "fileTooLarge": "파일이 너무 큽니다 ({size})!",
+  "showPassword": "비밀번호 표시",
+  "hidePassword": "비밀번호 숨기기",
+  "dropHint": "또는 파일을 여기로 드래그하세요",
+  "restoreSuccessSkipped": "<b>{total}</b>개 중 <b>{restored}</b>개의 쿠키를 복원했습니다 (<b>{skipped}</b>개 건너뜀)",
+  "restoreSuccessFailed": "<b>{total}</b>개 중 <b>{restored}</b>개의 쿠키를 복원했습니다 (<b>{skipped}</b>개 건너뜀, <b>{failed}</b>개 실패)",
+  "dismissLabel": "닫기"
 },
 "ar": {
   "appTitle": "نسخ الكوكيز احتياطيًا واستعادتها",
@@ -1053,7 +1265,17 @@ const TRANSLATIONS = {
   "backBtn": "رجوع",
   "notBackupFile": "ليس ملف .ckz أو .json. اختر مجددًا!",
   "autoOption": "تلقائي",
-  "autoHint": "اتباع لغة المتصفح"
+  "autoHint": "اتباع لغة المتصفح",
+  "encConfirmPlaceholder": "كرر كلمة المرور",
+  "passwordMismatch": "كلمتا المرور غير متطابقتين!",
+  "passwordTooShort": "كلمة المرور قصيرة جدًا، استخدم 8 أحرف على الأقل!",
+  "fileTooLarge": "الملف كبير جدًا ({size})!",
+  "showPassword": "إظهار كلمة المرور",
+  "hidePassword": "إخفاء كلمة المرور",
+  "dropHint": "أو اسحب الملف إلى هنا",
+  "restoreSuccessSkipped": "تمت استعادة <b>{restored}</b> من <b>{total}</b> من الكوكيز (تم تخطي <b>{skipped}</b>)",
+  "restoreSuccessFailed": "تمت استعادة <b>{restored}</b> من <b>{total}</b> من الكوكيز (تم تخطي <b>{skipped}</b>، فشل <b>{failed}</b>)",
+  "dismissLabel": "إغلاق"
 },
 "hi": {
   "appTitle": "कुकीज़ बैकअप और रिस्टोर",
@@ -1095,6 +1317,16 @@ const TRANSLATIONS = {
   "backBtn": "वापस",
   "notBackupFile": ".ckz या .json फ़ाइल नहीं है। कृपया फिर से चुनें!",
   "autoOption": "ऑटो",
-  "autoHint": "ब्राउज़र की भाषा का उपयोग करें"
+  "autoHint": "ब्राउज़र की भाषा का उपयोग करें",
+  "encConfirmPlaceholder": "पासवर्ड दोहराएं",
+  "passwordMismatch": "पासवर्ड मेल नहीं खा रहे!",
+  "passwordTooShort": "पासवर्ड बहुत छोटा है, कम से कम 8 अक्षर रखें!",
+  "fileTooLarge": "फ़ाइल बहुत बड़ी है ({size})!",
+  "showPassword": "पासवर्ड दिखाएं",
+  "hidePassword": "पासवर्ड छिपाएं",
+  "dropHint": "या फ़ाइल को यहाँ ड्रैग करें",
+  "restoreSuccessSkipped": "<b>{total}</b> में से <b>{restored}</b> कुकीज़ रिस्टोर कीं (<b>{skipped}</b> छोड़ी गईं)",
+  "restoreSuccessFailed": "<b>{total}</b> में से <b>{restored}</b> कुकीज़ रिस्टोर कीं (<b>{skipped}</b> छोड़ी गईं, <b>{failed}</b> विफल)",
+  "dismissLabel": "बंद करें"
 }
 };

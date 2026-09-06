@@ -41,7 +41,7 @@
 
 ## ✨ Возможности
 
-- **Шифрованный бэкап (`.ckz`)** — все cookies через `cookies.getAll({})` → JSON → [SJCL](https://bitwiseshiftleft.github.io/sjcl/) (`sjcl.encrypt(pass, ...)`, `ks: 256`), пароль минимум 3 символа. Имя файла: `cookies-ДД-ММ-ГГГГ-ЧЧ-ММ-СС.ckz`.
+- **Шифрованный бэкап (`.ckz`)** — все cookies через `cookies.getAll({})` → JSON → [SJCL](https://bitwiseshiftleft.github.io/sjcl/) (`sjcl.encrypt(pass, ...)`, `ks: 256, iter: 100000`), пароль минимум 8 символов. Имя файла: `cookies-ГГГГ-ММ-ДД-ЧЧ-мм-сс.ckz`.
 - **Бэкап без пароля (`.json`)** — читаемый plain-JSON с отдельным экраном-предупреждением (`.json` хранит cookies открытым текстом, для переноса/отладки).
 - **Восстановление `.ckz` и `.json`** — автовыбор по расширению файла, прогресс-бар (`<progress>`), счётчики `восстановлено X из Y`, предупреждения по каждой проблемной cookie (истекшие / не восстановились) с закрываемыми алертами и дедупликацией.
 - **Кросс-браузерное восстановление** — пересборка `url` из `domain + path + secure`, маппинг `sameSite` (`lax_plus`/`strict_plus` → `lax`/`strict`, в Firefox только `no_restriction/lax/strict`), защита от `expirationDate: null` у сессионных cookie Firefox, плюс цепочка fallback-попыток на каждую cookie: чужой `storeId` → без него, `SameSite=None` без `Secure` → без `sameSite`, `__Host-`/`__Secure-` → принудительно `secure` + `https`.
@@ -131,8 +131,8 @@ Chrome и Chromium не умеют ставить `.zip` напрямую как
 
 **Бэкап с паролем (рекомендуется):**
 
-1. Нажмите **Backup all cookies** → введите пароль шифрования (≥3 символов) → Enter.
-2. Выберите место сохранения в диалоге (`cookies-ДД-ММ-ГГГГ-ЧЧ-ММ-СС.ckz`).
+1. Нажмите **Backup all cookies** → введите пароль шифрования (≥8 символов, с повтором) → Enter.
+2. Выберите место сохранения в диалоге (`cookies-ГГГГ-ММ-ДД-ЧЧ-мм-сс.ckz`).
 
 **Бэкап без пароля:**
 

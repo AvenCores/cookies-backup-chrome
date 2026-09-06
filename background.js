@@ -13,7 +13,15 @@ const api = isFirefox ? browser : chrome;
 
 // Upper bound for one message payload (runtime.sendMessage has its own
 // quota; fail fast with a clear error instead of a cryptic transport one).
-const MAX_DOWNLOAD_BYTES = 64 * 1024 * 1024;
+// Kept in sync with MAX_BACKUP_BYTES in popup.js: a backup that passes the
+// popup precheck must also pass here. The value accounts for the ~33%
+// base64 inflation of the data: URL fallback used in service workers.
+const MAX_DOWNLOAD_BYTES = 32 * 1024 * 1024;
+
+// Last blob URL handed out but not yet revoked (its onChanged may never
+// fire if an MV3 worker is suspended mid-download). Reclaimed on the next
+// download instead of leaking. Data: URLs need no cleanup.
+let lastBlobUrl = null;
 
 api.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (!message || message.type !== "downloadBackup") {
@@ -54,6 +62,12 @@ async function downloadBackup(data, filename) {
   if (!filename || filename.length > 255) {
     throw new Error("invalid filename");
   }
+  // allowlist: backups are only ever .ckz (encrypted) or .json (plain).
+  // Without this any sender could make the browser download an executable.
+  const lowerName = filename.toLowerCase();
+  if (!lowerName.endsWith(".ckz") && !lowerName.endsWith(".json")) {
+    throw new Error("invalid filename");
+  }
   if (!api.downloads || typeof api.downloads.download !== "function") {
     throw new Error("downloads API is not available");
   }
@@ -75,6 +89,7 @@ async function downloadBackup(data, filename) {
       try {
         URL.revokeObjectURL(url);
       } catch (e) {}
+      if (url === lastBlobUrl) lastBlobUrl = null;
       url = null;
     }
   };
@@ -92,18 +107,38 @@ async function downloadBackup(data, filename) {
     throw error;
   }
 
+  // Reclaim a stale blob URL from a previous download whose onChanged never
+  // fired (worker was suspended), then track the new one for the same case.
+  if (isBlobUrl && url) {
+    if (lastBlobUrl && lastBlobUrl !== url) {
+      try {
+        URL.revokeObjectURL(lastBlobUrl);
+      } catch (e) {}
+    }
+    lastBlobUrl = url;
+  }
+
+  let safetyTimer = 0;
+  const cleanup = () => {
+    api.downloads.onChanged.removeListener(listener);
+    if (safetyTimer) {
+      try {
+        clearTimeout(safetyTimer);
+      } catch (e) {}
+      safetyTimer = 0;
+    }
+    revoke();
+  };
   const listener = (delta) => {
     if (delta?.id != id) return;
     if (delta?.state?.current == "complete") {
-      api.downloads.onChanged.removeListener(listener);
-      revoke();
+      cleanup();
       try {
         const shown = api.downloads.show(id);
         if (shown && typeof shown.catch === "function") shown.catch(() => {});
       } catch (e) {}
     } else if (delta?.state?.current == "interrupted") {
-      api.downloads.onChanged.removeListener(listener);
-      revoke();
+      cleanup();
       // the popup only learns whether the download *started*; post-start
       // states have no UI to report to (the popup may be closed), so log
       // the reason here for diagnostics
@@ -113,6 +148,13 @@ async function downloadBackup(data, filename) {
     }
   };
   api.downloads.onChanged.addListener(listener);
+  // last resort if onChanged never fires (suspended worker, huge file):
+  // drop the listener so repeated backups don't accumulate them.
+  // unref (Node/test only) so this safety net never keeps the loop alive.
+  try {
+    safetyTimer = setTimeout(cleanup, 5 * 60 * 1000);
+    if (safetyTimer && typeof safetyTimer.unref === "function") safetyTimer.unref();
+  } catch (e) {}
 
   return id;
 }

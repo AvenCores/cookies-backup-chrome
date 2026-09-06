@@ -386,6 +386,9 @@ if (location.search.includes("standalone")) {
     Promise.resolve(api.tabs.create({ url: api.runtime.getURL("popup.html?standalone=1") }))
       .then(() => window.close())
       .catch(() => {
+        // alert() is intentional here: in Firefox popup mode the messages UI
+        // is hidden (only #open-tab-wrap is shown), so an inline warning
+        // would be invisible
         alert(tr("openTabFail"));
       });
   });
@@ -440,13 +443,8 @@ async function handleEncPasswdSubmit(e) {
     return;
   }
   // if the confirm field exists (new UI), it must match; old UI without it
-  // keeps working as before
-  if (pass2 !== null && pass2 !== "" && pass !== pass2) {
-    clearMessages();
-    addToWarningMessageList(createWarning("passwordMismatch"));
-    return;
-  }
-  if (pass2 !== null && pass2 === "") {
+  // keeps working as before (pass2 === null means no confirm field)
+  if (pass2 !== null && pass !== pass2) {
     clearMessages();
     addToWarningMessageList(createWarning("passwordMismatch"));
     return;
@@ -467,7 +465,7 @@ async function handleEncPasswdSubmit(e) {
       return;
     }
     if (!cookies || cookies.length === 0) {
-      alert(tr("noCookies"));
+      addToWarningMessageList(createWarning("noCookies"));
       return;
     }
     // COMPAT: iter is stored inside the .ckz payload, so a higher count is
@@ -602,7 +600,7 @@ async function handleJsonBackup() {
     return;
   }
   if (!cookies || cookies.length === 0) {
-    alert(tr("noCookies"));
+    addToWarningMessageList(createWarning("noCookies"));
     return;
   }
   // plain JSON: human-readable, NO password, NO encryption.
@@ -647,16 +645,16 @@ function handlePickedBackupFile(file) {
   cookieFile = file || null;
   const input = document.getElementById("restore");
   if (!cookieFile) {
-    hideDecPasswordInputBox()
-    hideJsonRestoreConfirm()
+    hideDecPasswordInputBox();
+    hideJsonRestoreConfirm();
     clearDecPassword();
     updateDroppedFileName();
     return;
   }
   const name = String(cookieFile.name || "").toLowerCase();
   if (name.endsWith(".json")) {
-    hideFallbackCkzButton()
-    showJsonRestoreConfirm()
+    hideFallbackCkzButton();
+    showJsonRestoreConfirm();
     updateDroppedFileName();
     return;
   }
@@ -665,14 +663,14 @@ function handlePickedBackupFile(file) {
     addToWarningMessageList(createWarning("notBackupFile"));
     if (input) input.value = "";
     cookieFile = null;
-    hideDecPasswordInputBox()
-    hideJsonRestoreBanner()
+    hideDecPasswordInputBox();
+    hideJsonRestoreBanner();
     updateDroppedFileName();
     return;
   }
-  hideFallbackCkzButton()
-  hideJsonRestoreBanner()
-  showDecPasswordInputBox()
+  hideFallbackCkzButton();
+  hideJsonRestoreBanner();
+  showDecPasswordInputBox();
   updateDroppedFileName();
 }
 
@@ -682,7 +680,7 @@ function handlePickedBackupFile(file) {
 function updateDroppedFileName() {
   const label = document.getElementById("dropped-file-name");
   if (!label) return;
-  const file = typeof cookieFile !== "undefined" ? cookieFile : null;
+  const file = cookieFile || null;
   if (file && file.name) {
     label.textContent = file.name;
     label.title = file.name;
@@ -788,6 +786,7 @@ function handleDecPasswdSubmit(e) {
     } else {
       addToWarningMessageList(createWarning("invalidFile"));
     }
+    clearDecPassword();
     return;
   }
 
@@ -795,6 +794,7 @@ function handleDecPasswdSubmit(e) {
     // re-check the actual content (file could have changed / textarea edited)
     if (!isPlausibleCkzPayload(data)) {
       addToWarningMessageList(createWarning("invalidFile"));
+      clearDecPassword();
       return;
     }
     let cookies;
@@ -812,11 +812,13 @@ function handleDecPasswdSubmit(e) {
       } else {
         addToWarningMessageList(createWarning("unknownError"));
       }
+      clearDecPassword();
       return;
     }
 
     if (!Array.isArray(cookies)) {
       addToWarningMessageList(createWarning("invalidFile"));
+      clearDecPassword();
       return;
     }
 
@@ -827,7 +829,8 @@ function handleDecPasswdSubmit(e) {
 }
 
 // ---- compat-safe pre-validation (no format change) ----
-const MAX_BACKUP_BYTES = 100 * 1024 * 1024;
+// Kept in sync with MAX_DOWNLOAD_BYTES in background.js (see its comment).
+const MAX_BACKUP_BYTES = 32 * 1024 * 1024;
 
 function formatByteSize(n) {
   if (typeof n !== "number" || !isFinite(n) || n < 0) return String(n);
@@ -881,7 +884,9 @@ function buildRestoreAttempts(base, cookie, host) {
   const attempts = [];
   const seen = new Set();
   const push = (details) => {
-    const key = JSON.stringify(details, Object.keys(details).sort());
+    // stable dedup key: JSON.stringify with an array replacer only filters
+    // keys instead of ordering them, so build the key by hand
+    const key = Object.keys(details).sort().map((k) => k + "=" + String(details[k])).join("|");
     if (!seen.has(key)) {
       seen.add(key);
       attempts.push(details);
@@ -941,6 +946,7 @@ async function restoreCookies(cookies) {
 
   let total = 0;
   let skipped = 0;
+  let failed = 0;
   let processed = 0;
 
   const epoch = new Date().getTime() / 1000;
@@ -1042,12 +1048,13 @@ async function restoreCookies(cookies) {
     if (restored) {
       total++;
     } else {
+      failed++;
       // the user-facing message stays localizable and short; the technical
       // reason goes to the console for bug reports
       try {
         console.warn("Cookie restore failed:", cookie.name, url, lastError && (lastError.message || lastError));
       } catch (e) {}
-      unknownErrWarning(cookie.name, url)
+      unknownErrWarning(cookie.name, url);
     }
   };
 
@@ -1068,7 +1075,7 @@ async function restoreCookies(cookies) {
   await Promise.all(workers);
 
   // update messages: restored + skipped + failed always add up to total
-  restoreSuccessAlert(total, cookies.length, skipped)
+  restoreSuccessAlert(total, cookies.length, skipped, failed)
 
   // hide progress bar
   hideRestoreProgressBar()
@@ -1126,11 +1133,19 @@ function backupSuccessAlert(totalCookies) {
   addToSuccessMessageList(createSuccessAlert("backupSuccess", { count }))
 }
 
-function restoreSuccessAlert(restoredCookies, totalCookies, skippedCookies) {
+function restoreSuccessAlert(restoredCookies, totalCookies, skippedCookies, failedCookies) {
   const skipped = Number(skippedCookies) || 0;
+  const failed = Number(failedCookies) || 0;
   const params = { restored: restoredCookies, total: totalCookies };
-  const key = skipped > 0 ? "restoreSuccessSkipped" : "restoreSuccess";
-  if (skipped > 0) params.skipped = skipped;
+  let key = "restoreSuccess";
+  if (failed > 0) {
+    key = "restoreSuccessFailed";
+    params.skipped = skipped;
+    params.failed = failed;
+  } else if (skipped > 0) {
+    key = "restoreSuccessSkipped";
+    params.skipped = skipped;
+  }
   // zero restored is not a success: same text, warning style
   const node = Number(restoredCookies) === 0
     ? createWarning(key, params)
