@@ -22,38 +22,58 @@ let currentLocale = "en";
 const AUTO_LOCALE = "auto";
 let localeMode = AUTO_LOCALE;
 const RTL_LOCALES = ["ar"];
-// flags shown in the custom language menu (native <select> can't render them)
-const LOCALE_FLAGS = {
-  en: "\u{1F1EC}\u{1F1E7}",
-  ru: "\u{1F1F7}\u{1F1FA}",
-  uk: "\u{1F1FA}\u{1F1E6}",
-  de: "\u{1F1E9}\u{1F1EA}",
-  fr: "\u{1F1EB}\u{1F1F7}",
-  es: "\u{1F1EA}\u{1F1F8}",
-  pt: "\u{1F1F5}\u{1F1F9}",
-  it: "\u{1F1EE}\u{1F1F9}",
-  pl: "\u{1F1F5}\u{1F1F1}",
-  nl: "\u{1F1F3}\u{1F1F1}",
-  sv: "\u{1F1F8}\u{1F1EA}",
-  da: "\u{1F1E9}\u{1F1F0}",
-  fi: "\u{1F1EB}\u{1F1EE}",
-  no: "\u{1F1F3}\u{1F1F4}",
-  cs: "\u{1F1E8}\u{1F1FF}",
-  sk: "\u{1F1F8}\u{1F1F0}",
-  hu: "\u{1F1ED}\u{1F1FA}",
-  ro: "\u{1F1F7}\u{1F1F4}",
-  tr: "\u{1F1F9}\u{1F1F7}",
-  "zh-CN": "\u{1F1E8}\u{1F1F3}",
-  "zh-TW": "\u{1F1F9}\u{1F1FC}",
-  ja: "\u{1F1EF}\u{1F1F5}",
-  ko: "\u{1F1F0}\u{1F1F7}",
-  ar: "\u{1F1F8}\u{1F1E6}",
-  hi: "\u{1F1EE}\u{1F1F3}"
+// Inline SVG flags for the custom language menu. Regional-indicator emoji
+// flags render as plain letter pairs ("GB", "RU") on Windows, which has no
+// flag-emoji glyphs — so every locale gets a tiny hand-drawn SVG instead.
+// Values hold the inner content of an 18x12 viewBox; our own static strings
+// only, rendered via innerHTML (no CSP issue, no user data inside).
+const FLAG_SVGS = {
+  en: '<rect width="18" height="12" fill="#012169"/><path d="M0 0l18 12M18 0L0 12" stroke="#fff" stroke-width="2.4"/><path d="M0 0l18 12M18 0L0 12" stroke="#C8102E" stroke-width=".9"/><path d="M9 0v12M0 6h18" stroke="#fff" stroke-width="3.8"/><path d="M9 0v12M0 6h18" stroke="#C8102E" stroke-width="2.2"/>',
+  ru: '<rect width="18" height="4" fill="#fff"/><rect y="4" width="18" height="4" fill="#0039A6"/><rect y="8" width="18" height="4" fill="#D52B1E"/>',
+  uk: '<rect width="18" height="6" fill="#005BBB"/><rect y="6" width="18" height="6" fill="#FFD500"/>',
+  de: '<rect width="18" height="4" fill="#000"/><rect y="4" width="18" height="4" fill="#DD0000"/><rect y="8" width="18" height="4" fill="#FFCE00"/>',
+  fr: '<rect width="6" height="12" fill="#0055A4"/><rect x="6" width="6" height="12" fill="#fff"/><rect x="12" width="6" height="12" fill="#EF4135"/>',
+  es: '<rect width="18" height="12" fill="#AA151B"/><rect y="3" width="18" height="6" fill="#F1BF00"/>',
+  pt: '<rect width="7" height="12" fill="#046A38"/><rect x="7" width="11" height="12" fill="#DA291C"/>',
+  it: '<rect width="6" height="12" fill="#009246"/><rect x="6" width="6" height="12" fill="#fff"/><rect x="12" width="6" height="12" fill="#CE2B37"/>',
+  pl: '<rect width="18" height="6" fill="#fff"/><rect y="6" width="18" height="6" fill="#DC143C"/>',
+  nl: '<rect width="18" height="4" fill="#AE1C28"/><rect y="4" width="18" height="4" fill="#fff"/><rect y="8" width="18" height="4" fill="#21468B"/>',
+  sv: '<rect width="18" height="12" fill="#006AA7"/><path d="M5.5 0v12M0 6h18" stroke="#FECC00" stroke-width="2"/>',
+  da: '<rect width="18" height="12" fill="#C8102E"/><path d="M5.5 0v12M0 6h18" stroke="#fff" stroke-width="1.8"/>',
+  fi: '<rect width="18" height="12" fill="#fff"/><path d="M5.5 0v12M0 6h18" stroke="#002F6C" stroke-width="2.2"/>',
+  no: '<rect width="18" height="12" fill="#BA0C2F"/><path d="M5.5 0v12M0 6h18" stroke="#fff" stroke-width="3"/><path d="M5.5 0v12M0 6h18" stroke="#00205B" stroke-width="1.5"/>',
+  cs: '<rect width="18" height="6" fill="#fff"/><rect y="6" width="18" height="6" fill="#D7141A"/><path d="M0 0l9 6-9 6z" fill="#11457E"/>',
+  sk: '<rect width="18" height="4" fill="#fff"/><rect y="4" width="18" height="4" fill="#0B4EA2"/><rect y="8" width="18" height="4" fill="#EE1C25"/><path d="M7 4.5h4V7c0 1.4-2 2.4-2 2.4S7 8.4 7 7z" fill="#EE1C25" stroke="#fff" stroke-width=".5"/>',
+  hu: '<rect width="18" height="4" fill="#CD2A3A"/><rect y="4" width="18" height="4" fill="#fff"/><rect y="8" width="18" height="4" fill="#436F4D"/>',
+  ro: '<rect width="6" height="12" fill="#002B7F"/><rect x="6" width="6" height="12" fill="#FCD116"/><rect x="12" width="6" height="12" fill="#CE1126"/>',
+  tr: '<rect width="18" height="12" fill="#E30A17"/><circle cx="7.2" cy="6" r="3" fill="#fff"/><circle cx="7.9" cy="6" r="2.4" fill="#E30A17"/><polygon points="11.3,4.7 11.61,5.58 12.54,5.6 11.79,6.16 12.06,7.05 11.3,6.52 10.54,7.05 10.81,6.16 10.06,5.6 10.99,5.58" fill="#fff"/>',
+  "zh-CN": '<rect width="18" height="12" fill="#DE2910"/><polygon points="3.2,1.4 3.56,2.5 4.72,2.51 3.79,3.19 4.14,4.29 3.2,3.62 2.26,4.29 2.61,3.19 1.68,2.51 2.84,2.5" fill="#FFDE00"/><circle cx="6.2" cy="1.4" r=".55" fill="#FFDE00"/><circle cx="7.4" cy="2.8" r=".55" fill="#FFDE00"/><circle cx="7.4" cy="4.6" r=".55" fill="#FFDE00"/><circle cx="6.2" cy="6" r=".55" fill="#FFDE00"/>',
+  "zh-TW": '<rect width="18" height="12" fill="#FE0000"/><rect width="9" height="6" fill="#000095"/><circle cx="4.5" cy="3" r="1.6" fill="#fff"/><circle cx="4.5" cy="3" r=".5" fill="#000095"/>',
+  ja: '<rect width="18" height="12" fill="#fff"/><circle cx="9" cy="6" r="3" fill="#BC002D"/>',
+  ko: '<rect width="18" height="12" fill="#fff"/><path d="M5.5 6a3.5 3.5 0 0 1 7 0z" fill="#CD2E3A"/><path d="M5.5 6a3.5 3.5 0 0 0 7 0z" fill="#0047A0"/><path d="M3 2.6l1.8-1.2M3 9.4l1.8 1.2M15 2.6l-1.8-1.2M15 9.4l-1.8 1.2" stroke="#000" stroke-width=".8"/>',
+  ar: '<rect width="18" height="12" fill="#006C35"/><rect x="5" y="3" width="8" height="1.8" fill="#fff"/><path d="M3.5 8.5h11" stroke="#fff" stroke-width=".9"/>',
+  hi: '<rect width="18" height="4" fill="#FF9933"/><rect y="4" width="18" height="4" fill="#fff"/><rect y="8" width="18" height="4" fill="#138808"/><circle cx="9" cy="6" r="1.1" fill="none" stroke="#000080" stroke-width=".5"/>'
 };
 
-function localeFlag(code) {
-  if (!code) return "\u{1F310}";
-  return LOCALE_FLAGS[code] || LOCALE_FLAGS[String(code).split("-")[0]] || "\u{1F310}";
+function flagMarkup(code) {
+  if (!code) return null;
+  const key = FLAG_SVGS[code] ? code : String(code).split("-")[0];
+  const inner = FLAG_SVGS[key];
+  if (!inner) return null;
+  return '<svg class="flag-svg" viewBox="0 0 18 12" aria-hidden="true" focusable="false">' + inner + "</svg>";
+}
+
+// "auto" keeps the globe emoji (it renders on Windows, unlike flag emoji);
+// explicit locales get the SVG above, globe as the last-resort fallback.
+function setFlagContent(el, code) {
+  if (!el) return;
+  if (!code || code === AUTO_LOCALE) {
+    el.textContent = "\u{1F310}";
+    return;
+  }
+  const svg = flagMarkup(code);
+  if (svg) el.innerHTML = svg;
+  else el.textContent = "\u{1F310}";
 }
 const _localeLowerMap = {};
 try {
@@ -245,18 +265,18 @@ function updateLocaleButton() {
   const flagEl = document.getElementById("locale-flag");
   const curEl = document.getElementById("locale-current");
   if (isAuto) {
-    if (flagEl) flagEl.textContent = "🌐";
+    setFlagContent(flagEl, AUTO_LOCALE);
     if (curEl) curEl.textContent = tr("autoOption");
   } else {
     const entry = LOCALES_LIST.find((e) => e.code === currentLocale) || { name: currentLocale };
-    if (flagEl) flagEl.textContent = localeFlag(currentLocale);
+    setFlagContent(flagEl, currentLocale);
     if (curEl) curEl.textContent = entry.name;
   }
   btn.setAttribute("aria-label", tr("localeLabel"));
   btn.title = isAuto ? tr("autoHint") : tr("localeLabel");
 }
 
-function appendLocaleOption(menu, code, flagText, nameText, selected) {
+function appendLocaleOption(menu, code, nameText, selected) {
   const li = document.createElement("li");
   li.className = "locale-option" + (selected ? " selected" : "");
   li.setAttribute("role", "option");
@@ -267,7 +287,7 @@ function appendLocaleOption(menu, code, flagText, nameText, selected) {
   const flag = document.createElement("span");
   flag.className = "locale-flag";
   flag.setAttribute("aria-hidden", "true");
-  flag.textContent = flagText;
+  setFlagContent(flag, code);
   const name = document.createElement("span");
   name.className = "locale-name";
   name.textContent = nameText;
@@ -286,10 +306,10 @@ function buildLocaleMenu() {
   const menu = document.getElementById("locale-menu");
   if (!menu) return;
   menu.replaceChildren();
-  appendLocaleOption(menu, AUTO_LOCALE, "🌐", tr("autoOption"), localeMode === AUTO_LOCALE);
+  appendLocaleOption(menu, AUTO_LOCALE, tr("autoOption"), localeMode === AUTO_LOCALE);
   for (const entry of LOCALES_LIST) {
     const selected = localeMode !== AUTO_LOCALE && entry.code === currentLocale;
-    appendLocaleOption(menu, entry.code, localeFlag(entry.code), entry.name, selected);
+    appendLocaleOption(menu, entry.code, entry.name, selected);
   }
 }
 

@@ -191,9 +191,22 @@ body.standalone textarea {
 }
 
 .locale-flag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
   flex-shrink: 0;
   font-size: 14px;
   line-height: 1;
+}
+
+/* hand-drawn SVG flags (emoji flags show as letter codes on Windows) */
+.flag-svg {
+  display: block;
+  width: 18px;
+  height: 12px;
+  border-radius: 2px;
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.3);
 }
 
 .locale-current {
