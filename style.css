@@ -360,7 +360,8 @@ body.standalone textarea {
   -webkit-user-select: none;
   touch-action: manipulation;
   vertical-align: middle;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 
 .btn-primary:hover {
@@ -403,7 +404,8 @@ body.standalone textarea {
   text-align: center;
   user-select: none;
   -webkit-user-select: none;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 
 .btn-secondary:hover {
@@ -445,7 +447,9 @@ body.standalone textarea {
   text-align: center;
   user-select: none;
   -webkit-user-select: none;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
+  min-width: 0;
 }
 
 .btn-danger:hover {
@@ -482,6 +486,12 @@ body.standalone textarea {
 
 .insecure-box .two-col-group {
   justify-content: flex-start;
+  flex-wrap: wrap;
+  row-gap: 6px;
+}
+
+.insecure-box .two-col-group .btn-danger {
+  flex: 1 1 auto;
 }
 
 input[type="password"],

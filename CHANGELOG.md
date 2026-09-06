@@ -66,6 +66,10 @@
   вместо гарантированного `cookieRestoreFail`.
 - Cancel в `.json`-подтверждении restore не возвращал ссылку
   «Unable to upload a backup file?» — теперь возвращает (выход из тупика).
+- Кнопки вылезали за пределы popup на языках с длинными переводами
+  (de, fr, ru, uk, es, pt, sk, hi и др.): у `.btn-primary`/`.btn-secondary`/
+  `.btn-danger` снят `white-space: nowrap` — текст переносится, а ряд кнопок
+  в `.insecure-box` умеет переходить на вторую строку (`flex-wrap: wrap`).
 
 ### Removed — удалено
 
