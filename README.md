@@ -48,9 +48,9 @@
 - **Fallback «Вставить текстом»** — ссылка «Unable to upload a backup file?» скрывает file-input и показывает `textarea` для вставки содержимого `.ckz`/`.json` вручную (нужно для Firefox и для переноса Chrome → Firefox).
 - **25 языков + режим Auto** — `locales.js` (`AVAILABLE_LOCALES` + `TRANSLATIONS`), автоопределение по `i18n.getUILanguage()` + `navigator.languages`, кастомное меню с флагами, сохранение выбора в `storage.local.locale`, поддержка RTL (`ar`).
 - **Тёмная/светлая тема** — `data-theme` + CSS-переменные, по умолчанию следует `prefers-color-scheme`, ручной выбор запоминается в `storage.local.theme`.
-- **Надёжное скачивание в обоих браузерах:**
-  - Chrome блокирует `blob:`-загрузки со страниц расширения → используется `data:` URL (`FileReader.readAsDataURL`).
-  - Firefox отзывает `blob:` URL вместе с закрывшимся popup → полный UI работает во вкладке (`?standalone=1`), где blob-URL создаётся и качается напрямую из документа; `background.js` тоже умеет качать (blob там, где есть DOM, иначе `data:`-URL, т.к. в service worker нет `URL.createObjectURL`).
+- **Надёжное скачивание в обоих браузерах:** единый путь через `background.js` — popup шлёт `{type: "downloadBackup", data, filename}` сообщением и только показывает результат. Фон переживает закрытие popup диалогом `saveAs` и сам чистит URL по `downloads.onChanged`:
+  - Chrome блокирует `blob:`-загрузки со страниц расширения → в service worker используется `data:` URL, собранный вручную (`TextEncoder` + `btoa`, т.к. там нет `URL.createObjectURL`/`FileReader`).
+  - Firefox (event page с DOM) → обычный blob-URL; полный UI при этом работает во вкладке (`?standalone=1`).
 
 ## 🧩 Структура проекта
 
@@ -59,7 +59,7 @@
 | `manifest.json` / `manifest.firefox.json` | MV3-манифесты (v4.2): `cookies`, `downloads`, `storage`, `host_permissions: <all_urls>`, `action.default_popup = popup.html`, `browser_specific_settings.gecko` (id, `strict_min_version: 109.0`). Два файла отличаются **только** секцией `background`: Chrome требует `service_worker`, Firefox — `scripts` (один файл на оба браузера невозможен: Chromium отвергает `scripts` в MV3, Firefox не умеет в `service_worker`). CI проверяет, что файлы идентичны кроме `background`. |
 | `popup.html` | UI: шапка (выбор языка, тема), блок бэкапа, блок восстановления, прогресс, сообщения, `open-tab-wrap` для Firefox. Подключает `sjcl.js` → `locales.js` → `popup.js`. |
 | `popup.js` | Вся логика: i18n, тема, бэкап `.ckz`/`.json`, восстановление, прогресс, алерты, скачивание, fallback-вставка, Firefox standalone-режим (`?standalone=1`). |
-| `background.js` | Скачивание по сообщению `{type: "downloadBackup", data, filename}`: blob-URL там, где доступен DOM (Firefox event page), иначе `data:`-URL, собранный вручную (`TextEncoder` + `btoa` — в service worker нет `URL.createObjectURL`/`FileReader`). Чистит URL по `downloads.onChanged`. |
+| `background.js` | Единственный путь скачивания: сообщение `{type: "downloadBackup", data, filename}` с валидацией (тип/размер payload, имя файла без путей) → blob-URL там, где доступен DOM (Firefox event page), иначе `data:`-URL вручную (`TextEncoder` + `btoa`). Чистит URL по `downloads.onChanged`, показывает файл по `downloads.show`. |
 | `locales.js` | 25 локалей: `en, ru, uk, de, fr, es, pt, it, pl, nl, sv, da, fi, no, cs, sk, hu, ro, tr, zh-CN, zh-TW, ja, ko, ar, hi`. |
 | `style.css` | Светлая/тёмная темы, карточки, кнопки, `insecure-box`, языковое меню, standalone-режим (центровка, `width: 340px`). |
 | `sjcl.js` | Stanford Javascript Crypto Library для шифрования. |

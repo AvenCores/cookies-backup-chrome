@@ -1200,21 +1200,16 @@ function getCkzFileContentsFromTextarea() {
   return document.getElementById("ckz-textarea").value.trim()
 }
 
-function readAsDataURL(blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(blob);
-  });
-}
-
 // Chrome's extension APIs were callback-only for a long time and return
 // promises only in recent versions; Firefox's browser.* APIs are promise-only
 // and ignore the callback argument. This helper accepts both forms: if the
 // call returns a thenable it is awaited, otherwise the callback fires and
 // runtime.lastError (read synchronously inside it) decides the outcome.
 function callExtensionApi(owner, name, ...args) {
+  return callExtensionApiWithTimeout(owner, name, args, 10000);
+}
+
+function callExtensionApiWithTimeout(owner, name, args, timeoutMs) {
   return new Promise((resolve, reject) => {
     if (!owner || typeof owner[name] !== "function") {
       reject(new Error("API not available: " + String(name)));
@@ -1226,7 +1221,7 @@ function callExtensionApi(owner, name, ...args) {
         settled = true;
         reject(new Error("API call timed out: " + String(name)));
       }
-    }, 10000);
+    }, timeoutMs);
     const settleOk = (value) => {
       if (!settled) {
         settled = true;
@@ -1276,10 +1271,6 @@ function cookiesSet(details) {
   return callExtensionApi(api.cookies, "set", details);
 }
 
-function downloadsDownload(options) {
-  return callExtensionApi(api.downloads, "download", options);
-}
-
 // Known cookie store ids of this browser/profile ("0" in Chromium,
 // "firefox-default" in Firefox). A backup made in another browser carries a
 // storeId that does not exist here and every cookies.set with it is rejected,
@@ -1297,88 +1288,38 @@ async function getCookieStoreIds() {
   return null;
 }
 
+// Single download path: the actual downloads.download call lives in
+// background.js, which owns the blob/data: URL and the onChanged cleanup.
+// That matters because the popup can close while the saveAs dialog is open —
+// a listener created here would die with it, while the background outlives
+// the dialog. This function only forwards the payload and reports the
+// outcome, keeping the boolean contract of callers (true = download started).
 async function downloadJson(data, filename) {
-  if (!api.downloads || !api.downloads.download) {
-    addToWarningMessageList(createWarning("noDownloadsApi"))
-    alert(tr("noDownloadsApi"));
-    return false;
-  }
-
-  let url = null;
-  let isBlobUrl = false;
+  let res;
   try {
-    const blob = new Blob([data], { type: "application/octet-stream" });
-    if (isFirefox) {
-      // The full UI runs in a tab on Firefox (see the standalone mode above),
-      // so this document outlives the save dialog and a blob URL created here
-      // stays valid. Downloading here also avoids the MV3 background, which
-      // has no URL.createObjectURL, while Firefox rejects data: URLs.
-      url = URL.createObjectURL(blob);
-      isBlobUrl = true;
-    } else {
-      // Chrome blocks blob: downloads started from extension pages
-      // ("Failed - Extension"), so use a data: URL there. A data: URL is just a
-      // string, it doesn't depend on the popup staying alive.
-      url = await readAsDataURL(blob);
-    }
+    res = await sendDownloadRequest(data, filename);
   } catch (error) {
-    addToWarningMessageList(createWarning("prepareFailed", { error: error?.message || error }))
-    return false;
-  }
-
-  const revoke = () => {
-    if (isBlobUrl && url) {
-      try {
-        URL.revokeObjectURL(url);
-      } catch (e) {}
-      url = null;
-    }
-  };
-
-  const options = {
-    url: url,
-    filename: filename,
-    conflictAction: "uniquify",
-    saveAs: true
-  };
-
-  let downloadId;
-  try {
-    downloadId = await downloadsDownload(options);
-  } catch (error) {
-    revoke();
-    const msg = error?.message || error;
-    addToWarningMessageList(createWarning("downloadRejected", { msg }))
-    return false;
-  }
-
-  if (downloadId == null) {
-    revoke();
-    const msg = "download returned no id";
+    const msg = error?.message || String(error);
     addToWarningMessageList(createWarning("downloadFailed", { error: msg }))
     return false;
   }
+  if (res && res.ok) {
+    return true;
+  }
+  const msg = (res && res.error) || "unknown";
+  addToWarningMessageList(createWarning("downloadRejected", { msg }))
+  return false;
+}
 
-  const listener = (delta) => {
-    if (delta?.id != downloadId) {
-      return;
-    }
-    if (delta?.state?.current == "complete") {
-      try {
-        const shown = api.downloads.show(downloadId);
-        if (shown && typeof shown.catch === "function") shown.catch(() => {});
-      } catch (e) {}
-      api.downloads.onChanged.removeListener(listener);
-      revoke();
-    } else if (delta?.state?.current == "interrupted") {
-      const msg = delta?.error?.current || "unknown";
-      addToWarningMessageList(createWarning("downloadInterrupted", { msg }))
-      api.downloads.onChanged.removeListener(listener);
-      revoke();
-    }
-  };
-  api.downloads.onChanged.addListener(listener);
-  return true;
+function sendDownloadRequest(data, filename) {
+  // the saveAs dialog can stay open for a while, so this call gets a longer
+  // timeout than the default 10s used for instant API calls above
+  return callExtensionApiWithTimeout(
+    api.runtime,
+    "sendMessage",
+    [{ type: "downloadBackup", data: data, filename: filename }],
+    120000
+  );
 }
 
 function getBackupFileDataAsText(cb) {
