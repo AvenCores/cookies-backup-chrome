@@ -80,7 +80,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "Successfully restored <b>{restored}</b> cookies out of <b>{total}</b> (<b>{skipped}</b> skipped)",
   "restoreSuccessFailed": "Successfully restored <b>{restored}</b> cookies out of <b>{total}</b> (<b>{skipped}</b> skipped, <b>{failed}</b> failed)",
   "dismissLabel": "Dismiss",
-  "emptyBackup": "Backup file contains no cookies!"
+  "emptyBackup": "Backup file contains no cookies!",
+  "aboutBtn": "About",
+  "aboutTitle": "About",
+  "closeBtn": "Close",
+  "copiedMsg": "Copied!",
+  "copyBtn": "Copy",
+  "donateBtn": "Donate",
+  "donateText": "If you like this extension, you can support the author:",
+  "donateTitle": "Support the author"
 },
 "ru": {
   "appTitle": "Бэкап и восстановление cookies",
@@ -133,7 +141,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "Успешно восстановлено <b>{restored}</b> cookies из <b>{total}</b> (пропущено: <b>{skipped}</b>)",
   "restoreSuccessFailed": "Успешно восстановлено <b>{restored}</b> cookies из <b>{total}</b> (пропущено: <b>{skipped}</b>, не удалось: <b>{failed}</b>)",
   "dismissLabel": "Закрыть",
-  "emptyBackup": "В файле бэкапа нет cookies!"
+  "emptyBackup": "В файле бэкапа нет cookies!",
+  "aboutBtn": "О программе",
+  "aboutTitle": "О программе",
+  "closeBtn": "Закрыть",
+  "copiedMsg": "Скопировано!",
+  "copyBtn": "Копировать",
+  "donateBtn": "Донат",
+  "donateText": "Если вам нравится это расширение, вы можете поддержать автора:",
+  "donateTitle": "Поддержать автора"
 },
 "uk": {
   "appTitle": "Резервна копія та відновлення cookies",
@@ -186,7 +202,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "Успішно відновлено <b>{restored}</b> cookies з <b>{total}</b> (пропущено: <b>{skipped}</b>)",
   "restoreSuccessFailed": "Успішно відновлено <b>{restored}</b> cookies з <b>{total}</b> (пропущено: <b>{skipped}</b>, не вдалося: <b>{failed}</b>)",
   "dismissLabel": "Закрити",
-  "emptyBackup": "У файлі копії немає cookies!"
+  "emptyBackup": "У файлі копії немає cookies!",
+  "aboutBtn": "Про програму",
+  "aboutTitle": "Про програму",
+  "closeBtn": "Закрити",
+  "copiedMsg": "Скопійовано!",
+  "copyBtn": "Копіювати",
+  "donateBtn": "Донат",
+  "donateText": "Якщо вам подобається це розширення, ви можете підтримати автора:",
+  "donateTitle": "Підтримати автора"
 },
 "de": {
   "appTitle": "Cookies sichern & wiederherstellen",
@@ -239,7 +263,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "Erfolgreich <b>{restored}</b> von <b>{total}</b> Cookies wiederhergestellt (<b>{skipped}</b> übersprungen)",
   "restoreSuccessFailed": "Erfolgreich <b>{restored}</b> von <b>{total}</b> Cookies wiederhergestellt (<b>{skipped}</b> übersprungen, <b>{failed}</b> fehlgeschlagen)",
   "dismissLabel": "Schließen",
-  "emptyBackup": "Die Backup-Datei enthält keine Cookies!"
+  "emptyBackup": "Die Backup-Datei enthält keine Cookies!",
+  "aboutBtn": "Über",
+  "aboutTitle": "Über das Programm",
+  "closeBtn": "Schließen",
+  "copiedMsg": "Kopiert!",
+  "copyBtn": "Kopieren",
+  "donateBtn": "Spenden",
+  "donateText": "Wenn Ihnen diese Erweiterung gefällt, können Sie den Autor unterstützen:",
+  "donateTitle": "Autor unterstützen"
 },
 "fr": {
   "appTitle": "Sauvegarde et restauration des cookies",
@@ -292,7 +324,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "<b>{restored}</b> cookies restaurés sur <b>{total}</b> (<b>{skipped}</b> ignorés)",
   "restoreSuccessFailed": "<b>{restored}</b> cookies restaurés sur <b>{total}</b> (<b>{skipped}</b> ignorés, <b>{failed}</b> en échec)",
   "dismissLabel": "Fermer",
-  "emptyBackup": "Le fichier de sauvegarde ne contient aucun cookie !"
+  "emptyBackup": "Le fichier de sauvegarde ne contient aucun cookie !",
+  "aboutBtn": "À propos",
+  "aboutTitle": "À propos",
+  "closeBtn": "Fermer",
+  "copiedMsg": "Copié !",
+  "copyBtn": "Copier",
+  "donateBtn": "Faire un don",
+  "donateText": "Si vous aimez cette extension, vous pouvez soutenir l'auteur :",
+  "donateTitle": "Soutenir l'auteur"
 },
 "es": {
   "appTitle": "Copia de seguridad y restauración de cookies",
@@ -345,7 +385,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "<b>{restored}</b> cookies restauradas de <b>{total}</b> (<b>{skipped}</b> omitidas)",
   "restoreSuccessFailed": "<b>{restored}</b> cookies restauradas de <b>{total}</b> (<b>{skipped}</b> omitidas, <b>{failed}</b> fallidas)",
   "dismissLabel": "Cerrar",
-  "emptyBackup": "¡El archivo de respaldo no contiene cookies!"
+  "emptyBackup": "¡El archivo de respaldo no contiene cookies!",
+  "aboutBtn": "Acerca de",
+  "aboutTitle": "Acerca del programa",
+  "closeBtn": "Cerrar",
+  "copiedMsg": "¡Copiado!",
+  "copyBtn": "Copiar",
+  "donateBtn": "Donar",
+  "donateText": "Si te gusta esta extensión, puedes apoyar al autor:",
+  "donateTitle": "Apoyar al autor"
 },
 "pt": {
   "appTitle": "Backup e restauração de cookies",
@@ -398,7 +446,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "<b>{restored}</b> cookies restaurados de <b>{total}</b> (<b>{skipped}</b> ignorados)",
   "restoreSuccessFailed": "<b>{restored}</b> cookies restaurados de <b>{total}</b> (<b>{skipped}</b> ignorados, <b>{failed}</b> com falha)",
   "dismissLabel": "Fechar",
-  "emptyBackup": "O arquivo de backup não contém cookies!"
+  "emptyBackup": "O arquivo de backup não contém cookies!",
+  "aboutBtn": "Sobre",
+  "aboutTitle": "Sobre o programa",
+  "closeBtn": "Fechar",
+  "copiedMsg": "Copiado!",
+  "copyBtn": "Copiar",
+  "donateBtn": "Doar",
+  "donateText": "Se você gosta desta extensão, pode apoiar o autor:",
+  "donateTitle": "Apoiar o autor"
 },
 "it": {
   "appTitle": "Backup e ripristino dei cookie",
@@ -451,7 +507,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "<b>{restored}</b> cookie ripristinati su <b>{total}</b> (<b>{skipped}</b> ignorati)",
   "restoreSuccessFailed": "<b>{restored}</b> cookie ripristinati su <b>{total}</b> (<b>{skipped}</b> ignorati, <b>{failed}</b> non riusciti)",
   "dismissLabel": "Chiudi",
-  "emptyBackup": "Il file di backup non contiene cookie!"
+  "emptyBackup": "Il file di backup non contiene cookie!",
+  "aboutBtn": "Info",
+  "aboutTitle": "Informazioni",
+  "closeBtn": "Chiudi",
+  "copiedMsg": "Copiato!",
+  "copyBtn": "Copia",
+  "donateBtn": "Dona",
+  "donateText": "Se ti piace questa estensione, puoi sostenere l'autore:",
+  "donateTitle": "Sostieni l'autore"
 },
 "pl": {
   "appTitle": "Kopia zapasowa i przywracanie cookies",
@@ -504,7 +568,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "Pomyślnie przywrócono <b>{restored}</b> z <b>{total}</b> plików cookie (pominięto: <b>{skipped}</b>)",
   "restoreSuccessFailed": "Pomyślnie przywrócono <b>{restored}</b> z <b>{total}</b> plików cookie (pominięto: <b>{skipped}</b>, nieudane: <b>{failed}</b>)",
   "dismissLabel": "Zamknij",
-  "emptyBackup": "Plik kopii nie zawiera plików cookie!"
+  "emptyBackup": "Plik kopii nie zawiera plików cookie!",
+  "aboutBtn": "O programie",
+  "aboutTitle": "O programie",
+  "closeBtn": "Zamknij",
+  "copiedMsg": "Skopiowano!",
+  "copyBtn": "Kopiuj",
+  "donateBtn": "Wesprzyj",
+  "donateText": "Jeśli podoba Ci się to rozszerzenie, możesz wesprzeć autora:",
+  "donateTitle": "Wesprzyj autora"
 },
 "nl": {
   "appTitle": "Cookies back-uppen & herstellen",
@@ -557,7 +629,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "Succesvol <b>{restored}</b> van <b>{total}</b> cookies hersteld (<b>{skipped}</b> overgeslagen)",
   "restoreSuccessFailed": "Succesvol <b>{restored}</b> van <b>{total}</b> cookies hersteld (<b>{skipped}</b> overgeslagen, <b>{failed}</b> mislukt)",
   "dismissLabel": "Sluiten",
-  "emptyBackup": "Het back-upbestand bevat geen cookies!"
+  "emptyBackup": "Het back-upbestand bevat geen cookies!",
+  "aboutBtn": "Over",
+  "aboutTitle": "Over het programma",
+  "closeBtn": "Sluiten",
+  "copiedMsg": "Gekopieerd!",
+  "copyBtn": "Kopiëren",
+  "donateBtn": "Doneren",
+  "donateText": "Als je deze extensie leuk vindt, kun je de auteur steunen:",
+  "donateTitle": "Steun de auteur"
 },
 "sv": {
   "appTitle": "Säkerhetskopiera & återställ cookies",
@@ -610,7 +690,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "Återställde <b>{restored}</b> av <b>{total}</b> cookies (<b>{skipped}</b> överhoppade)",
   "restoreSuccessFailed": "Återställde <b>{restored}</b> av <b>{total}</b> cookies (<b>{skipped}</b> överhoppade, <b>{failed}</b> misslyckades)",
   "dismissLabel": "Stäng",
-  "emptyBackup": "Backupfilen innehåller inga cookies!"
+  "emptyBackup": "Backupfilen innehåller inga cookies!",
+  "aboutBtn": "Om",
+  "aboutTitle": "Om programmet",
+  "closeBtn": "Stäng",
+  "copiedMsg": "Kopierat!",
+  "copyBtn": "Kopiera",
+  "donateBtn": "Donera",
+  "donateText": "Om du gillar detta tillägg kan du stödja författaren:",
+  "donateTitle": "Stöd författaren"
 },
 "da": {
   "appTitle": "Backup & gendannelse af cookies",
@@ -663,7 +751,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "Gendannede <b>{restored}</b> af <b>{total}</b> cookies (<b>{skipped}</b> sprunget over)",
   "restoreSuccessFailed": "Gendannede <b>{restored}</b> af <b>{total}</b> cookies (<b>{skipped}</b> sprunget over, <b>{failed}</b> mislykkedes)",
   "dismissLabel": "Luk",
-  "emptyBackup": "Backupfilen indeholder ingen cookies!"
+  "emptyBackup": "Backupfilen indeholder ingen cookies!",
+  "aboutBtn": "Om",
+  "aboutTitle": "Om programmet",
+  "closeBtn": "Luk",
+  "copiedMsg": "Kopieret!",
+  "copyBtn": "Kopiér",
+  "donateBtn": "Donér",
+  "donateText": "Hvis du kan lide denne udvidelse, kan du støtte forfatteren:",
+  "donateTitle": "Støt forfatteren"
 },
 "fi": {
   "appTitle": "Evästeiden varmuuskopiointi ja palautus",
@@ -716,7 +812,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "Palautettiin <b>{restored}</b> / <b>{total}</b> evästettä (ohitettu: <b>{skipped}</b>)",
   "restoreSuccessFailed": "Palautettiin <b>{restored}</b> / <b>{total}</b> evästettä (ohitettu: <b>{skipped}</b>, epäonnistui: <b>{failed}</b>)",
   "dismissLabel": "Sulje",
-  "emptyBackup": "Varmuuskopiotiedosto ei sisällä evästeitä!"
+  "emptyBackup": "Varmuuskopiotiedosto ei sisällä evästeitä!",
+  "aboutBtn": "Tietoa",
+  "aboutTitle": "Tietoa ohjelmasta",
+  "closeBtn": "Sulje",
+  "copiedMsg": "Kopioitu!",
+  "copyBtn": "Kopioi",
+  "donateBtn": "Lahjoita",
+  "donateText": "Jos pidät tästä laajennuksesta, voit tukea tekijää:",
+  "donateTitle": "Tue tekijää"
 },
 "no": {
   "appTitle": "Sikkerhetskopier & gjenopprett informasjonskapsler",
@@ -769,7 +873,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "Gjenopprettet <b>{restored}</b> av <b>{total}</b> informasjonskapsler (<b>{skipped}</b> hoppet over)",
   "restoreSuccessFailed": "Gjenopprettet <b>{restored}</b> av <b>{total}</b> informasjonskapsler (<b>{skipped}</b> hoppet over, <b>{failed}</b> mislyktes)",
   "dismissLabel": "Lukk",
-  "emptyBackup": "Backupfilen inneholder ingen informasjonskapsler!"
+  "emptyBackup": "Backupfilen inneholder ingen informasjonskapsler!",
+  "aboutBtn": "Om",
+  "aboutTitle": "Om programmet",
+  "closeBtn": "Lukk",
+  "copiedMsg": "Kopiert!",
+  "copyBtn": "Kopier",
+  "donateBtn": "Doner",
+  "donateText": "Hvis du liker denne utvidelsen, kan du støtte forfatteren:",
+  "donateTitle": "Støtt forfatteren"
 },
 "cs": {
   "appTitle": "Záloha a obnova cookies",
@@ -822,7 +934,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "Úspěšně obnoveno <b>{restored}</b> z <b>{total}</b> cookies (přeskočeno: <b>{skipped}</b>)",
   "restoreSuccessFailed": "Úspěšně obnoveno <b>{restored}</b> z <b>{total}</b> cookies (přeskočeno: <b>{skipped}</b>, selhalo: <b>{failed}</b>)",
   "dismissLabel": "Zavřít",
-  "emptyBackup": "Soubor zálohy neobsahuje žádné cookies!"
+  "emptyBackup": "Soubor zálohy neobsahuje žádné cookies!",
+  "aboutBtn": "O programu",
+  "aboutTitle": "O programu",
+  "closeBtn": "Zavřít",
+  "copiedMsg": "Zkopírováno!",
+  "copyBtn": "Kopírovat",
+  "donateBtn": "Přispět",
+  "donateText": "Pokud se vám toto rozšíření líbí, můžete podpořit autora:",
+  "donateTitle": "Podpořte autora"
 },
 "sk": {
   "appTitle": "Záloha a obnova cookies",
@@ -875,7 +995,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "Úspešne obnovených <b>{restored}</b> z <b>{total}</b> cookies (preskočené: <b>{skipped}</b>)",
   "restoreSuccessFailed": "Úspešne obnovených <b>{restored}</b> z <b>{total}</b> cookies (preskočené: <b>{skipped}</b>, zlyhalo: <b>{failed}</b>)",
   "dismissLabel": "Zavrieť",
-  "emptyBackup": "Súbor zálohy neobsahuje žiadne cookies!"
+  "emptyBackup": "Súbor zálohy neobsahuje žiadne cookies!",
+  "aboutBtn": "O programe",
+  "aboutTitle": "O programe",
+  "closeBtn": "Zavrieť",
+  "copiedMsg": "Skopírované!",
+  "copyBtn": "Kopírovať",
+  "donateBtn": "Prispieť",
+  "donateText": "Ak sa vám toto rozšírenie páči, môžete podporiť autora:",
+  "donateTitle": "Podporte autora"
 },
 "hu": {
   "appTitle": "Cookie-k biztonsági mentése és visszaállítása",
@@ -928,7 +1056,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "Sikeresen visszaállítva <b>{restored}</b> / <b>{total}</b> cookie (kihagyva: <b>{skipped}</b>)",
   "restoreSuccessFailed": "Sikeresen visszaállítva <b>{restored}</b> / <b>{total}</b> cookie (kihagyva: <b>{skipped}</b>, sikertelen: <b>{failed}</b>)",
   "dismissLabel": "Bezárás",
-  "emptyBackup": "A mentésfájl nem tartalmaz cookie-kat!"
+  "emptyBackup": "A mentésfájl nem tartalmaz cookie-kat!",
+  "aboutBtn": "Névjegy",
+  "aboutTitle": "Névjegy",
+  "closeBtn": "Bezárás",
+  "copiedMsg": "Kimásolva!",
+  "copyBtn": "Másolás",
+  "donateBtn": "Támogatás",
+  "donateText": "Ha tetszik ez a bővítmény, támogathatod a szerzőt:",
+  "donateTitle": "Szerző támogatása"
 },
 "ro": {
   "appTitle": "Backup și restaurare cookies",
@@ -981,7 +1117,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "S-au restaurat <b>{restored}</b> din <b>{total}</b> cookie-uri (ignorate: <b>{skipped}</b>)",
   "restoreSuccessFailed": "S-au restaurat <b>{restored}</b> din <b>{total}</b> cookie-uri (ignorate: <b>{skipped}</b>, eșuate: <b>{failed}</b>)",
   "dismissLabel": "Închide",
-  "emptyBackup": "Fișierul de backup nu conține cookie-uri!"
+  "emptyBackup": "Fișierul de backup nu conține cookie-uri!",
+  "aboutBtn": "Despre",
+  "aboutTitle": "Despre program",
+  "closeBtn": "Închide",
+  "copiedMsg": "Copiat!",
+  "copyBtn": "Copiază",
+  "donateBtn": "Donează",
+  "donateText": "Dacă îți place această extensie, poți susține autorul:",
+  "donateTitle": "Susține autorul"
 },
 "tr": {
   "appTitle": "Çerezleri yedekle ve geri yükle",
@@ -1034,7 +1178,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "<b>{total}</b> çerezden <b>{restored}</b> tanesi geri yüklendi (<b>{skipped}</b> atlandı)",
   "restoreSuccessFailed": "<b>{total}</b> çerezden <b>{restored}</b> tanesi geri yüklendi (<b>{skipped}</b> atlandı, <b>{failed}</b> başarısız)",
   "dismissLabel": "Kapat",
-  "emptyBackup": "Yedek dosyasında çerez yok!"
+  "emptyBackup": "Yedek dosyasında çerez yok!",
+  "aboutBtn": "Hakkında",
+  "aboutTitle": "Program hakkında",
+  "closeBtn": "Kapat",
+  "copiedMsg": "Kopyalandı!",
+  "copyBtn": "Kopyala",
+  "donateBtn": "Bağış",
+  "donateText": "Bu eklentiyi beğendiyseniz yazarı destekleyebilirsiniz:",
+  "donateTitle": "Yazarı destekle"
 },
 "zh-CN": {
   "appTitle": "Cookie 备份与恢复",
@@ -1087,7 +1239,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "共 <b>{total}</b> 个 Cookie，成功恢复 <b>{restored}</b> 个 (已跳过 <b>{skipped}</b> 个)",
   "restoreSuccessFailed": "共 <b>{total}</b> 个 Cookie，成功恢复 <b>{restored}</b> 个 (已跳过 <b>{skipped}</b> 个，失败 <b>{failed}</b> 个)",
   "dismissLabel": "关闭",
-  "emptyBackup": "备份文件中没有 Cookie！"
+  "emptyBackup": "备份文件中没有 Cookie！",
+  "aboutBtn": "关于",
+  "aboutTitle": "关于本程序",
+  "closeBtn": "关闭",
+  "copiedMsg": "已复制！",
+  "copyBtn": "复制",
+  "donateBtn": "捐赠",
+  "donateText": "如果您喜欢此扩展，可以支持作者：",
+  "donateTitle": "支持作者"
 },
 "zh-TW": {
   "appTitle": "Cookie 備份與還原",
@@ -1140,7 +1300,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "共 <b>{total}</b> 個 Cookie，成功還原 <b>{restored}</b> 個 (已略過 <b>{skipped}</b> 個)",
   "restoreSuccessFailed": "共 <b>{total}</b> 個 Cookie，成功還原 <b>{restored}</b> 個 (已略過 <b>{skipped}</b> 個，失敗 <b>{failed}</b> 個)",
   "dismissLabel": "關閉",
-  "emptyBackup": "備份檔案中沒有 Cookie！"
+  "emptyBackup": "備份檔案中沒有 Cookie！",
+  "aboutBtn": "關於",
+  "aboutTitle": "關於本程式",
+  "closeBtn": "關閉",
+  "copiedMsg": "已複製！",
+  "copyBtn": "複製",
+  "donateBtn": "贊助",
+  "donateText": "如果您喜歡此擴充功能，可以支持作者：",
+  "donateTitle": "支持作者"
 },
 "ja": {
   "appTitle": "Cookie のバックアップと復元",
@@ -1193,7 +1361,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "<b>{total}</b> 件中 <b>{restored}</b> 件の Cookie を復元しました (<b>{skipped}</b> 件スキップ)",
   "restoreSuccessFailed": "<b>{total}</b> 件中 <b>{restored}</b> 件の Cookie を復元しました (<b>{skipped}</b> 件スキップ、<b>{failed}</b> 件失敗)",
   "dismissLabel": "閉じる",
-  "emptyBackup": "バックアップファイルに Cookie が含まれていません！"
+  "emptyBackup": "バックアップファイルに Cookie が含まれていません！",
+  "aboutBtn": "この拡張機能について",
+  "aboutTitle": "このプログラムについて",
+  "closeBtn": "閉じる",
+  "copiedMsg": "コピーしました！",
+  "copyBtn": "コピー",
+  "donateBtn": "寄付",
+  "donateText": "この拡張機能が気に入ったら、作者を支援できます：",
+  "donateTitle": "作者を支援"
 },
 "ko": {
   "appTitle": "쿠키 백업 및 복원",
@@ -1246,7 +1422,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "<b>{total}</b>개 중 <b>{restored}</b>개의 쿠키를 복원했습니다 (<b>{skipped}</b>개 건너뜀)",
   "restoreSuccessFailed": "<b>{total}</b>개 중 <b>{restored}</b>개의 쿠키를 복원했습니다 (<b>{skipped}</b>개 건너뜀, <b>{failed}</b>개 실패)",
   "dismissLabel": "닫기",
-  "emptyBackup": "백업 파일에 쿠키가 없습니다!"
+  "emptyBackup": "백업 파일에 쿠키가 없습니다!",
+  "aboutBtn": "정보",
+  "aboutTitle": "프로그램 정보",
+  "closeBtn": "닫기",
+  "copiedMsg": "복사됨!",
+  "copyBtn": "복사",
+  "donateBtn": "후원",
+  "donateText": "이 확장 프로그램이 마음에 드시면 제작자를 후원할 수 있습니다:",
+  "donateTitle": "제작자 후원"
 },
 "ar": {
   "appTitle": "نسخ الكوكيز احتياطيًا واستعادتها",
@@ -1299,7 +1483,15 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "تمت استعادة <b>{restored}</b> من <b>{total}</b> من الكوكيز (تم تخطي <b>{skipped}</b>)",
   "restoreSuccessFailed": "تمت استعادة <b>{restored}</b> من <b>{total}</b> من الكوكيز (تم تخطي <b>{skipped}</b>، فشل <b>{failed}</b>)",
   "dismissLabel": "إغلاق",
-  "emptyBackup": "ملف النسخة الاحتياطية لا يحتوي على أي كوكيز!"
+  "emptyBackup": "ملف النسخة الاحتياطية لا يحتوي على أي كوكيز!",
+  "aboutBtn": "حول",
+  "aboutTitle": "حول البرنامج",
+  "closeBtn": "إغلاق",
+  "copiedMsg": "تم النسخ!",
+  "copyBtn": "نسخ",
+  "donateBtn": "تبرع",
+  "donateText": "إذا أعجبتك هذه الإضافة، يمكنك دعم المؤلف:",
+  "donateTitle": "ادعم المؤلف"
 },
 "hi": {
   "appTitle": "कुकीज़ बैकअप और रिस्टोर",
@@ -1352,6 +1544,14 @@ const TRANSLATIONS = {
   "restoreSuccessSkipped": "<b>{total}</b> में से <b>{restored}</b> कुकीज़ रिस्टोर कीं (<b>{skipped}</b> छोड़ी गईं)",
   "restoreSuccessFailed": "<b>{total}</b> में से <b>{restored}</b> कुकीज़ रिस्टोर कीं (<b>{skipped}</b> छोड़ी गईं, <b>{failed}</b> विफल)",
   "dismissLabel": "बंद करें",
-  "emptyBackup": "बैकअप फ़ाइल में कोई कुकीज़ नहीं हैं!"
+  "emptyBackup": "बैकअप फ़ाइल में कोई कुकीज़ नहीं हैं!",
+  "aboutBtn": "परिचय",
+  "aboutTitle": "कार्यक्रम के बारे में",
+  "closeBtn": "बंद करें",
+  "copiedMsg": "कॉपी हो गया!",
+  "copyBtn": "कॉपी करें",
+  "donateBtn": "दान करें",
+  "donateText": "यदि आपको यह एक्सटेंशन पसंद है, तो आप लेखक का समर्थन कर सकते हैं:",
+  "donateTitle": "लेखक का समर्थन करें"
 }
 };

@@ -8,6 +8,15 @@
 
 ### Added — новое
 
+- Футер popup: кнопки «О программе» и «Донат» вместо статичных кредитов.
+  Кредиты (автор `AvenCores / github`, `основано на candh/cookies-backup-chrome`)
+  переехали внутрь модалки «О программе», туда же — кнопки соцсетей из шапки
+  README (YouTube, Telegram, VK, Dzen) и версия расширения из манифеста.
+- Модалка «Донат» с данными из футера README (`SBER 2202 2050 1464 4675`)
+  и кнопкой копирования номера (Clipboard API + fallback выделением вручную).
+- Иконки соцсетей — инлайн-SVG без внешних запросов: YouTube/Telegram/VK
+  (контуры Simple Icons, CC0), звезда Dzen нарисована вручную (в Simple Icons её нет).
+- Иконка Сбербанка в донат-меню (присланный SVG логотипа, инлайн).
 - Подтверждение пароля шифрования: второе поле при создании бэкапа.
   Кнопка Enter подсвечивается, только когда оба поля совпадают (минимум 8 символов).
 - Кнопки показать/скрыть пароль (`👁`/`🙈`) в формах шифрования и расшифровки.
@@ -21,7 +30,9 @@
 - В манифестах: `action.default_icon`, `minimum_chrome_version: 88`.
 - Новые ключи локалей: `dropHint`, `passwordMismatch`, `passwordTooShort`,
   `fileTooLarge`, `showPassword`/`hidePassword`, `restoreSuccessSkipped`,
-  `restoreSuccessFailed`, `emptyBackup`, `dismissLabel`, `backBtn` — все 25 языков полные.
+  `restoreSuccessFailed`, `emptyBackup`, `dismissLabel`, `backBtn`,
+  `aboutBtn`, `donateBtn`, `aboutTitle`, `donateTitle`, `donateText`,
+  `copyBtn`, `copiedMsg`, `closeBtn` — все 25 языков полные.
 - Кнопки «Назад» (`←`/`→` в RTL) в формах шифрования и расшифровки:
   возврат из под-экранов бэкапа, выбора `.ckz` и paste-режима без перезагрузки.
 
@@ -100,6 +111,9 @@
 - Консоль больше не заваливается тысячами строк: первые 20 ошибок подробно,
   дальше — одна итоговая.
 - CI: тег релиза сверяется с версией манифеста.
+- Кнопки соцсетей «плыли» после добавления иконок (`flex: 1 1 auto` давал
+  ширину по контенту): теперь строгая сетка 2×2 (`flex: 1 1 calc(50% - 3px)`),
+  у SVG убран строчный baseline-отступ (`display: block`).
 - Кнопки вылезали за пределы popup на языках с длинными переводами
   (de, fr, ru, uk, es, pt, sk, hi и др.): у `.btn-primary`/`.btn-secondary`/
   `.btn-danger` снят `white-space: nowrap` — текст переносится, а ряд кнопок

@@ -725,6 +725,134 @@ input[type="file"]::file-selector-button:active {
   padding-bottom: 5px;
 }
 
+/* footer with About + Donate buttons */
+.footer-buttons {
+  padding-bottom: 5px;
+}
+
+.btn-footer {
+  flex: 1 1 0;
+}
+
+/* modal dialogs (About / Donate) */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  background-color: rgba(0, 0, 0, 0.45);
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.modal {
+  display: flex;
+  flex-direction: column;
+  row-gap: 10px;
+  width: 100%;
+  max-width: 260px;
+  max-height: 100%;
+  overflow-y: auto;
+  box-sizing: border-box;
+  padding: 14px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background-color: var(--wrap-bg);
+  color: var(--text);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.modal-title {
+  font-weight: bold;
+  font-size: 14px;
+  text-align: center;
+}
+
+.modal-body {
+  display: flex;
+  flex-direction: column;
+  row-gap: 8px;
+  font-size: 12px;
+  text-align: center;
+}
+
+.about-line {
+  line-height: 1.5;
+}
+
+.social-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.social-btn {
+  flex: 1 1 calc(50% - 3px);
+  min-width: 0;
+  padding: 4px 8px;
+  font-size: 12px;
+  line-height: 20px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.social-icon {
+  display: block;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  fill: currentColor;
+}
+
+.donate-text {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.donate-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 8px;
+  border: 1.5px dotted var(--border);
+  border-radius: 6px;
+  background-color: var(--card-bg);
+}
+
+.donate-bank {
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.donate-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+#donate-card-number {
+  font-size: 13px;
+  user-select: all;
+}
+
+#copy-hint {
+  font-size: 11px;
+}
+
 /* helper classes */
 .title {
   font-weight: bold;

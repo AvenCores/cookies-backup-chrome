@@ -489,9 +489,134 @@ document.getElementById("btn-upload-fallback").onclick = (e) => {
 document.getElementById("btn-enc-back").onclick = resetBackupView;
 document.getElementById("btn-dec-back").onclick = handleRestoreBack;
 
+wireAboutAndDonate();
+
 wirePasswordToggles();
 wireRestoreDropZone();
 wireEncSubmitState();
+
+// ---- About / Donate modals ----
+// Credits (author / based on) live inside the About dialog; social links
+// come from the README header, donate details from the README footer.
+
+function openModal(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove("hidden");
+  const closeBtn = el.querySelector(".modal .btn-back");
+  if (closeBtn) {
+    try {
+      closeBtn.focus();
+    } catch (e) {}
+  }
+}
+
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add("hidden");
+}
+
+function closeAllModals() {
+  closeModal("about-modal");
+  closeModal("donate-modal");
+}
+
+function fillAboutVersion() {
+  try {
+    const el = document.getElementById("about-version");
+    if (!el) return;
+    const manifest = api?.runtime?.getManifest?.();
+    if (manifest && manifest.version) {
+      el.textContent = "v" + manifest.version;
+    }
+  } catch (e) {}
+}
+
+async function copyDonateCard() {
+  const numEl = document.getElementById("donate-card-number");
+  const hint = document.getElementById("copy-hint");
+  const raw = numEl ? numEl.textContent || "" : "";
+  const compact = raw.replace(/\s+/g, "");
+  let ok = false;
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(compact);
+      ok = true;
+    }
+  } catch (e) {
+    ok = false;
+  }
+  if (!ok) {
+    // clipboard API unavailable (or denied): select the number so the user
+    // can copy it manually with Ctrl+C
+    try {
+      const range = document.createRange();
+      range.selectNodeContents(numEl);
+      const sel = window.getSelection();
+      if (sel) {
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+      ok = !!(sel && sel.toString());
+    } catch (e) {
+      ok = false;
+    }
+  }
+  if (hint) {
+    hint.textContent = tr("copiedMsg");
+    hint.classList.remove("hidden");
+  }
+}
+
+function wireAboutAndDonate() {
+  const btnAbout = document.getElementById("btn-about");
+  const btnDonate = document.getElementById("btn-donate");
+  if (btnAbout && !btnAbout.dataset.wired) {
+    btnAbout.dataset.wired = "1";
+    btnAbout.addEventListener("click", () => {
+      closeModal("donate-modal");
+      fillAboutVersion();
+      openModal("about-modal");
+    });
+  }
+  if (btnDonate && !btnDonate.dataset.wired) {
+    btnDonate.dataset.wired = "1";
+    btnDonate.addEventListener("click", () => {
+      closeModal("about-modal");
+      const hint = document.getElementById("copy-hint");
+      if (hint) hint.classList.add("hidden");
+      openModal("donate-modal");
+    });
+  }
+  for (const [closeId, modalId] of [
+    ["btn-about-close", "about-modal"],
+    ["btn-donate-close", "donate-modal"],
+  ]) {
+    const btn = document.getElementById(closeId);
+    if (btn && !btn.dataset.wired) {
+      btn.dataset.wired = "1";
+      btn.addEventListener("click", () => closeModal(modalId));
+    }
+  }
+  for (const modalId of ["about-modal", "donate-modal"]) {
+    const overlay = document.getElementById(modalId);
+    if (overlay && !overlay.dataset.wired) {
+      overlay.dataset.wired = "1";
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) closeModal(modalId);
+      });
+    }
+  }
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeAllModals();
+  });
+  const btnCopy = document.getElementById("btn-copy-card");
+  if (btnCopy && !btnCopy.dataset.wired) {
+    btnCopy.dataset.wired = "1";
+    btnCopy.addEventListener("click", copyDonateCard);
+  }
+}
 
 async function handleEncPasswdSubmit(e) {
   e.preventDefault();
