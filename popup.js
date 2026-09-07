@@ -1226,19 +1226,26 @@ function refreshDynamicTexts() {
   } catch (e) {}
 }
 
+// Hiding the whole split row (not just its main button): leaving the 92px
+// format toggle alone collapses the row horizontally at the exact moment the
+// sub-screen grows vertically — that simultaneous 2-axis shift makes Chromium
+// show a sticky popup scrollbar instead of seamlessly growing the window.
+function setBackupButtonsVisible(visible) {
+  const b1 = document.getElementById("btn-backup");
+  if (b1) b1.style.display = visible ? "" : "none";
+  const splitWrap = document.querySelector("#backup-wrap .split-wrap");
+  if (splitWrap) splitWrap.style.display = visible ? "" : "none";
+}
+
 function showPlainExportConfirm() {
-  document.getElementById("btn-backup").style.display = "none";
-  document.getElementById("btn-backup-plain").style.display = "none";
+  setBackupButtonsVisible(false);
   fillPlainExportText();
   document.getElementById("plain-export-confirm").classList.remove("hidden");
 }
 
 function hidePlainExportConfirm() {
   document.getElementById("plain-export-confirm").classList.add("hidden");
-  const b1 = document.getElementById("btn-backup");
-  if (b1) b1.style.display = "";
-  const b2 = document.getElementById("btn-backup-plain");
-  if (b2) b2.style.display = "";
+  setBackupButtonsVisible(true);
 }
 
 function fillPlainExportText() {
@@ -2159,13 +2166,8 @@ function restoreSuccessAlert(restoredCookies, totalCookies, skippedCookies, fail
   addToSuccessMessageList(node);
 }
 
-function hideBackupButton() {
-  document.getElementById("btn-backup").style.display = "none";
-}
-
 function showEncPasswordInputBox(e) {
-  hideBackupButton()
-  document.getElementById("btn-backup-plain").style.display = "none";
+  setBackupButtonsVisible(false);
   document.getElementById("plain-export-confirm").classList.add("hidden");
   document.getElementById("enc-passwd").style.display = "flex";
   updateEncSubmitState();

@@ -66,6 +66,11 @@ a {
   text-decoration: none;
 }
 
+html {
+  height: auto;
+  overflow: visible;
+}
+
 p {
   margin: 0;
 }
@@ -84,10 +89,18 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
     Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   width: 340px;
-  max-height: 560px;
+  height: auto;
+  max-height: none;
   margin: 0;
   box-sizing: border-box;
-  overflow-x: hidden;
+  /* Popup должен бесшовно расширяться вместе с контентом:
+     никакого внутреннего скролла — окно Chromium само
+     подгоняет высоту под содержимое. overflow-x: clip прячет
+     горизонтальный перелив, но (в отличие от hidden) не создаёт
+     скролл-контейнер и не заставляет overflow-y вычисляться в auto,
+     так что вертикаль остаётся visible и скроллбар не появляется. */
+  overflow-x: clip;
+  overflow-y: visible;
   color: var(--text);
   background-color: var(--bg);
   background-image: linear-gradient(var(--grid-line) 0.4px, transparent 0.4px), linear-gradient(to right, var(--grid-line) 0.4px, var(--bg) 0.4px);
@@ -109,6 +122,8 @@ body.standalone {
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 body.standalone .container-main-screen {
@@ -315,11 +330,12 @@ body.standalone textarea {
   display: flex;
   flex-direction: column;
   flex-wrap: nowrap;
-  overflow-y: auto;
-  overflow-x: hidden;
-  /* bounded so long warning lists scroll inside the popup instead of
-     spilling past body's max-height with no way to reach them */
-  max-height: 560px;
+  /* Seamless popup growth: no inner scroll container, no height cap.
+     Chromium сам увеличивает окно под контент — полоса прокрутки
+     не появляется. Для длинных списков предупреждений окно просто
+     станет выше (до системного лимита popup ~600px). */
+  overflow: visible;
+  max-height: none;
   width: 100%;
   max-width: 100%;
   min-width: 0;
@@ -550,6 +566,14 @@ body.standalone textarea {
   display: flex;
   flex-direction: column;
   row-gap: 8px;
+  /* flex-item in the column .wrap: without min-width:0 the longest word
+     (e.g. a format name or a long locale string) forces its intrinsic width
+     onto the row and shifts the popup horizontally — together with the
+     vertical growth that summons a sticky Chromium scrollbar */
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
   padding: 10px 12px;
   border-radius: 6px;
   border: 1.5px solid var(--warning-border);
@@ -567,6 +591,8 @@ body.standalone textarea {
 .insecure-text {
   margin: 0;
   line-height: 1.4;
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 .insecure-box .two-col-group {
@@ -758,6 +784,9 @@ input[type="file"]::file-selector-button:active {
   font-weight: 400;
   font-size: 12px;
   box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
   padding: 6px 28px 6px 15px;
   margin: 5px 0px;
 }
@@ -797,6 +826,14 @@ input[type="file"]::file-selector-button:active {
   border-left: 3px solid var(--warning-border);
   background-color: var(--warning-bg);
   color: var(--warning-text);
+}
+
+/* message lists must never widen the popup: long cookie names / URLs
+   wrap inside instead of shifting the UI horizontally */
+#messages,
+#warnings {
+  min-width: 0;
+  max-width: 100%;
 }
 
 #credits {
@@ -1000,6 +1037,19 @@ input[type="file"]::file-selector-button:active {
 }
 
 /* ---- animations (all subtle; disabled under prefers-reduced-motion) ---- */
+/* fade-up is kept for appended alerts; sub-screens use fade-in (opacity
+   only): a translateY overshoot during the 0.2s appear would stick out 6px
+   below the final box exactly while Chromium measures the popup — the same
+   transient 2-axis overflow that summons a sticky scrollbar */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @keyframes fade-up {
   from {
     opacity: 0;
@@ -1080,12 +1130,12 @@ input[type="file"]::file-selector-button:active {
   transition: background-color 0.12s ease;
 }
 
-/* sub-screens (password forms, insecure warnings) fade up every time
+/* sub-screens (password forms, insecure warnings) fade in every time
    they are shown — the animation restarts on display:none -> visible */
 #enc-passwd,
 #dec-passwd,
 .insecure-box {
-  animation: fade-up 0.2s ease;
+  animation: fade-in 0.2s ease;
 }
 
 /* success/warning alerts slide in when appended */
