@@ -1037,19 +1037,6 @@ input[type="file"]::file-selector-button:active {
 }
 
 /* ---- animations (all subtle; disabled under prefers-reduced-motion) ---- */
-/* fade-up is kept for appended alerts; sub-screens use fade-in (opacity
-   only): a translateY overshoot during the 0.2s appear would stick out 6px
-   below the final box exactly while Chromium measures the popup — the same
-   transient 2-axis overflow that summons a sticky scrollbar */
-@keyframes fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
 @keyframes fade-up {
   from {
     opacity: 0;
@@ -1130,12 +1117,16 @@ input[type="file"]::file-selector-button:active {
   transition: background-color 0.12s ease;
 }
 
-/* sub-screens (password forms, insecure warnings) fade in every time
-   they are shown — the animation restarts on display:none -> visible */
+/* sub-screens (password forms, insecure warnings) expand with the same
+   menu-drop animation as the dropdown menus: a -4px slide fades the panel
+   into place. Unlike a downward slide, the upward overshoot stays inside
+   the row gap above the panel, so it never pokes past the popup edge and
+   can't summon a scrollbar while Chromium measures the window.
+   The animation restarts on every display:none -> visible show. */
 #enc-passwd,
 #dec-passwd,
 .insecure-box {
-  animation: fade-in 0.2s ease;
+  animation: menu-drop 0.15s ease;
 }
 
 /* success/warning alerts slide in when appended */
