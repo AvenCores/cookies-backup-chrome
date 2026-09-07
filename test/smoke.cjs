@@ -254,30 +254,45 @@ function makeBgContext({ blobUrls }) {
   // with every wire step reached.
   {
     const bootEls = {};
-    const mkEl = () => {
+    const mkEl = (tag) => {
       const listeners = {};
-      return {
+      const el = {
         _listeners: listeners,
+        _children: [],
+        tagName: String(tag || "div").toUpperCase(),
         style: {}, dataset: {}, textContent: "", title: "", value: "",
-        type: "password", files: null, placeholder: "", innerHTML: "",
+        type: "password", files: null, placeholder: "",
         classList: { add() {}, remove() {}, toggle() {}, contains() { return false; } },
         setAttribute() {}, getAttribute() { return null; },
         addEventListener(t, f) { (listeners[t] = listeners[t] || []).push(f); },
-        appendChild() {}, append() {}, replaceChildren() {},
+        appendChild(c) { el._children.push(c); return c; },
+        append(...args) { for (const a of args) el._children.push(a); },
+        replaceChildren(...args) { el._children = [...args]; },
+        removeChild(c) {
+          const i = el._children.indexOf(c);
+          if (i >= 0) el._children.splice(i, 1);
+          return c;
+        },
         querySelector() { return null; },
         focus() {}, click() {},
       };
+      Object.defineProperty(el, "firstChild", {
+        get() { return el._children[0] || null; },
+        configurable: true,
+      });
+      return el;
     };
     const listenersOf = (id, type) => ((bootEls[id] && bootEls[id]._listeners[type]) || []).length;
     const pctx = {
       console,
       document: {
         documentElement: { lang: "", dir: "", setAttribute() {}, getAttribute() { return "light"; } },
-        getElementById(id) { return (bootEls[id] = bootEls[id] || mkEl()); },
+        getElementById(id) { return (bootEls[id] = bootEls[id] || mkEl(id)); },
         querySelectorAll() { return []; },
         querySelector() { return null; },
         addEventListener() {},
-        createElement() { return mkEl(); },
+        createElement(tag) { return mkEl(tag); },
+        createElementNS(ns, tag) { return mkEl(tag); },
       },
       window: {},
       navigator: { userAgent: "node-smoke", languages: ["en"], language: "en" },
@@ -299,7 +314,12 @@ function makeBgContext({ blobUrls }) {
     await new Promise((r) => setTimeout(r, 150));
     ok("popup boots without exceptions and wires everything", () => {
       assert.strictEqual(bootEls["picked-file-status"].textContent, "No file chosen");
-      assert.ok(bootEls["toggle-enc-passwd"].innerHTML.includes("<svg"), "eye icon rendered");
+      // eye icons are built via createElementNS (Firefox-safe, no innerHTML):
+      // the toggle button must gain an SVG child with shape children.
+      const eyeBtn = bootEls["toggle-enc-passwd"];
+      const eyeSvg = (eyeBtn._children || []).find((c) => c && c.tagName === "SVG");
+      assert.ok(eyeSvg, "eye icon rendered as SVG element");
+      assert.ok((eyeSvg._children || []).length > 0, "eye icon has shape children");
       for (const [id, type] of [
         ["restore", "change"],
         ["dec-passwd-form", "submit"],
@@ -317,6 +337,9 @@ function makeBgContext({ blobUrls }) {
 
   // ---------- 3. static guards ----------
   const popup = fs.readFileSync(path.join(ROOT, "popup.js"), "utf8");
+  ok("popup has no innerHTML (Firefox AMO-safe SVG rendering)", () => {
+    assert.ok(!popup.includes("innerHTML"), "popup.js must not contain innerHTML");
+  });
   ok("popup has no download duplication", () => {
     for (const token of ["new Blob", "createObjectURL", "revokeObjectURL", "readAsDataURL", "downloadsDownload", "api.downloads"]) {
       assert.ok(!popup.includes(token), "popup.js must not contain " + token);

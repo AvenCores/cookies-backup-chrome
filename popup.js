@@ -25,8 +25,67 @@ const RTL_LOCALES = ["ar"];
 // Inline SVG flags for the custom language menu. Regional-indicator emoji
 // flags render as plain letter pairs ("GB", "RU") on Windows, which has no
 // flag-emoji glyphs — so every locale gets a tiny hand-drawn SVG instead.
-// Values hold the inner content of an 18x12 viewBox; our own static strings
-// only, rendered via innerHTML (no CSP issue, no user data inside).
+// Values hold the inner shapes of an 18x12 viewBox; our own static strings
+// only, rendered via createElementNS (no markup-string assignment,
+// no user data inside).
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+function clearElement(el) {
+  if (!el) return;
+  try {
+    if (typeof el.replaceChildren === "function") {
+      el.replaceChildren();
+      return;
+    }
+  } catch (e) {}
+  try {
+    while (el.firstChild) el.removeChild(el.firstChild);
+  } catch (e) {}
+  try {
+    el.textContent = "";
+  } catch (e) {}
+}
+
+// Build an <svg> node from our own static shape markup without any
+// markup-string assignment: only the whitelisted shape tags and their
+// plain attributes are materialized via createElementNS + setAttribute.
+function buildSvgElement(innerMarkup, svgAttrs) {
+  const makeSvg = (typeof document !== "undefined" && typeof document.createElementNS === "function")
+    ? (t) => document.createElementNS(SVG_NS, t)
+    : (t) => document.createElement(t);
+  const svg = makeSvg("svg");
+  if (svgAttrs) {
+    for (const [k, v] of Object.entries(svgAttrs)) {
+      try {
+        svg.setAttribute(k, v);
+      } catch (e) {}
+    }
+  }
+  const tagRe = /<(rect|circle|path|polygon|line)\s([^<>]*?)\/?>/g;
+  const attrRe = /([\w-]+)="([^"]*)"/g;
+  let m;
+  while ((m = tagRe.exec(innerMarkup || "")) !== null) {
+    const node = makeSvg(m[1]);
+    let a;
+    while ((a = attrRe.exec(m[2])) !== null) {
+      try {
+        node.setAttribute(a[1], a[2]);
+      } catch (e) {}
+    }
+    try {
+      svg.appendChild(node);
+    } catch (e) {}
+  }
+  return svg;
+}
+
+function renderSvgInto(el, innerMarkup, svgAttrs) {
+  if (!el) return;
+  clearElement(el);
+  try {
+    el.appendChild(buildSvgElement(innerMarkup, svgAttrs));
+  } catch (e) {}
+}
 const FLAG_SVGS = {
   en: '<rect width="18" height="12" fill="#012169"/><path d="M0 0l18 12M18 0L0 12" stroke="#fff" stroke-width="2.4"/><path d="M0 0l18 12M18 0L0 12" stroke="#C8102E" stroke-width=".9"/><path d="M9 0v12M0 6h18" stroke="#fff" stroke-width="3.8"/><path d="M9 0v12M0 6h18" stroke="#C8102E" stroke-width="2.2"/>',
   ru: '<rect width="18" height="4" fill="#fff"/><rect y="4" width="18" height="4" fill="#0039A6"/><rect y="8" width="18" height="4" fill="#D52B1E"/>',
@@ -55,12 +114,10 @@ const FLAG_SVGS = {
   hi: '<rect width="18" height="4" fill="#FF9933"/><rect y="4" width="18" height="4" fill="#fff"/><rect y="8" width="18" height="4" fill="#138808"/><circle cx="9" cy="6" r="1.1" fill="none" stroke="#000080" stroke-width=".5"/>'
 };
 
-function flagMarkup(code) {
+function flagInnerMarkup(code) {
   if (!code) return null;
   const key = FLAG_SVGS[code] ? code : String(code).split("-")[0];
-  const inner = FLAG_SVGS[key];
-  if (!inner) return null;
-  return '<svg class="flag-svg" viewBox="0 0 18 12" aria-hidden="true" focusable="false">' + inner + "</svg>";
+  return FLAG_SVGS[key] || null;
 }
 
 // "auto" keeps the globe emoji (it renders on Windows, unlike flag emoji);
@@ -68,12 +125,22 @@ function flagMarkup(code) {
 function setFlagContent(el, code) {
   if (!el) return;
   if (!code || code === AUTO_LOCALE) {
+    clearElement(el);
     el.textContent = "\u{1F310}";
     return;
   }
-  const svg = flagMarkup(code);
-  if (svg) el.innerHTML = svg;
-  else el.textContent = "\u{1F310}";
+  const inner = flagInnerMarkup(code);
+  if (inner) {
+    renderSvgInto(el, inner, {
+      class: "flag-svg",
+      viewBox: "0 0 18 12",
+      "aria-hidden": "true",
+      focusable: "false",
+    });
+  } else {
+    clearElement(el);
+    el.textContent = "\u{1F310}";
+  }
 }
 const _localeLowerMap = {};
 try {
@@ -530,8 +597,10 @@ let cookieFile;
 // states). Emoji 👁/🙈 have different advance widths on every platform,
 // so swapping them resized the button and shoved the password field.
 // Declared up-front: updatePasswordToggles() runs during wiring below.
-const EYE_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>';
-const EYE_OFF_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+// Static shape markup only; rendered via buildSvgElement (no markup assignment).
+const EYE_ATTRS = { viewBox: "0 0 24 24", "aria-hidden": "true", focusable: "false" };
+const EYE_INNER = '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="12" r="3" fill="currentColor"/>';
+const EYE_OFF_INNER = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="1" y1="1" x2="23" y2="23" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>';
 
 document
   .getElementById("dec-passwd-form")
@@ -2244,8 +2313,8 @@ function updatePasswordToggles() {
     btn.setAttribute("aria-label", label);
     btn.title = label;
     // same-size SVG either way: the button box never changes, the field
-    // next to it stays put (our own static strings only)
-    btn.innerHTML = shown ? EYE_OFF_SVG : EYE_SVG;
+    // next to it stays put (our own static shapes only, built via DOM API)
+    renderSvgInto(btn, shown ? EYE_OFF_INNER : EYE_INNER, EYE_ATTRS);
   }
 }
 
