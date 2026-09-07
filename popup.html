@@ -185,6 +185,7 @@
         </p>
         <div class="insecure-box hidden" id="plain-restore-confirm">
           <div class="insecure-title" data-i18n="jsonWarningTitle">⚠️ Insecure backup</div>
+          <small id="picked-plain-echo" class="text-muted file-status hidden"></small>
           <p class="insecure-text" id="plain-restore-text"></p>
           <div class="gap-5px hidden" id="restore-domain-wrap">
             <label class="check-row">
@@ -212,11 +213,12 @@
         </div>
         <div class="wrap-card hidden text-center" id="dec-passwd">
           <form id="dec-passwd-form" class="gap-15px">
+            <small id="picked-file-echo" class="text-muted file-status hidden"></small>
             <div class="gap-5px hidden" id="restore-using-text-wrap">
               <small><b data-i18n="pasteTitle">Paste the contents of your .ckz file</b></small>
               <textarea
                 id="ckz-textarea"
-                rows="5"
+                rows="4"
                 placeholder="{iv: 'kjFC7RBV-N4', 'v': 1, 'iter': ..., ...}"
               ></textarea>
             </div>

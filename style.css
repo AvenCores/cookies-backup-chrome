@@ -148,7 +148,7 @@ body.standalone textarea {
   justify-content: space-between;
   align-items: center;
   gap: 4px 6px;
-  margin-top: 5px;
+  margin-top: 3px;
 }
 
 #header .large-title {
@@ -332,8 +332,10 @@ body.standalone textarea {
   flex-wrap: nowrap;
   /* Seamless popup growth: no inner scroll container, no height cap.
      Chromium сам увеличивает окно под контент — полоса прокрутки
-     не появляется. Для длинных списков предупреждений окно просто
-     станет выше (до системного лимита popup ~600px). */
+     не появляется. Размеры подобраны так, чтобы любое одиночное
+     состояние влезало в системный лимит popup ~600px (замерено
+     headless-рендером для самых длинных локалей); комбинации
+     подэкранов исключены аккордеоном в popup.js. */
   overflow: visible;
   max-height: none;
   width: 100%;
@@ -341,7 +343,7 @@ body.standalone textarea {
   min-width: 0;
   box-sizing: border-box;
   padding: 0px 5px;
-  row-gap: 10px;
+  row-gap: 8px;
   border-radius: 16px;
 }
 
@@ -353,7 +355,7 @@ body.standalone textarea {
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
-  padding: 1em;
+  padding: 0.85em;
   border-radius: 6px;
   background-color: var(--card-bg);
   box-shadow: var(--card-shadow) 0 1px 0;
@@ -369,7 +371,7 @@ body.standalone textarea {
   max-width: 100%;
   box-sizing: border-box;
   background: var(--wrap-bg);
-  padding: 1em;
+  padding: 0.85em;
   border: 1.5px solid var(--border);
   border-radius: 6px;
 }
@@ -565,7 +567,7 @@ body.standalone textarea {
 .insecure-box {
   display: flex;
   flex-direction: column;
-  row-gap: 8px;
+  row-gap: 6px;
   /* flex-item in the column .wrap: without min-width:0 the longest word
      (e.g. a format name or a long locale string) forces its intrinsic width
      onto the row and shifts the popup horizontally — together with the
@@ -574,7 +576,7 @@ body.standalone textarea {
   max-width: 100%;
   box-sizing: border-box;
   overflow-wrap: break-word;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border-radius: 6px;
   border: 1.5px solid var(--warning-border);
   background-color: var(--warning-bg);
@@ -596,16 +598,23 @@ body.standalone textarea {
 }
 
 .insecure-box .two-col-group {
-  flex-direction: column;
-  justify-content: flex-start;
+  /* One row when the labels fit (saves ~40px of popup height vs stacking),
+     graceful wrap to two full-width rows for long locales. flex:1 1 0 with
+     min-width:0 lets the buttons squeeze without ever pushing the popup
+     wider — so no horizontal shift and no scrollbar. */
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: stretch;
   row-gap: 6px;
+  column-gap: 6px;
 }
 
 .insecure-box .two-col-group .btn-danger,
 .insecure-box .two-col-group .btn-enter {
-  flex: none;
-  width: 100%;
+  flex: 1 1 0;
+  min-width: 0;
+  width: auto;
   white-space: normal;
 }
 
@@ -842,7 +851,7 @@ input[type="file"]::file-selector-button:active {
 
 /* footer with About + Donate buttons */
 .footer-buttons {
-  padding-bottom: 5px;
+  padding-bottom: 3px;
 }
 
 .btn-footer {
@@ -997,7 +1006,7 @@ input[type="file"]::file-selector-button:active {
 }
 
 .gap-15px {
-  row-gap: 15px;
+  row-gap: 12px;
 }
 
 .gap-5px {

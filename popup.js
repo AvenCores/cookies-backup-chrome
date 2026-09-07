@@ -1238,6 +1238,7 @@ function setBackupButtonsVisible(visible) {
 }
 
 function showPlainExportConfirm() {
+  collapseRestoreSection();
   setBackupButtonsVisible(false);
   fillPlainExportText();
   document.getElementById("plain-export-confirm").classList.remove("hidden");
@@ -1254,10 +1255,80 @@ function fillPlainExportText() {
   el.textContent = tr("plainExportText", { format: safeShortName(getExportFormat()) });
 }
 
+// Accordion: a Chromium popup is capped at ~600px, so two expanded
+// sub-screens at once (e.g. insecure export confirm + paste fallback,
+// ~766px stacked) physically cannot fit — the browser would show a scrollbar
+// instead of growing. Opening any sub-screen therefore collapses the other
+// section back to neutral first. Pasted text is stashed and restored, so the
+// auto-collapse never destroys user input (backup passwords are deliberately
+// NOT stashed — they are wiped like on any Back navigation).
+let stashedPasteText = "";
+function collapseBackupSection() {
+  clearEncPasswords();
+  try {
+    document.getElementById("enc-passwd").style.display = "none";
+  } catch (e) {}
+  hidePlainExportConfirm();
+}
+function collapseRestoreSection() {
+  if (isFallbackActive()) {
+    try {
+      const ta = document.getElementById("ckz-textarea");
+      stashedPasteText = ta && typeof ta.value === "string" ? ta.value : "";
+    } catch (e) {
+      stashedPasteText = "";
+    }
+    exitFallbackMode();
+  } else {
+    resetRestoreFileState();
+  }
+}
+
+// File sub-screens (password / plain confirm) replace the file picker: the
+// upload box + fallback link hide while the step is open, so the popup stays
+// under the ~600px browser clamp. Every exit path must show them again.
+function setRestorePickerVisible(visible) {
+  const up = document.getElementById("restore-upload-wrap");
+  if (up) up.style.display = visible ? "" : "none";
+  const fb = document.getElementById("btn-upload-fallback");
+  if (fb) fb.style.display = visible ? "" : "none";
+}
+
+// Echo of the picked file name inside the sub-screen: the picker (with its
+// own name line) is hidden above, and restoring the wrong backup would
+// overwrite the user's cookies — so the step always names its file.
+function setPickedEcho(name) {
+  for (const id of ["picked-file-echo", "picked-plain-echo"]) {
+    let el = null;
+    try {
+      el = document.getElementById(id);
+    } catch (e) {
+      continue;
+    }
+    if (!el || !el.classList) continue;
+    if (name) {
+      el.textContent = name;
+      try {
+        el.title = name;
+      } catch (e) {}
+      el.classList.remove("hidden");
+    } else {
+      el.textContent = "";
+      try {
+        el.title = "";
+      } catch (e) {}
+      el.classList.add("hidden");
+    }
+  }
+}
+
 function showPlainRestoreConfirm(format) {
+  collapseBackupSection();
   hideDecPasswordInputBox();
   fillPlainRestoreText(format);
   updateRestoreDomainVisibility(format);
+  setRestorePickerVisible(false);
+  setPickedEcho(cookieFile && cookieFile.name ? cookieFile.name : "");
   document.getElementById("plain-restore-confirm").classList.remove("hidden");
 }
 
@@ -1293,8 +1364,8 @@ function cancelPlainRestore() {
   cookieFile = null;
   pendingPlain = null;
   updateDroppedFileName();
-  const fb = document.getElementById("btn-upload-fallback");
-  if (fb) fb.style.display = "";
+  setPickedEcho("");
+  setRestorePickerVisible(true);
 }
 
 // ---- back navigation: every sub-screen must have a way back without reload ----
@@ -1302,9 +1373,7 @@ function cancelPlainRestore() {
 // Backup with password -> back to the export buttons + format grid
 function resetBackupView() {
   clearMessages();
-  clearEncPasswords();
-  document.getElementById("enc-passwd").style.display = "none";
-  hidePlainExportConfirm();
+  collapseBackupSection();
 }
 
 function isFallbackActive() {
@@ -1324,10 +1393,8 @@ function resetRestoreFileState() {
   hidePlainRestoreConfirm();
   hideDecDomainRow();
   resetFallbackControls();
-  const fb = document.getElementById("btn-upload-fallback");
-  if (fb) fb.style.display = "";
-  const up = document.getElementById("restore-upload-wrap");
-  if (up) up.style.display = "";
+  setPickedEcho("");
+  setRestorePickerVisible(true);
 }
 
 // Paste-fallback mode -> back to the file picker
@@ -1345,12 +1412,10 @@ function exitFallbackMode() {
   hidePlainRestoreConfirm();
   hideDecDomainRow();
   resetFallbackControls();
+  setPickedEcho("");
   const ta = document.getElementById("restore-using-text-wrap");
   if (ta) ta.style.display = "none";
-  const up = document.getElementById("restore-upload-wrap");
-  if (up) up.style.display = "";
-  const fb = document.getElementById("btn-upload-fallback");
-  if (fb) fb.style.display = "";
+  setRestorePickerVisible(true);
 }
 
 // Single Back button in the restore form covers both sub-screens:
@@ -1489,6 +1554,9 @@ function isSupportedBackupName(lowerName) {
 function handlePickedBackupFile(file) {
   cookieFile = file || null;
   pendingPlain = null;
+  // a picked file takes over the restore flow: drop any stashed paste so a
+  // later fallback open starts empty instead of resurrecting stale text
+  stashedPasteText = "";
   const input = document.getElementById("restore");
   if (!cookieFile) {
     hideDecPasswordInputBox();
@@ -1496,6 +1564,8 @@ function handlePickedBackupFile(file) {
     hideDecDomainRow();
     clearDecPassword();
     updateDroppedFileName();
+    setPickedEcho("");
+    setRestorePickerVisible(true);
     return;
   }
   const name = String(cookieFile.name || "").toLowerCase();
@@ -1516,6 +1586,8 @@ function handlePickedBackupFile(file) {
     hidePlainRestoreConfirm();
     hideDecDomainRow();
     updateDroppedFileName();
+    setPickedEcho("");
+    setRestorePickerVisible(true);
     return;
   }
   hideFallbackCkzButton();
@@ -1536,6 +1608,8 @@ function preparePlainFileRestore(file) {
       if (input) input.value = "";
       cookieFile = null;
       updateDroppedFileName();
+      setPickedEcho("");
+      setRestorePickerVisible(true);
       return;
     }
   } catch (e) {}
@@ -2167,6 +2241,7 @@ function restoreSuccessAlert(restoredCookies, totalCookies, skippedCookies, fail
 }
 
 function showEncPasswordInputBox(e) {
+  collapseRestoreSection();
   setBackupButtonsVisible(false);
   document.getElementById("plain-export-confirm").classList.add("hidden");
   document.getElementById("enc-passwd").style.display = "flex";
@@ -2178,8 +2253,11 @@ function showEncPasswordInputBox(e) {
 function showDecPasswordInputBox(e) {
   // picked .ckz file: password is always required, make sure a previous
   // paste session did not leave the row disabled
+  collapseBackupSection();
   setDecPasswordEnabled(true);
   hidePasteRestoreButton();
+  setRestorePickerVisible(false);
+  setPickedEcho(cookieFile && cookieFile.name ? cookieFile.name : "");
   document.getElementById("dec-passwd").style.display = "flex";
   document.getElementById("inp-dec-passwd").focus()
 }
@@ -2341,6 +2419,7 @@ function hideFallbackCkzButton() {
 }
 
 function showFallbackCkzInput() {
+  collapseBackupSection();
   hideFallbackCkzButton()
   document.getElementById("restore-upload-wrap").style.display = "none"
   // show the fallback: textarea + password row (locked until a .ckz
@@ -2348,8 +2427,16 @@ function showFallbackCkzInput() {
   // No insecure-warning box here: the UI itself shows which path applies.
   pendingPlain = null;
   hidePlainRestoreConfirm();
+  setPickedEcho("");
   document.getElementById("restore-using-text-wrap").style.display = "flex"
   document.getElementById("dec-passwd").style.display = "flex";
+  // restore text stashed when a backup sub-screen auto-collapsed the fallback
+  if (stashedPasteText) {
+    try {
+      document.getElementById("ckz-textarea").value = stashedPasteText;
+    } catch (e) {}
+    stashedPasteText = "";
+  }
   updateFallbackState();
 }
 
@@ -2369,6 +2456,10 @@ function setDecPasswordEnabled(on) {
     if (row && row.classList && typeof row.classList.toggle === "function") {
       row.classList.toggle("disabled-row", !on);
     }
+    // A locked row is dead weight: hiding it (instead of dimming) saves
+    // ~75px of popup height, which keeps paste states under the ~600px
+    // browser clamp so no scrollbar appears. Shown again once enabled.
+    if (row && row.style) row.style.display = on ? "" : "none";
   } catch (e) {}
 }
 
