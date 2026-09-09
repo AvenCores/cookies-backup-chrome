@@ -633,6 +633,7 @@ wireRestoreDropZone();
 wireFilePicker();
 wireEncSubmitState();
 wireFallbackTextarea();
+wirePasteButton();
 wireDomainCheckboxes();
 initExportFormat();
 
@@ -2509,6 +2510,111 @@ function wireFallbackTextarea() {
   if (typeof ta.addEventListener !== "function") return;
   ta.dataset.fbWired = "1";
   ta.addEventListener("input", scheduleFallbackUpdate);
+  // "paste"/"cut" fire before "input" on some mobile Chromiums and may be
+  // the only event when autocomplete/autofill edits the field
+  ta.addEventListener("paste", scheduleFallbackUpdate);
+  ta.addEventListener("cut", scheduleFallbackUpdate);
+  ta.addEventListener("change", scheduleFallbackUpdate);
+}
+
+// One-tap paste for mobile Chromium popups (Kiwi / Mises / Lemur): the OS
+// long-press callout often never appears there, so the button fills the
+// textarea via the async Clipboard API (user gesture -> allowed) with an
+// execCommand fallback. Never throws: worst case it focuses the field so
+// the user can paste manually.
+function wirePasteButton() {
+  let btn = null;
+  try {
+    btn = document.getElementById("btn-paste-clipboard");
+  } catch (e) {
+    return;
+  }
+  if (!btn || btn.dataset.wired === "1") return;
+  if (typeof btn.addEventListener !== "function") return;
+  btn.dataset.wired = "1";
+  btn.addEventListener("click", handlePasteFromClipboard);
+}
+
+function insertPastedBackupText(ta, text) {
+  try {
+    if (text && typeof ta.setRangeText === "function") {
+      try {
+        const start = typeof ta.selectionStart === "number" ? ta.selectionStart : ta.value.length;
+        const end = typeof ta.selectionEnd === "number" ? ta.selectionEnd : ta.value.length;
+        ta.setRangeText(text, start, end, "end");
+      } catch (e) {
+        ta.value = (ta.value || "") + text;
+      }
+    } else {
+      ta.value = (ta.value || "") + text;
+    }
+  } catch (e) {
+    try {
+      ta.value = text;
+    } catch (err) {}
+  }
+  try {
+    ta.dispatchEvent(new Event("input", { bubbles: true }));
+  } catch (e) {}
+  updateFallbackState();
+  try {
+    ta.focus();
+  } catch (e) {}
+}
+
+async function handlePasteFromClipboard() {
+  let ta = null;
+  try {
+    ta = document.getElementById("ckz-textarea");
+  } catch (e) {
+    ta = null;
+  }
+  if (!ta) return;
+  // 1: modern async clipboard (works in extension popups on tap)
+  try {
+    if (navigator && navigator.clipboard && typeof navigator.clipboard.readText === "function") {
+      const text = await navigator.clipboard.readText();
+      if (typeof text === "string" && text) {
+        insertPastedBackupText(ta, text);
+        return;
+      }
+      // empty clipboard: nothing to insert, just focus for manual paste
+      try {
+        ta.focus();
+      } catch (e) {}
+      return;
+    }
+  } catch (e) {
+    // SecurityError / NotAllowedError (permission denied) falls through to
+    // the legacy path below; any other error shows a hint.
+    const name = e && e.name ? String(e.name) : "";
+    if (name !== "NotAllowedError" && name !== "SecurityError") {
+      try {
+        addToWarningMessageList(createWarning("readError"));
+      } catch (err) {}
+    }
+  }
+  // 2: legacy execCommand fallback (needs focus + selection first)
+  try {
+    ta.focus();
+  } catch (e) {}
+  let pasted = false;
+  try {
+    if (typeof document.execCommand === "function") {
+      pasted = document.execCommand("paste") === true;
+    }
+  } catch (e) {
+    pasted = false;
+  }
+  if (pasted) {
+    scheduleFallbackUpdate();
+    return;
+  }
+  // 3: clipboard unreadable here (e.g. permission blocked): keep focus so
+  // the OS paste bar / keyboard paste key can still target the field
+  try {
+    if (typeof ta.select === "function") ta.select();
+  } catch (e) {}
 }
 
 // Live paste detection: .ckz payload -> unlock password, hide plain button;

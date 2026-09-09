@@ -2,7 +2,7 @@
   "name": "Cookie Backup and Restore",
   "version": "4.2.1",
   "description": "Backups and Encrypts all the cookies and Decrypts and Restores them when you need it.",
-  "permissions": ["cookies", "downloads", "storage"],
+  "permissions": ["cookies", "downloads", "storage", "clipboardRead"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "scripts": ["background.js"]

@@ -632,6 +632,45 @@ textarea {
   border-radius: 6px;
   outline: none;
   box-shadow: var(--input-shadow) 0px 1px 0px 0px inset;
+  /* Mobile Chromium (Kiwi / Mises / Lemur) extension popups often swallow
+     the native long-press callout when an ancestor disables selection.
+     Force text fields back to selectable so tap-hold -> Paste keeps working. */
+  user-select: text;
+  -webkit-user-select: text;
+  -webkit-touch-callout: default;
+  touch-action: auto;
+}
+
+/* explicit paste action: on mobile popups the OS long-press menu often never
+   appears, so one tap on this button fills the textarea via Clipboard API */
+.btn-paste {
+  align-self: stretch;
+  touch-action: manipulation;
+}
+
+#ckz-textarea {
+  user-select: text;
+  -webkit-user-select: text;
+  -webkit-touch-callout: default;
+  touch-action: auto;
+}
+
+/* coarse pointers (phones/tablets): 16px+ stops iOS auto-zoom on focus,
+   taller field + full-width paste button fit fat-finger taps */
+@media (pointer: coarse) {
+  input[type="password"],
+  input.pwd-input,
+  input[type="text"].domain-input,
+  textarea {
+    font-size: 16px;
+  }
+  #ckz-textarea {
+    min-height: 120px;
+  }
+  .btn-paste {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
 }
 
 input[type="password"]:focus,

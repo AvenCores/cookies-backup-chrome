@@ -219,8 +219,18 @@
               <textarea
                 id="ckz-textarea"
                 rows="4"
+                autocomplete="off"
+                autocapitalize="off"
+                autocorrect="off"
+                spellcheck="false"
+                inputmode="text"
+                enterkeyhint="done"
+                aria-label="Paste the contents of your backup file"
                 placeholder="{iv: 'kjFC7RBV-N4', 'v': 1, 'iter': ..., ...}"
               ></textarea>
+              <button class="btn-secondary btn-paste" type="button" id="btn-paste-clipboard" data-i18n="pasteBtn">
+                Paste from clipboard
+              </button>
             </div>
             <button class="btn-primary hidden" type="button" id="btn-paste-restore" data-i18n="pasteRestoreBtn">
               Restore pasted backup
