@@ -1923,7 +1923,8 @@ function precheckBackupPayload() {
 // One cookie, several increasingly lenient ways to store it. The first
 // attempt preserves the backup 1:1; later ones drop or coerce only the bits
 // Chromium rejects while Firefox tolerates: a cookie store id from another
-// browser, SameSite=None without Secure, and the __Host-/__Secure- prefix
+// browser, SameSite=None without Secure, HTTPS-only hosts rejecting http://
+// urls, a domain that no longer matches, and the __Host-/__Secure- prefix
 // rules. Redundant attempts are deduplicated.
 function buildRestoreAttempts(base, cookie, host) {
   const attempts = [];
@@ -1990,6 +1991,44 @@ function buildRestoreAttempts(base, cookie, host) {
     push({ ...current, secure: true, url: "https://" + host + coercedPath });
   }
 
+  // HTTPS twin: HSTS / https-only hosts (e.g. www.tiktok.com,
+  // studio.rutube.ru) reject cookies.set over http:// even for non-Secure
+  // cookies, while a non-Secure cookie set over https:// always works. So
+  // every http:// attempt gets an https:// twin with flags untouched.
+  // The reverse twin (https:// -> http:// with Secure dropped) covers
+  // http-only intranet hosts where a Secure cookie can never be set.
+  const snapshot = attempts.slice();
+  for (const a of snapshot) {
+    if (typeof a.url === "string" && a.url.startsWith("http://")) {
+      push({ ...a, url: "https://" + a.url.slice("http://".length) });
+    } else if (typeof a.url === "string" && a.url.startsWith("https://")) {
+      const { secure, ...rest } = a;
+      void secure;
+      push({ ...rest, url: "http://" + a.url.slice("https://".length), secure: false });
+    }
+  }
+
+  // Domain-drop: the backed-up domain may no longer match here (subdomain
+  // move, public suffix list, foreign backup) — a host-only retry against
+  // the same url still restores the value instead of losing the cookie.
+  for (const a of attempts.slice()) {
+    if (a.domain !== undefined) {
+      const { domain, ...hostOnly } = a;
+      void domain;
+      push(hostOnly);
+    }
+  }
+
+  // SameSite-strip, last resort: some Chromium builds reject Lax/Strict
+  // over http:// or with mismatched Secure instead of defaulting.
+  for (const a of attempts.slice()) {
+    if (a.sameSite !== undefined) {
+      const { sameSite, ...noSameSite } = a;
+      void sameSite;
+      push(noSameSite);
+    }
+  }
+
   return attempts;
 }
 
@@ -2019,7 +2058,10 @@ async function restoreCookies(cookies) {
       return;
     }
     const domain = typeof cookie.domain === "string" ? cookie.domain : "";
-    const path = typeof cookie.path === "string" ? cookie.path : "/";
+    // cookies.set requires a path starting with "/": foreign backups may
+    // carry "" or a relative path, which Chromium rejects outright.
+    const rawPath = typeof cookie.path === "string" ? cookie.path : "/";
+    const path = rawPath.startsWith("/") && rawPath.length > 0 ? rawPath : "/";
     if (!domain) {
       skipped++;
       return;
