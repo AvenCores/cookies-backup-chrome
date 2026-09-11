@@ -64,7 +64,7 @@
 | `style.css` | Светлая/тёмная темы, карточки, кнопки, `insecure-box`, языковое меню, standalone-режим (центровка, `width: 340px`). |
 | `sjcl.js` | Stanford Javascript Crypto Library для шифрования. |
 | `icons/`, `badge.png`, `firefox.svg`, `demo.gif` | Иконки, бейджи сторов, демо. |
-| `.github/workflows/build.yml` | CI: проверка синтаксиса, сборка `.zip`/`.xpi`, публикация в Release. |
+| `.github/workflows/build.yml` | CI: проверка синтаксиса, сборка `.zip`/`.crx`/`.xpi`, публикация в Release. |
 
 ## 🔑 Разрешения (почему они нужны)
 
@@ -84,7 +84,8 @@
 
 ### Из файла в Releases — Chromium / Chrome / Edge / Opera / Brave
 
-В [Releases](https://github.com/AvenCores/cookies-backup-chrome/releases) скачайте файл `cookie-backup-chrome-<version>-chromium.zip`.
+В [Releases](https://github.com/AvenCores/cookies-backup-chrome/releases) скачайте файл `cookie-backup-chrome-<version>-chromium.zip`
+(там же лежит `cookie-backup-chrome-<version>-chromium.crx` — самоподписанная CRX-сборка для Chromium-форков).
 
 Chrome и Chromium не умеют ставить `.zip` напрямую как подписанный пакет, установка — только как «распакованное расширение»:
 
@@ -94,6 +95,8 @@ Chrome и Chromium не умеют ставить `.zip` напрямую как
 4. Для обновления: скачайте новый `.zip` из Releases, распакуйте поверх старой папки и нажмите «Обновить» на странице расширений.
 
 Альтернатива — склонировать репозиторий и загрузить его папку таким же способом.
+
+Про `.crx`: файл подписан эфемерным ключом CI (формат CRX3), поэтому его extension ID меняется от сборки к сборке, а Chrome Stable такой файл ставить откажется (принимает только пакеты из Web Store) — используйте `.crx` в Chromium-форках (Ungoogled Chromium, Kiwi и т.п.) через перетаскивание на `chrome://extensions` с включённым «Режимом разработчика». Чтобы зафиксировать стабильный ID, сгенерируйте ключ один раз (`npx --yes crx@5 keygen ./crx-key`) и положите его содержимое в секрет репозитория `CRX_PRIVATE_KEY` (Settings → Secrets → Actions, raw PEM или base64) — CI подхватит его автоматически.
 
 ### Из файла в Releases — Firefox (⚠️ файл без подписи)
 
@@ -170,8 +173,9 @@ Chrome и Chromium не умеют ставить `.zip` напрямую как
 4. Firefox-сборка прогоняется через `addons-linter` (`continue-on-error`).
 5. Пакуются артефакты:
    - `cookie-backup-chrome-<version>-chromium.zip` — загрузка распакованным через `chrome://extensions`
+   - `cookie-backup-chrome-<version>-chromium.crx` (CRX3 через `npx crx@5 pack`; ключ — из секрета `CRX_PRIVATE_KEY`, иначе генерируется эфемерный с предупреждением в логе)
    - `cookie-backup-chrome-<version>-firefox.xpi` — временное дополнение через `about:debugging` или загрузка в AMO для подписи (unlisted)
-6. По тегу `v*` оба архива автоматически прикрепляются к GitHub Release (`softprops/action-gh-release`).
+6. По тегу `v*` все три архива автоматически прикрепляются к GitHub Release (`softprops/action-gh-release`).
 
 # 📜 Лицензия
 

@@ -84,6 +84,28 @@ jobs:
           zip -r -X "../../cookie-backup-chrome-${VERSION}-firefox.xpi" .
           cd ../..
 
+      - name: Pack Chromium (.crx)
+        env:
+          CRX_PRIVATE_KEY: ${{ secrets.CRX_PRIVATE_KEY }}
+        run: |
+          KEY_FILE="$RUNNER_TEMP/crx-private-key.pem"
+          if [ -n "$CRX_PRIVATE_KEY" ]; then
+            if printf '%s' "$CRX_PRIVATE_KEY" | grep -q 'BEGIN'; then
+              printf '%s' "$CRX_PRIVATE_KEY" > "$KEY_FILE"
+            else
+              printf '%s' "$CRX_PRIVATE_KEY" | base64 -d > "$KEY_FILE"
+            fi
+            echo "Using CRX_PRIVATE_KEY secret (stable extension ID)."
+          else
+            mkdir -p "$RUNNER_TEMP/crx-keygen"
+            npx --yes crx@5 keygen "$RUNNER_TEMP/crx-keygen"
+            cp "$RUNNER_TEMP/crx-keygen/key.pem" "$KEY_FILE"
+            echo "::warning::CRX_PRIVATE_KEY secret is not set — generated an ephemeral key, so the .crx extension ID will change on every build. To keep a stable ID, generate a key once locally ('npx --yes crx@5 keygen ./crx-key') and store its content as a repository secret named CRX_PRIVATE_KEY (raw PEM or base64)."
+          fi
+          chmod 600 "$KEY_FILE"
+          npx --yes crx@5 pack build/chromium --crx-version 3 -p "$KEY_FILE" -o "cookie-backup-chrome-${VERSION}-chromium.crx"
+          ls -lh "cookie-backup-chrome-${VERSION}-chromium.crx"
+
       - uses: actions/upload-artifact@v7
         with:
           name: cookie-backup-chrome-${{ env.VERSION }}-chromium
@@ -94,10 +116,16 @@ jobs:
           name: cookie-backup-chrome-${{ env.VERSION }}-firefox
           path: cookie-backup-chrome-*-firefox.xpi
 
+      - uses: actions/upload-artifact@v7
+        with:
+          name: cookie-backup-chrome-${{ env.VERSION }}-chromium-crx
+          path: cookie-backup-chrome-*-chromium.crx
+
       - name: Attach builds to GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
           files: |
             cookie-backup-chrome-*-chromium.zip
+            cookie-backup-chrome-*-chromium.crx
             cookie-backup-chrome-*-firefox.xpi
